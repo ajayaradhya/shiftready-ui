@@ -5,28 +5,29 @@ import { useInventory } from "@/hooks/use-inventory";
 import { VideoPreview } from "@/components/features/inventory/video-preview";
 import { InventoryCard } from "@/components/features/inventory/inventory-card";
 import { Header } from "@/components/ui/header";
-import { Package, Sparkles, Loader2 } from "lucide-react";
+import { Package, Sparkles, Loader2, Database } from "lucide-react";
 import { triggerReestimation } from "@/lib/api";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useIsMutating } from "@tanstack/react-query";
 
 export default function InventoryReviewPage() {
   const { eventId } = useParams() as { eventId: string };
-  const { summary, isProcessing, isLoading, status } = useInventory(eventId);
+  const { summary, isProcessing, isPricing, isLoading, status } = useInventory(eventId);
+  
+  // Detects if ANY mutation (save or re-analyse) is in flight
+  const activeMutations = useIsMutating();
 
-  // 1. Hooks are correctly placed at the top level
   const reestimateMutation = useMutation({
     mutationFn: () => triggerReestimation(eventId),
   });
 
-  // Derived state for the AI processing overlay
-  const isThinking = isProcessing || reestimateMutation.isPending;
+  // One Unified State for the Global Loader
+  const isGlobalLoading = isProcessing || isPricing || activeMutations > 0;
 
-  // 2. Handle initial loading state
   if (isLoading && !summary) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] gap-4">
         <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <div className="text-outline uppercase tracking-[0.3em] text-xs">Synchronizing Data...</div>
+        <div className="text-outline uppercase tracking-[0.3em] text-xs">Initializing Monolith...</div>
       </div>
     );
   }
@@ -35,55 +36,54 @@ export default function InventoryReviewPage() {
 
   return (
     <div className="relative">
-      {/* Global Loading Overlay */}
-      {isThinking && (
-        <div className="fixed inset-0 z-[100] bg-surface/80 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-500">
-          <div className="flex flex-col items-center gap-6">
+      {/* SINGLE GLOBAL LOADING SCREEN 
+          Covers: Initial Scan, Global Re-analysis, and Individual Saves
+      */}
+      {isGlobalLoading && (
+        <div className="fixed inset-0 z-[100] bg-surface/60 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-500">
+          <div className="flex flex-col items-center gap-8 max-w-sm text-center">
             <div className="relative">
-              <div className="w-20 h-20 border-2 border-primary/10 rounded-full animate-ping" />
-              <Sparkles className="absolute inset-0 m-auto text-primary animate-pulse" size={32} />
-            </div>
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-on-surface uppercase tracking-[0.2em]">Recalculating Value</h2>
-              <p className="text-on-surface-variant text-xs mt-2 italic">Gemini is analyzing Sydney market demand...</p>
-            </div>
-          </div>
-        </div>
-      )}
-      <Header isProcessing={isThinking}>
-        {summary?.moveOutDate && (
-          <div className="hidden lg:flex items-center gap-4 ml-6 animate-in fade-in slide-in-from-top-2 duration-1000">
-            <div className="h-6 w-[1px] bg-outline-variant/20" />
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Move-out Deadline</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-on-surface uppercase">
-                  {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
-                </span>
-                <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded font-black">
-                  {Math.ceil((new Date(summary.moveOutDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} DAYS LEFT
-                </span>
+              <div className="w-24 h-24 border border-primary/20 rounded-full animate-ping" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                {isPricing || reestimateMutation.isPending ? (
+                  <Sparkles className="text-primary animate-pulse" size={40} />
+                ) : (
+                  <Database className="text-primary animate-bounce" size={40} />
+                )}
               </div>
             </div>
-          </div>
-        )}
-      </Header>
-
-      {/* AI PROCESSING OVERLAY: Active during re-estimation or initial pipeline */}
-      {isThinking && (
-        <div className="fixed inset-0 z-[100] bg-surface/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-500">
-          <div className="flex flex-col items-center gap-6 max-w-md text-center">
-            <div className="relative">
-              <div className="w-24 h-24 border-2 border-primary/20 rounded-full animate-ping" />
-              <Sparkles className="absolute inset-0 m-auto text-primary animate-pulse" size={40} />
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter">
+                {isPricing ? "AI Market Analysis" : "Syncing Changes"}
+              </h2>
+              <p className="text-sm text-on-surface-variant font-medium leading-relaxed italic">
+                {isPricing 
+                  ? "Gemini is recalculating resale values based on Sydney demand..." 
+                  : "Updating cloud-ledger. Please hold while the monolith syncs."}
+              </p>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-on-surface">Gemini is Pricing</h2>
-            <p className="text-on-surface-variant italic">
-              Analyzing Sydney market trends based on your corrections. This usually takes 15-30 seconds.
-            </p>
+            
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest rounded-full border border-outline-variant/10">
+              <Loader2 className="animate-spin text-primary" size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-outline">
+                Live Polling: {status || 'active'}
+              </span>
+            </div>
           </div>
         </div>
       )}
+
+      <Header isProcessing={isGlobalLoading}>
+        {summary?.moveOutDate && (
+           <div className="flex flex-col items-start ml-6 leading-none border-l border-outline-variant/20 pl-6">
+              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Deadline</span>
+              <span className="text-sm font-bold text-on-surface uppercase">
+                {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+              </span>
+           </div>
+        )}
+      </Header>
 
       <div className="flex h-[calc(100vh-64px)] w-full p-8 gap-12">
         <VideoPreview 
@@ -92,35 +92,25 @@ export default function InventoryReviewPage() {
           itemCount={totalItems} 
         />
 
-        {/* Floating Action Button for Re-analysis */}
+        {/* Action Button */}
         <div className="fixed bottom-12 right-12 z-[60]">
           <button 
             onClick={() => reestimateMutation.mutate()}
-            disabled={isThinking}
-            className="flex items-center gap-3 bg-primary text-surface px-6 py-4 rounded-full font-black uppercase tracking-tighter shadow-[0_12px_48px_rgba(173,198,255,0.4)] hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+            disabled={isGlobalLoading}
+            className="flex items-center gap-3 bg-primary text-surface px-8 py-5 rounded-full font-black uppercase tracking-tighter shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
           >
-            {isThinking ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <Sparkles size={20} fill="currentColor" />
-            )}
-            {isThinking ? "AI is Calculating..." : "Re-Analyse Prices"}
+            <Sparkles size={20} fill="currentColor" />
+            Re-Analyse Prices
           </button>
         </div>
 
-        {/* Inventory Review Column */}
         <section className="flex-1 overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-12 pb-24">
           {summary?.bundles?.map((bundle) => (
             <div key={bundle.id} className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex items-end justify-between border-b border-outline-variant/10 pb-2">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-medium text-on-surface">{bundle.name}</h3>
-                  <span className="bg-surface-container-highest px-2 py-0.5 rounded text-[10px] text-primary font-bold">
-                    ${bundle.suggestedPrice} VALUE
-                  </span>
-                </div>
+                <h3 className="text-xl font-medium text-on-surface">{bundle.name}</h3>
                 <span className="text-[10px] text-outline uppercase tracking-widest">
-                  {bundle.items.length} Assets
+                  {bundle.items.length} Assets Found
                 </span>
               </div>
               
@@ -129,25 +119,19 @@ export default function InventoryReviewPage() {
                   <InventoryCard 
                     key={item.id} 
                     item={item} 
-                    bundleId={bundle.id} // Essential for PATCH requests
-                    onSeek={(seconds) => {
-                      const video = document.getElementById('inventory-video') as HTMLVideoElement;
-                      if (video) {
-                        video.currentTime = seconds;
-                        video.play();
-                        video.parentElement?.classList.add('ring-2', 'ring-primary');
-                        setTimeout(() => video.parentElement?.classList.remove('ring-2', 'ring-primary'), 1000);
-                      }
+                    bundleId={bundle.id}
+                    onSeek={(s) => {
+                      const v = document.getElementById('inventory-video') as HTMLVideoElement;
+                      if (v) { v.currentTime = s; v.play(); }
                     }} 
                   />
                 ))}
               </div>
             </div>
           ))}
-          
-          <div className="flex flex-col items-center py-12 opacity-20">
-            <Package size={48} strokeWidth={0.5} />
-            <p className="text-[10px] uppercase tracking-[0.4em] mt-4">End of Catalog</p>
+          <div className="flex flex-col items-center py-12 opacity-10">
+            <Package size={48} />
+            <p className="text-[10px] uppercase tracking-[0.4em] mt-4 font-bold">End of Catalog</p>
           </div>
         </section>
       </div>
