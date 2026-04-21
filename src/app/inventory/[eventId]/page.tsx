@@ -26,14 +26,21 @@ export default function InventoryReviewPage() {
 
   return (
     <>
-      {/* Fix #3: Show real Move-out date in the Header */}
       <Header isProcessing={isProcessing}>
         {summary?.moveOutDate && (
-          <div className="hidden md:flex items-center gap-2 px-4 py-1 bg-surface-container-high rounded-full border border-outline-variant/10">
-            <Calendar size={14} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Move-out: {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
-            </span>
+          <div className="hidden lg:flex items-center gap-4 ml-6 animate-in fade-in slide-in-from-top-2 duration-1000">
+            <div className="h-6 w-[1px] bg-outline-variant/20" />
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Move-out Deadline</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-on-surface uppercase">
+                  {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded font-black">
+                  {Math.ceil((new Date(summary.moveOutDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} DAYS LEFT
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </Header>
@@ -43,12 +50,22 @@ export default function InventoryReviewPage() {
         <VideoPreview 
           videoUrl={summary?.videoUrl} 
           status={status}
-          itemCount={totalItems}
+          itemCount={totalItems} 
         />
 
         {/* Fix #1: Correct Data Mapping for Bundles */}
         <section className="flex-1 overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-12 pb-24">
-          {summary?.bundles?.map((bundle) => (
+          {isProcessing && summary?.bundles.length === 0 && (
+            <div className="flex flex-col gap-4 opacity-40">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 w-full bg-surface-container-high rounded-xl animate-pulse" />
+              ))}
+              <p className="text-center text-[10px] uppercase tracking-[0.4em] text-outline mt-4">
+                Gemini is cataloging space...
+              </p>
+            </div>
+          )}
+          { summary?.bundles?.map((bundle) => (
             <div key={bundle.id} className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex items-end justify-between border-b border-outline-variant/10 pb-2">
                 <div className="flex items-center gap-3">
@@ -67,11 +84,14 @@ export default function InventoryReviewPage() {
                   <InventoryCard 
                     key={item.id} 
                     item={item} 
-                    onSeek={(ts) => {
-                      const video = document.querySelector('video');
+                    onSeek={(seconds) => {
+                      const video = document.getElementById('inventory-video') as HTMLVideoElement;
                       if (video) {
-                        video.currentTime = ts;
+                        video.currentTime = seconds;
                         video.play();
+                        // Visual feedback: briefly highlight the video border
+                        video.parentElement?.classList.add('ring-2', 'ring-primary');
+                        setTimeout(() => video.parentElement?.classList.remove('ring-2', 'ring-primary'), 1000);
                       }
                     }} 
                   />
