@@ -1,36 +1,51 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# next.js
+# Next.js Build Output
 /.next/
 /out/
 
-# production
+# Production Build
 /build
 
-# misc
-.DS_Store
-*.pem
+# Environment Variables
+# (Never commit actual secrets to source control!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# debug
+# Tailwind / PostCSS
+# Usually, these are source files, but if you generate a static 
+# tailwind output file separately, ignore it here:
+# /public/style.css
+
+# Testing
+/coverage
+/.nyc_output
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# IDE / Editor folders
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
