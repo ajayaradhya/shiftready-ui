@@ -9,9 +9,7 @@ export function useInventory(eventId: string) {
     queryKey: ["status", eventId],
     queryFn: () => getStatus(eventId),
     refetchInterval: (query) => 
-      query.state.data?.status === "ready_for_review" || query.state.data?.status === "failed" 
-        ? false 
-        : 3000,
+      ["ready_for_review", "live", "failed"].includes(query.state.data?.status) ? false : 3000,
   });
 
   // 2. Summary Data (Fetches immediately to get Video and Metadata)

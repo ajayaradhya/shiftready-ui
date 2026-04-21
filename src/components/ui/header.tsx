@@ -5,9 +5,10 @@ import { Bell, UserCircle } from "lucide-react";
 
 interface HeaderProps {
   isProcessing?: boolean;
+  children?: React.ReactNode;
 }
 
-export function Header({ isProcessing = false }: HeaderProps) {
+export function Header({ isProcessing, children }: HeaderProps) {
   return (
     <header className="fixed top-0 right-0 left-0 h-16 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/5 z-50 flex items-center justify-between px-8 pl-72">
       {/* 2026 AI Pulse Line: Visual feedback for backend activity */}
@@ -21,6 +22,7 @@ export function Header({ isProcessing = false }: HeaderProps) {
         <h1 className="text-sm font-medium uppercase tracking-[0.2em] text-outline">
           Inventory <span className="text-on-surface">Review</span>
         </h1>
+        {children}
       </div>
 
       <div className="flex items-center gap-6 text-outline">
