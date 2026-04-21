@@ -18,5 +18,13 @@ export async function patchItem(eventId: string, bundleId: string, itemId: strin
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
   });
+  if (!res.ok) throw new Error("Update failed");
+  return res.json();
+}
+
+export async function triggerReestimation(eventId: string) {
+  const res = await fetch(`${API_BASE}/sales/${eventId}/estimate`, {
+    method: 'POST',
+  });
   return res.json();
 }
