@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteItem, patchItem } from "@/lib/api";
 import { InventoryItem } from "@/lib/types";
-import { Clock, Loader2, AlertCircle, CheckCircle2, Sparkles, ChevronDown, Trash2 } from "lucide-react";
+import { Clock, Loader2, AlertCircle, CheckCircle2, Sparkles, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -21,9 +21,7 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
   const mutation = useMutation({
     mutationFn: (updates: Partial<InventoryItem>) => 
       patchItem(eventId, bundleId, item.id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
   });
 
   const deleteMutation = useMutation({
@@ -32,41 +30,34 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
   });
 
   const handleSave = (field: keyof InventoryItem, value: any) => {
-    if (item[field] !== value) {
-      mutation.mutate({ [field]: value });
-    }
+    if (item[field] !== value) mutation.mutate({ [field]: value });
   };
 
   const handleNumberInput = (field: keyof InventoryItem, value: string) => {
     const cleanValue = value.replace(/[^0-9.]/g, "").slice(0, 7);
     const numValue = parseFloat(cleanValue);
-    if (!isNaN(numValue) && item[field] !== numValue) {
-      mutation.mutate({ [field]: numValue });
-    }
+    if (!isNaN(numValue) && item[field] !== numValue) mutation.mutate({ [field]: numValue });
   };
 
-  // Logic for Trust Badges (Confidence)
   const isLowConfidence = item.confidence < 0.75;
 
   return (
-    <div className={`group relative flex flex-col gap-5 rounded-2xl p-6 transition-all duration-300 border ${
+    <div className={`group relative flex flex-col gap-5 rounded-2xl p-6 transition-all duration-500 border ${
       isLowConfidence 
         ? 'bg-amber-500/[0.02] border-amber-500/10 hover:border-amber-500/30' 
         : 'bg-surface-container-high border-transparent hover:border-primary/10'
     } ${mutation.isPending ? 'opacity-70 grayscale-[0.5]' : 'opacity-100'}`}>
       
-      {/* Top Action Row: Badges & Timestamp */}
-      <div className="flex items-center justify-between">
+      {/* Top Action Row */}
+      <div className="flex items-center justify-between relative">
         <div className="flex items-center gap-2">
           {isLowConfidence ? (
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[9px] font-black uppercase tracking-widest border border-amber-500/20">
-              <AlertCircle size={10} />
-              Review Needed
+              <AlertCircle size={10} /> Review Needed
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-tertiary/10 text-tertiary text-[9px] font-black uppercase tracking-widest border border-tertiary/20">
-              <CheckCircle2 size={10} />
-              Verified
+              <CheckCircle2 size={10} /> Verified
             </div>
           )}
           {mutation.isPending && (
@@ -76,34 +67,36 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
           )}
         </div>
 
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        {/* UNIQUE ACTION DECK: Separates metadata from destruction */}
+        <div className="flex items-center gap-1.5 translate-x-2 group-hover:translate-x-0 transition-transform duration-300">
+          {/* MODERN DELETE: Ghostly red on hover with a blur backdrop */}
           <button 
-            onClick={() => deleteMutation.mutate()}
-            className="opacity-0 group-hover:opacity-100 p-2 text-outline hover:text-error transition-all"
+            onClick={() => {
+              if(confirm("Permanently remove this asset?")) deleteMutation.mutate();
+            }}
+            className="opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 p-2 rounded-full bg-error/10 hover:bg-error text-error hover:text-white backdrop-blur-md transition-all duration-300 border border-error/20"
+            title="Delete Item"
           >
             <Trash2 size={14} />
           </button>
-          <button onClick={() => onSeek(item.video_timestamp)} className="...">
-            {/* ... existing timestamp button ... */}
+
+          {/* TIMESTAMP: Frosted capsule style */}
+          <button 
+            onClick={() => onSeek(item.video_timestamp)}
+            className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface/40 hover:bg-surface-container-highest transition-all border border-outline-variant/10 group/btn"
+          >
+            <Clock size={12} className="text-outline group-hover/btn:text-primary transition-colors" />
+            <span className="text-[11px] font-mono font-bold text-on-surface tracking-tighter">
+              {item.timestamp_label}
+            </span>
           </button>
         </div>
-
-        <button 
-          onClick={() => onSeek(item.video_timestamp)}
-          className="flex items-center gap-2 px-3 py-1 rounded bg-surface/30 hover:bg-surface-container-highest transition-colors border border-outline-variant/10 group/btn"
-        >
-          <Clock size={12} className="text-outline group-hover/btn:text-primary transition-colors" />
-          <span className="text-[11px] font-mono font-bold text-on-surface tracking-tighter">
-            {item.timestamp_label}
-          </span>
-        </button>
-        
       </div>
 
-      {/* Main Identity: Product & Brand */}
+      {/* Main Identity */}
       <div className="flex flex-col gap-1.5 pr-10">
         <input 
-          className="bg-transparent border-none text-xl font-bold text-on-surface w-full p-0 outline-none focus:text-primary placeholder:opacity-20"
+          className="bg-transparent border-none text-xl font-bold text-on-surface w-full p-0 outline-none focus:text-primary placeholder:opacity-20 transition-colors"
           defaultValue={item.name}
           onBlur={(e) => handleSave('name', e.target.value)}
         />
@@ -114,7 +107,7 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
             onBlur={(e) => handleSave('brand', e.target.value)}
           />
           <div className="flex items-center gap-1.5 border-l border-outline-variant/20 pl-4">
-            <span className="text-[9px] text-outline font-black uppercase">Year:</span>
+            <span className="text-[9px] text-outline font-black uppercase tracking-tighter">Purchase Year:</span>
             <input 
               type="text"
               inputMode="numeric"
@@ -148,9 +141,9 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
             {item.pricing_reasoning && (
               <button 
                 onClick={() => setShowReasoning(!showReasoning)}
-                className="text-tertiary/40 hover:text-tertiary transition-colors"
+                className={`transition-all duration-300 ${showReasoning ? 'text-tertiary scale-110' : 'text-tertiary/40 hover:text-tertiary'}`}
               >
-                <Sparkles size={12} />
+                <Sparkles size={12} fill={showReasoning ? "currentColor" : "none"} />
               </button>
             )}
           </div>
@@ -172,7 +165,7 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
         <div className="animate-in slide-in-from-top-2 fade-in duration-300 p-4 rounded-xl bg-surface/40 border border-tertiary/10">
           <div className="flex items-start gap-3">
             <Sparkles size={14} className="text-tertiary shrink-0 mt-0.5" />
-            <p className="text-[11px] leading-relaxed text-on-surface-variant font-medium">
+            <p className="text-[11px] leading-relaxed text-on-surface-variant font-medium italic">
               {item.pricing_reasoning}
             </p>
           </div>
