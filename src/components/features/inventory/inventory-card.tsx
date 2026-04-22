@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchItem } from "@/lib/api";
+import { deleteItem, patchItem } from "@/lib/api";
 import { InventoryItem } from "@/lib/types";
-import { Clock, Loader2, AlertCircle, CheckCircle2, Sparkles, ChevronDown } from "lucide-react";
+import { Clock, Loader2, AlertCircle, CheckCircle2, Sparkles, ChevronDown, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -24,6 +24,11 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteItem(eventId, bundleId, item.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
   });
 
   const handleSave = (field: keyof InventoryItem, value: any) => {
@@ -71,6 +76,18 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
           )}
         </div>
 
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button 
+            onClick={() => deleteMutation.mutate()}
+            className="opacity-0 group-hover:opacity-100 p-2 text-outline hover:text-error transition-all"
+          >
+            <Trash2 size={14} />
+          </button>
+          <button onClick={() => onSeek(item.video_timestamp)} className="...">
+            {/* ... existing timestamp button ... */}
+          </button>
+        </div>
+
         <button 
           onClick={() => onSeek(item.video_timestamp)}
           className="flex items-center gap-2 px-3 py-1 rounded bg-surface/30 hover:bg-surface-container-highest transition-colors border border-outline-variant/10 group/btn"
@@ -80,6 +97,7 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
             {item.timestamp_label}
           </span>
         </button>
+        
       </div>
 
       {/* Main Identity: Product & Brand */}
