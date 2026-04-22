@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Play, Maximize, Settings2, Globe, CheckCircle2 } from "lucide-react";
 
 interface VideoPreviewProps {
@@ -11,6 +12,13 @@ interface VideoPreviewProps {
 export function VideoPreview({ videoUrl, status, itemCount }: VideoPreviewProps) {
   const isLive = status === "live";
   const isProcessing = ["processing", "pricing_in_progress"].includes(status || "");
+
+  // FIX: Create a stable key by stripping signed URL parameters.
+  // This prevents the video from remounting/re-streaming on every poll.
+  const stableVideoKey = useMemo(() => {
+    if (!videoUrl) return "empty";
+    return videoUrl.split('?')[0]; 
+  }, [videoUrl]);
 
   return (
     <div className="w-full md:w-[55%] flex flex-col gap-6 relative z-10">
@@ -36,9 +44,11 @@ export function VideoPreview({ videoUrl, status, itemCount }: VideoPreviewProps)
       <div className="relative aspect-video rounded-xl overflow-hidden bg-surface-container-low shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] group">
         <video 
           id="inventory-video"
-          key={videoUrl} 
+          key={stableVideoKey} // Key now ignores signature changes
           controls={isLive}
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${isProcessing ? 'opacity-40' : 'opacity-90'}`}>
+          className={`w-full h-full object-cover transition-opacity duration-1000 ${isProcessing ? 'opacity-40' : 'opacity-90'}`}
+          preload="auto"
+        >
           <source src={videoUrl} type="video/mp4" />
         </video>
         

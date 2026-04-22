@@ -7,21 +7,30 @@ import { InventoryCard } from "@/components/features/inventory/inventory-card";
 import { Header } from "@/components/ui/header";
 import { Package, Sparkles, Loader2, Database } from "lucide-react";
 import { triggerReestimation } from "@/lib/api";
-import { useMutation, useIsMutating } from "@tanstack/react-query";
+import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 
 export default function InventoryReviewPage() {
   const { eventId } = useParams() as { eventId: string };
+  const queryClient = useQueryClient();
+  
+  // Assumes useInventory returns isPricing = (status === 'pricing_in_progress' || (status === 'ready_for_review' && isFetching))
   const { summary, isProcessing, isPricing, isLoading, status } = useInventory(eventId);
   
-  // Detects if ANY mutation (save or re-analyse) is in flight
   const activeMutations = useIsMutating();
 
   const reestimateMutation = useMutation({
     mutationFn: () => triggerReestimation(eventId),
+    onSuccess: () => {
+      // Optimistic update to prevent flicker before next poll
+      queryClient.setQueryData(["status", eventId], { status: "pricing_in_progress" });
+    },
   });
 
-  // One Unified State for the Global Loader
-  const isGlobalLoading = isProcessing || isPricing || activeMutations > 0;
+  /**
+   * THE SEAMLESS GLOBAL THINKING STATE
+   * The overlay remains active until the final summary fetch completes.
+   */
+  const isGlobalLoading = isProcessing || isPricing || reestimateMutation.isPending || activeMutations > 0;
 
   if (isLoading && !summary) {
     return (
@@ -36,29 +45,27 @@ export default function InventoryReviewPage() {
 
   return (
     <div className="relative">
-      {/* SINGLE GLOBAL LOADING SCREEN 
-          Covers: Initial Scan, Global Re-analysis, and Individual Saves
-      */}
+      {/* UNIFIED GLOBAL LOADING SCREEN */}
       {isGlobalLoading && (
         <div className="fixed inset-0 z-[100] bg-surface/60 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-500">
           <div className="flex flex-col items-center gap-8 max-w-sm text-center">
             <div className="relative">
               <div className="w-24 h-24 border border-primary/20 rounded-full animate-ping" />
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center text-primary">
                 {isPricing || reestimateMutation.isPending ? (
-                  <Sparkles className="text-primary animate-pulse" size={40} />
+                  <Sparkles className="animate-pulse" size={40} />
                 ) : (
-                  <Database className="text-primary animate-bounce" size={40} />
+                  <Database className="animate-bounce" size={40} />
                 )}
               </div>
             </div>
             
             <div className="space-y-2">
               <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter">
-                {isPricing ? "AI Market Analysis" : "Syncing Changes"}
+                {isPricing || reestimateMutation.isPending ? "AI Market Analysis" : "Syncing Changes"}
               </h2>
               <p className="text-sm text-on-surface-variant font-medium leading-relaxed italic">
-                {isPricing 
+                {isPricing || reestimateMutation.isPending
                   ? "Gemini is recalculating resale values based on Sydney demand..." 
                   : "Updating cloud-ledger. Please hold while the monolith syncs."}
               </p>
@@ -67,7 +74,7 @@ export default function InventoryReviewPage() {
             <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest rounded-full border border-outline-variant/10">
               <Loader2 className="animate-spin text-primary" size={14} />
               <span className="text-[10px] font-black uppercase tracking-widest text-outline">
-                Live Polling: {status || 'active'}
+                Status: {status || 'active'}
               </span>
             </div>
           </div>
@@ -77,7 +84,7 @@ export default function InventoryReviewPage() {
       <Header isProcessing={isGlobalLoading}>
         {summary?.moveOutDate && (
            <div className="flex flex-col items-start ml-6 leading-none border-l border-outline-variant/20 pl-6">
-              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Deadline</span>
+              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Move-out Deadline</span>
               <span className="text-sm font-bold text-on-surface uppercase">
                 {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
               </span>
@@ -92,7 +99,7 @@ export default function InventoryReviewPage() {
           itemCount={totalItems} 
         />
 
-        {/* Action Button */}
+        {/* Floating Action Button */}
         <div className="fixed bottom-12 right-12 z-[60]">
           <button 
             onClick={() => reestimateMutation.mutate()}
@@ -129,6 +136,7 @@ export default function InventoryReviewPage() {
               </div>
             </div>
           ))}
+          
           <div className="flex flex-col items-center py-12 opacity-10">
             <Package size={48} />
             <p className="text-[10px] uppercase tracking-[0.4em] mt-4 font-bold">End of Catalog</p>

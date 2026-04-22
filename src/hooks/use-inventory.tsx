@@ -7,40 +7,41 @@ import { useEffect } from "react";
 export function useInventory(eventId: string) {
   const queryClient = useQueryClient();
 
-  // 1. Monitor AI Status
   const { data: statusData } = useQuery({
     queryKey: ["status", eventId],
     queryFn: () => getStatus(eventId),
-    refetchInterval: (query) => {
-      const s = query.state.data?.status;
-      // Continue polling if AI is working
-      return ["processing", "pricing_in_progress"].includes(s) ? 3000 : false;
-    },
+    refetchInterval: (query) => 
+      ["processing", "pricing_in_progress"].includes(query.state.data?.status) ? 2000 : false,
   });
 
-  // 2. Fetch/Cache Summary
-  const { data: summary, isLoading, refetch } = useQuery<SaleSummary>({
+  const { data: summary, isLoading, refetch, isFetching } = useQuery<SaleSummary>({
     queryKey: ["summary", eventId],
     queryFn: () => getSummary(eventId),
     enabled: !!eventId,
+    // FIX 2: Stop the "Tab-Switch" refetch burn
+    refetchOnWindowFocus: false, 
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // CRITICAL: When status flips from 'pricing_in_progress' to 'ready_for_review', 
-  // we must refresh the summary to see the new AI prices.
   useEffect(() => {
     if (statusData?.status === "ready_for_review") {
       refetch();
     }
   }, [statusData?.status, refetch]);
 
-  const isProcessing = statusData?.status === "processing";
-  const isPricing = statusData?.status === "pricing_in_progress";
+  // FIX 1: Seamless Loading Logic
+  // Keep the "Pricing" state active if:
+  // 1. Backend says it's pricing
+  // 2. OR Status just finished, and we are currently fetching the new summary
+  const isPricing = statusData?.status === "pricing_in_progress" || 
+                    (statusData?.status === "ready_for_review" && isFetching);
 
   return {
     summary,
     status: statusData?.status,
-    isProcessing,
-    isPricing,
+    isProcessing: statusData?.status === "processing",
+    isPricing, 
+    isSyncing: isFetching, // General syncing indicator
     isLoading: isLoading && !summary,
     refetchSummary: refetch
   };

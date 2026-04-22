@@ -28,3 +28,21 @@ export async function triggerReestimation(eventId: string) {
   });
   return res.json();
 }
+
+export async function initSale(userId: string, filename: string) {
+  const res = await fetch(`${API_BASE}/sales/init`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, filename }),
+  });
+  if (!res.ok) throw new Error("Failed to initialize sale");
+  return res.json(); // Returns { event_id, upload_url, gcs_uri }
+}
+
+export async function startProcessing(eventId: string) {
+  const res = await fetch(`${API_BASE}/sales/${eventId}/process`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error("Failed to start AI pipeline");
+  return res.json();
+}
