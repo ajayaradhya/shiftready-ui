@@ -46,3 +46,13 @@ export async function startProcessing(eventId: string) {
   if (!res.ok) throw new Error("Failed to start AI pipeline");
   return res.json();
 }
+
+export async function publishSale(eventId: string, moveOutDate: string) {
+  const res = await fetch(`${API_BASE}/sales/${eventId}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ move_out_date: moveOutDate }),
+  });
+  if (!res.ok) throw new Error("Failed to publish sale");
+  return res.json();
+}

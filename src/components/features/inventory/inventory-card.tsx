@@ -3,8 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchItem } from "@/lib/api";
 import { InventoryItem } from "@/lib/types";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, Loader2, AlertCircle, CheckCircle2, Sparkles, ChevronDown } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 
 interface InventoryCardProps {
   item: InventoryItem;
@@ -15,39 +16,64 @@ interface InventoryCardProps {
 export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
   const { eventId } = useParams() as { eventId: string };
   const queryClient = useQueryClient();
+  const [showReasoning, setShowReasoning] = useState(false);
 
-  // Step 1: The Cloud Sync Mutation
   const mutation = useMutation({
     mutationFn: (updates: Partial<InventoryItem>) => 
       patchItem(eventId, bundleId, item.id, updates),
     onSuccess: () => {
-      // Invalidate the summary to ensure bundle totals and AI reasoning stay fresh
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
     },
   });
 
-  // Step 2: Custom Number Sanitization
-  // This removes browser 'spinners' and prevents invalid scientific notation
+  const handleSave = (field: keyof InventoryItem, value: any) => {
+    if (item[field] !== value) {
+      mutation.mutate({ [field]: value });
+    }
+  };
+
   const handleNumberInput = (field: keyof InventoryItem, value: string) => {
-    // Regex: allow only digits and a single decimal point
     const cleanValue = value.replace(/[^0-9.]/g, "").slice(0, 7);
     const numValue = parseFloat(cleanValue);
-    
     if (!isNaN(numValue) && item[field] !== numValue) {
       mutation.mutate({ [field]: numValue });
     }
   };
 
+  // Logic for Trust Badges (Confidence)
+  const isLowConfidence = item.confidence < 0.75;
+
   return (
-    <div className={`bg-surface-container-high rounded-xl p-6 flex flex-col gap-6 relative transition-all group border border-transparent hover:border-primary/5 ${
-      mutation.isPending ? 'opacity-70' : 'opacity-100'
-    }`}>
+    <div className={`group relative flex flex-col gap-5 rounded-2xl p-6 transition-all duration-300 border ${
+      isLowConfidence 
+        ? 'bg-amber-500/[0.02] border-amber-500/10 hover:border-amber-500/30' 
+        : 'bg-surface-container-high border-transparent hover:border-primary/10'
+    } ${mutation.isPending ? 'opacity-70 grayscale-[0.5]' : 'opacity-100'}`}>
       
-      {/* Precision Timestamp: Mono font for technical accuracy */}
-      <div className="absolute top-4 right-4">
+      {/* Top Action Row: Badges & Timestamp */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isLowConfidence ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[9px] font-black uppercase tracking-widest border border-amber-500/20">
+              <AlertCircle size={10} />
+              Review Needed
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-tertiary/10 text-tertiary text-[9px] font-black uppercase tracking-widest border border-tertiary/20">
+              <CheckCircle2 size={10} />
+              Verified
+            </div>
+          )}
+          {mutation.isPending && (
+            <div className="flex items-center gap-1 text-[9px] text-primary font-bold uppercase animate-pulse">
+              <Loader2 size={10} className="animate-spin" /> Syncing
+            </div>
+          )}
+        </div>
+
         <button 
           onClick={() => onSeek(item.video_timestamp)}
-          className="flex items-center gap-2 px-3 py-1 bg-surface/40 hover:bg-surface-container-highest rounded border border-outline-variant/10 transition-all group/btn"
+          className="flex items-center gap-2 px-3 py-1 rounded bg-surface/30 hover:bg-surface-container-highest transition-colors border border-outline-variant/10 group/btn"
         >
           <Clock size={12} className="text-outline group-hover/btn:text-primary transition-colors" />
           <span className="text-[11px] font-mono font-bold text-on-surface tracking-tighter">
@@ -56,64 +82,82 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
         </button>
       </div>
 
-      {/* Identity Section: Name and Brand */}
-      <div className="flex flex-col gap-1 pr-24">
+      {/* Main Identity: Product & Brand */}
+      <div className="flex flex-col gap-1.5 pr-10">
         <input 
-          className="bg-transparent border-none text-lg font-bold text-on-surface w-full p-0 outline-none focus:text-primary transition-colors"
+          className="bg-transparent border-none text-xl font-bold text-on-surface w-full p-0 outline-none focus:text-primary placeholder:opacity-20"
           defaultValue={item.name}
-          onBlur={(e) => {
-            if (e.target.value !== item.name) {
-              mutation.mutate({ name: e.target.value });
-            }
-          }}
+          onBlur={(e) => handleSave('name', e.target.value)}
         />
-        <input 
-          className="bg-transparent border-none text-xs text-on-surface-variant uppercase tracking-[0.2em] font-black w-full p-0 outline-none focus:text-on-surface transition-colors"
-          defaultValue={item.brand || "UNBRANDED ASSET"}
-          onBlur={(e) => {
-            if (e.target.value !== item.brand) {
-              mutation.mutate({ brand: e.target.value });
-            }
-          }}
-        />
-      </div>
-
-      {/* Pricing Section: Understated Inputs */}
-      <div className="flex items-center gap-12 mt-2">
-        <div className="flex flex-col gap-1">
-          <span className="text-[9px] text-outline uppercase tracking-widest font-black">Original Retail</span>
-          <div className="flex items-center gap-1 border-b border-outline-variant/20 focus-within:border-primary transition-all pb-1">
-            <span className="text-xs text-outline/40 font-medium">$</span>
+        <div className="flex items-center gap-4">
+          <input 
+            className="bg-transparent border-none text-xs text-on-surface-variant uppercase tracking-[0.2em] font-black w-1/2 p-0 outline-none focus:text-on-surface"
+            defaultValue={item.brand || "UNKNOWN"}
+            onBlur={(e) => handleSave('brand', e.target.value)}
+          />
+          <div className="flex items-center gap-1.5 border-l border-outline-variant/20 pl-4">
+            <span className="text-[9px] text-outline font-black uppercase">Year:</span>
             <input 
               type="text"
               inputMode="numeric"
-              className="bg-transparent border-none p-0 text-sm font-bold text-on-surface w-20 outline-none focus:ring-0"
-              defaultValue={item.actual_original_price ?? item.predicted_original_price}
+              className="bg-transparent border-none p-0 text-xs font-bold text-on-surface-variant w-12 outline-none focus:text-primary"
+              defaultValue={item.actual_year_of_purchase ?? item.predicted_year_of_purchase ?? ""}
+              onBlur={(e) => handleNumberInput('actual_year_of_purchase', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing Grid */}
+      <div className="grid grid-cols-2 gap-8 py-2 border-t border-outline-variant/5">
+        <div className="flex flex-col gap-2">
+          <span className="text-[9px] text-outline uppercase tracking-[0.2em] font-black">Original Retail</span>
+          <div className="flex items-center gap-1 focus-within:text-primary transition-colors">
+            <span className="text-sm font-medium opacity-40">$</span>
+            <input 
+              type="text"
+              inputMode="numeric"
+              className="bg-transparent border-none p-0 text-base font-bold text-on-surface w-full outline-none"
+              defaultValue={item.actual_original_price ?? item.predicted_original_price ?? ""}
               onBlur={(e) => handleNumberInput('actual_original_price', e.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-[9px] text-tertiary uppercase tracking-widest font-black">Listing Value</span>
-          <div className="flex items-center gap-1 border-b border-tertiary/30 focus-within:border-tertiary transition-all pb-1">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] text-tertiary uppercase tracking-[0.2em] font-black">Listing Value</span>
+            {item.pricing_reasoning && (
+              <button 
+                onClick={() => setShowReasoning(!showReasoning)}
+                className="text-tertiary/40 hover:text-tertiary transition-colors"
+              >
+                <Sparkles size={12} />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
             <span className="text-lg font-black text-tertiary">$</span>
             <input 
               type="text"
               inputMode="numeric"
-              className="bg-transparent border-none p-0 text-xl font-black text-tertiary w-24 outline-none focus:ring-0"
-              defaultValue={item.actual_listing_price ?? item.predicted_listing_price}
+              className="bg-transparent border-none p-0 text-2xl font-black text-tertiary w-full outline-none"
+              defaultValue={item.actual_listing_price ?? item.predicted_listing_price ?? ""}
               onBlur={(e) => handleNumberInput('actual_listing_price', e.target.value)}
             />
           </div>
         </div>
       </div>
 
-      {/* Inline Feedback: Only shows for individual card syncs */}
-      {mutation.isPending && (
-        <div className="flex items-center gap-2 text-[9px] text-primary uppercase font-black tracking-widest animate-pulse">
-          <Loader2 size={10} className="animate-spin" /> 
-          Syncing to Monolith
+      {/* Expandable AI Reasoning */}
+      {showReasoning && item.pricing_reasoning && (
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 p-4 rounded-xl bg-surface/40 border border-tertiary/10">
+          <div className="flex items-start gap-3">
+            <Sparkles size={14} className="text-tertiary shrink-0 mt-0.5" />
+            <p className="text-[11px] leading-relaxed text-on-surface-variant font-medium">
+              {item.pricing_reasoning}
+            </p>
+          </div>
         </div>
       )}
     </div>

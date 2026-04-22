@@ -5,32 +5,41 @@ import { useInventory } from "@/hooks/use-inventory";
 import { VideoPreview } from "@/components/features/inventory/video-preview";
 import { InventoryCard } from "@/components/features/inventory/inventory-card";
 import { Header } from "@/components/ui/header";
-import { Package, Sparkles, Loader2, Database } from "lucide-react";
-import { triggerReestimation } from "@/lib/api";
+import { Package, Sparkles, Loader2, Database, Globe, ShieldCheck, Power, Send } from "lucide-react";
+import { publishSale, triggerReestimation } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 
 export default function InventoryReviewPage() {
   const { eventId } = useParams() as { eventId: string };
   const queryClient = useQueryClient();
-  
-  // Assumes useInventory returns isPricing = (status === 'pricing_in_progress' || (status === 'ready_for_review' && isFetching))
+
+  // 1. Hooks - Must remain at top level
   const { summary, isProcessing, isPricing, isLoading, status } = useInventory(eventId);
-  
   const activeMutations = useIsMutating();
 
   const reestimateMutation = useMutation({
     mutationFn: () => triggerReestimation(eventId),
     onSuccess: () => {
-      // Optimistic update to prevent flicker before next poll
+      // Optimistic cache update to trigger the loader immediately
       queryClient.setQueryData(["status", eventId], { status: "pricing_in_progress" });
     },
   });
 
+  const publishMutation = useMutation({
+    mutationFn: (date: string) => publishSale(eventId, date),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["status", eventId] });
+    },
+  });
+
   /**
-   * THE SEAMLESS GLOBAL THINKING STATE
-   * The overlay remains active until the final summary fetch completes.
+   * SEAMLESS GLOBAL LOADING LOGIC
+   * Blocks UI during: Initial scan, AI pricing pipeline, refetching summary, 
+   * or individual item auto-saves.
    */
   const isGlobalLoading = isProcessing || isPricing || reestimateMutation.isPending || activeMutations > 0;
+  const isLive = status === "live";
 
   if (isLoading && !summary) {
     return (
@@ -45,7 +54,7 @@ export default function InventoryReviewPage() {
 
   return (
     <div className="relative">
-      {/* UNIFIED GLOBAL LOADING SCREEN */}
+      {/* GLOBAL LOADING OVERLAY */}
       {isGlobalLoading && (
         <div className="fixed inset-0 z-[100] bg-surface/60 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-500">
           <div className="flex flex-col items-center gap-8 max-w-sm text-center">
@@ -82,14 +91,41 @@ export default function InventoryReviewPage() {
       )}
 
       <Header isProcessing={isGlobalLoading}>
-        {summary?.moveOutDate && (
-           <div className="flex flex-col items-start ml-6 leading-none border-l border-outline-variant/20 pl-6">
-              <span className="text-[9px] text-outline uppercase tracking-[0.3em] mb-1 font-bold">Move-out Deadline</span>
-              <span className="text-sm font-bold text-on-surface uppercase">
-                {new Date(summary.moveOutDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
-              </span>
-           </div>
-        )}
+        <div className="flex items-center gap-4 ml-6 border-l border-outline-variant/20 pl-6">
+          {/* Status Badge */}
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
+            isLive ? 'bg-tertiary/10 border-tertiary/20 text-tertiary' : 'bg-primary/10 border-primary/20 text-primary'
+          }`}>
+            {isLive ? <Globe size={12} /> : <ShieldCheck size={12} />}
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              {isLive ? "Live Listing" : "Draft Review"}
+            </span>
+          </div>
+
+          {/* Action Buttons: Toggle between Publish and Management */}
+          <div className="flex items-center gap-2">
+            {isLive ? (
+              <button 
+                onClick={() => {/* Implement un-publish logic */}}
+                className="flex items-center gap-2 px-4 py-1.5 bg-surface-container-highest hover:bg-error/10 hover:text-error rounded-md text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                <Power size={14} /> Unpublish
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  const date = summary?.moveOutDate || new Date().toISOString().split('T')[0];
+                  publishMutation.mutate(date);
+                }}
+                disabled={publishMutation.isPending}
+                className="flex items-center gap-2 px-4 py-1.5 bg-primary text-surface hover:opacity-90 rounded-md text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                {publishMutation.isPending ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
+                Publish Sale
+              </button>
+            )}
+          </div>
+        </div>
       </Header>
 
       <div className="flex h-[calc(100vh-64px)] w-full p-8 gap-12">
@@ -99,7 +135,7 @@ export default function InventoryReviewPage() {
           itemCount={totalItems} 
         />
 
-        {/* Floating Action Button */}
+        {/* Floating AI Trigger */}
         <div className="fixed bottom-12 right-12 z-[60]">
           <button 
             onClick={() => reestimateMutation.mutate()}
@@ -111,6 +147,7 @@ export default function InventoryReviewPage() {
           </button>
         </div>
 
+        {/* Catalog List */}
         <section className="flex-1 overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-12 pb-24">
           {summary?.bundles?.map((bundle) => (
             <div key={bundle.id} className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
