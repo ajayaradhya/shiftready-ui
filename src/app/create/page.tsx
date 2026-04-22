@@ -216,7 +216,7 @@ export default function InventoryReviewPage() {
                     key={item.id} 
                     item={item} 
                     bundleId={bundle.id}
-                    onSeek={(s) => {
+                    onSeek={(s:any) => {
                       const v = document.getElementById('inventory-video') as HTMLVideoElement;
                       if (v) { v.currentTime = s; v.play(); }
                     }} 
