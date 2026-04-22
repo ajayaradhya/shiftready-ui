@@ -1,14 +1,24 @@
 const API_BASE = "http://localhost:8000/api/v1";
 
 /**
- * UTILITY: Centralized fetch wrapper for cleaner error handling
+ * UTILITY: Centralized fetch wrapper.
+ * Ensures all errors are parsed for FastAPI 'detail' messages to avoid generic alerts.
  */
 async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
+
+  // If the response is 204 No Content (often for DELETE), return empty object as T
+  if (res.status === 204) {
+    return {} as T;
+  }
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    // Throwing the specific detail helps the UI show "Sale is already live" 
+    // instead of "API Request failed: 400"
     throw new Error(errorData.detail || `API Request failed: ${res.status}`);
   }
+
   return res.json();
 }
 
@@ -34,7 +44,9 @@ export async function initSale(userId: string, filename: string) {
 }
 
 export async function startProcessing(eventId: string) {
-  return apiRequest<any>(`${API_BASE}/sales/${eventId}/process`, { method: "POST" });
+  return apiRequest<any>(`${API_BASE}/sales/${eventId}/process`, { 
+    method: "POST" 
+  });
 }
 
 export async function triggerReestimation(eventId: string) {
@@ -51,6 +63,18 @@ export async function publishSale(eventId: string, moveOutDate: string) {
   });
 }
 
+export async function unpublishSale(eventId: string) {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/unpublish`, {
+    method: "POST",
+  });
+}
+
+export async function archiveSale(eventId: string) {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/archive`, {
+    method: "POST",
+  });
+}
+
 // --- Bundle Management (CRUD) ---
 
 export async function createBundle(eventId: string, name: string) {
@@ -62,18 +86,14 @@ export async function createBundle(eventId: string, name: string) {
 }
 
 export async function deleteBundle(eventId: string, bundleId: string) {
-  // Use apiRequest to ensure we catch 404s or permission issues on delete
-  return fetch(`${API_BASE}/sales/${eventId}/bundles/${bundleId}`, {
+  return apiRequest<any>(`${API_BASE}/sales/${eventId}/bundles/${bundleId}`, {
     method: "DELETE",
-  }).then((res) => {
-    if (!res.ok) throw new Error("Failed to delete bundle");
   });
 }
 
 // --- Item Management (CRUD) ---
 
 export async function createItem(eventId: string, bundleId: string, name: string) {
-  // Matches backend ItemCreateRequest defaults
   return apiRequest<{ item_id: string }>(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items`,
     {
@@ -106,9 +126,7 @@ export async function patchItem(
 }
 
 export async function deleteItem(eventId: string, bundleId: string, itemId: string) {
-  return fetch(`${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`, {
+  return apiRequest<any>(`${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`, {
     method: "DELETE",
-  }).then((res) => {
-    if (!res.ok) throw new Error("Failed to delete item");
   });
 }
