@@ -1,6 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL 
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1` 
-  : "http://localhost:8000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://shiftready-api-12644234558.australia-southeast1.run.app";
+const API_BASE = `${API_URL}/api/v1`;
+
+console.log("Monolith Initialized at:", API_BASE); // Debugging line
 
 /**
  * UTILITY: Centralized fetch wrapper.
