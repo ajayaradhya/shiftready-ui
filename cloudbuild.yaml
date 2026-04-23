@@ -1,0 +1,48 @@
+steps:
+  # 1. Build the container image
+  # We pass the backend URL as a build-arg so Next.js can bake it in
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '--build-arg', 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}',
+      '-t', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA', 
+      '.'
+    ]
+
+  # 2. Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 
+      '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
+    ]
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
+      - '--region'
+      - '${_LOCATION}'
+      - '--port'
+      - '3000'
+      - '--allow-unauthenticated'
+      # Using the same service account pattern for consistency
+      - '--service-account'
+      - 'shiftready-backend@$PROJECT_ID.iam.gserviceaccount.com'
+
+images:
+  - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+
+substitutions:
+  _LOCATION: australia-southeast1
+  _REPO_NAME: shiftready-repo
+  _SERVICE_NAME: shiftready-ui
+  _NEXT_PUBLIC_API_URL: https://shiftready-api-12644234558.australia-southeast1.run.app
