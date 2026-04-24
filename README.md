@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌐 ShiftReady UI \| Relocation Marketplace
 
-## Getting Started
+The **ShiftReady UI** is the frontend engine for an AI-driven relocation
+marketplace. It enables users to upload residential walkthroughs, review
+AI-extracted inventory, and manage listing prices for the Sydney resale
+market.
 
-First, run the development server:
+------------------------------------------------------------------------
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+-   **AI Inventory Dashboard**\
+    Interactive review system for assets identified by Gemini 3.1 Flash.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+-   **Zero-Blink Processing UI**\
+    Real-time polling and state transitions for background vision
+    pipelines.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+-   **Urgency Pricing Cockpit**\
+    Visualization of market-grounded price recommendations based on
+    move-out deadlines.
 
-## Learn More
+-   **Responsive Inventory Management**\
+    Mobile-first design for on-site room-by-room inventory verification.
 
-To learn more about Next.js, take a look at the following resources:
+------------------------------------------------------------------------
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠 Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+-   **Framework:** Next.js (App Router, Standalone Mode)\
+-   **Styling:** Tailwind CSS & Lucide Icons\
+-   **Deployment:** Google Cloud Run (australia-southeast1)\
+-   **CI/CD:** Google Cloud Build (triggered on `master` branch push)
 
-## Deploy on Vercel
+------------------------------------------------------------------------
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Local Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 1. Prerequisites
+
+-   Node.js 20+
+-   Running instance of the ShiftReady Backend
+
+### 2. Environment Configuration
+
+Create a `.env.local` file in the root directory:
+
+    NEXT_PUBLIC_API_URL=http://localhost:8000
+
+### 3. Installation
+
+    npm install
+    npm run dev
+
+Access the app at: http://localhost:3000
+
+------------------------------------------------------------------------
+
+## 🚀 CI/CD Pipeline (Google Cloud)
+
+This repository is configured for automated deployment via **Google
+Cloud Build**.
+
+### Build Logic
+
+-   **Trigger:** Automatic on push to `master`
+-   **Environment Injection:**\
+    `NEXT_PUBLIC_API_URL` is passed as a Docker `--build-arg` and baked
+    into the client bundle
+-   **Containerization:**\
+    Multi-stage Dockerfile producing a lightweight standalone build
+-   **Rollout:**\
+    Deployment to Cloud Run with automatic traffic migration
+
+### Production Environment Variable
+
+To change the API target, update the `_NEXT_PUBLIC_API_URL` substitution
+variable in the Cloud Build trigger.
+
+**Current Production API:**\
+https://shiftready-api-12644234558.australia-southeast1.run.app
+
+------------------------------------------------------------------------
+
+## 📂 Project Structure
+
+    app/            # Next.js App Router (pages & layouts)
+    components/     # Shared UI components (inventory cards, uploaders)
+    lib/            # API client (FastAPI handshake logic)
+    public/         # Static assets
+    next.config.js  # Configured with output: 'standalone'
+    Dockerfile      # Multi-stage production build
+    cloudbuild.yaml # GCP CI/CD definition
+
+------------------------------------------------------------------------
+
+## 🛡 License
+
+**Internal Proprietary --- ShiftReady (2026)**
