@@ -1,94 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { initSale, startProcessing } from "@/lib/api";
-import {
-  ACCEPTED_VIDEO_TYPES,
-  MAX_VIDEO_SIZE_BYTES,
-  MAX_VIDEO_SIZE_MB,
-} from "@/lib/constants";
-import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
-import { Upload, Sparkles, Video, Loader2 } from "lucide-react";
+import { useUpload } from "@/hooks/use-upload";
+import { ACCEPTED_VIDEO_TYPES } from "@/lib/constants";
+import { Upload } from "lucide-react";
+import { UploadStatusIcon } from "@/components/features/create/upload-status-icon";
+import { UploadProgressBar } from "@/components/features/create/upload-progress-bar";
+import { RelocationSteps } from "@/components/features/create/relocation-steps";
 
 export default function CreateSalePage() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const [status, setStatus] = useState<"idle" | "uploading" | "processing">("idle");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileError, setFileError] = useState<string | null>(null);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    setFileError(null);
-
-    if (!(ACCEPTED_VIDEO_TYPES as readonly string[]).includes(file.type)) {
-      setFileError("Unsupported format. Please use MP4, MOV, or WebM.");
-      return;
-    }
-    if (file.size > MAX_VIDEO_SIZE_BYTES) {
-      setFileError(`File too large. Maximum size is ${MAX_VIDEO_SIZE_MB}MB.`);
-      return;
-    }
-
-    try {
-      setStatus("uploading");
-
-      // 1. Handshake with backend — user.uid is the authenticated seller identity
-      const { event_id, upload_url } = await initSale(user.uid, file.name);
-
-      // 2. Upload to GCS via signed URL with real XHR progress
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", upload_url);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setUploadProgress(Math.round((e.loaded / e.total) * 100));
-          }
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            setUploadProgress(100);
-            resolve();
-          } else {
-            reject(new Error(`GCS upload failed (${xhr.status})`));
-          }
-        };
-        xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.send(file);
-      });
-
-      // 3. Trigger Stage 1 AI extraction
-      setStatus("processing");
-      await startProcessing(event_id);
-
-      setTimeout(() => {
-        router.push(`/inventory/${event_id}`);
-      }, 1500);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Upload failed. Please try again.";
-      setFileError(message);
-      toast.error(message);
-      setStatus("idle");
-      setUploadProgress(0);
-    }
-  };
+  const { status, uploadProgress, fileError, handleFileUpload } = useUpload();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] bg-surface">
       <div className="w-full max-w-xl bg-surface-container-high rounded-[2rem] p-12 border border-outline-variant/10 shadow-2xl flex flex-col items-center gap-8 text-center animate-in fade-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary">
-          {status === "processing" ? (
-            <Sparkles className="animate-pulse" size={40} />
-          ) : (
-            <Video size={40} />
-          )}
-        </div>
+        <UploadStatusIcon status={status} />
 
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-on-surface uppercase tracking-tighter">
@@ -125,43 +50,10 @@ export default function CreateSalePage() {
             </div>
           </label>
         ) : (
-          <div className="w-full mt-4 space-y-6">
-            <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-500 ease-out"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-              <Loader2 className="animate-spin" size={14} />
-              {status}... {uploadProgress}%
-            </div>
-          </div>
+          <UploadProgressBar status={status} progress={uploadProgress} />
         )}
 
-        {/* Relocation Timeline Tracker */}
-        <div className="mt-12 flex items-center gap-4 opacity-20">
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[8px] font-bold">
-              1
-            </div>
-            <span className="text-[7px] font-black uppercase tracking-widest">Record</span>
-          </div>
-          <div className="w-8 h-px bg-current" />
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[8px] font-bold">
-              2
-            </div>
-            <span className="text-[7px] font-black uppercase tracking-widest">Upload</span>
-          </div>
-          <div className="w-8 h-px bg-current" />
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[8px] font-bold">
-              3
-            </div>
-            <span className="text-[7px] font-black uppercase tracking-widest">Sell</span>
-          </div>
-        </div>
+        <RelocationSteps />
       </div>
     </div>
   );

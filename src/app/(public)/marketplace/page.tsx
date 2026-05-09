@@ -1,56 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Search, MapPin, Tag, Package } from "lucide-react";
+import { Search, MapPin, Package } from "lucide-react";
 import { searchMarketplace } from "@/lib/api";
-import type { MarketplaceItem } from "@/lib/types";
+import { MarketplaceItemCard } from "@/components/features/marketplace/marketplace-item-card";
 
 const SYDNEY_SUBURBS = [
   "Waterloo", "Surry Hills", "Newtown", "Glebe", "Pyrmont",
   "Chippendale", "Redfern", "Alexandria", "Zetland", "Erskineville",
   "Marrickville", "Balmain", "Rozelle", "Leichhardt", "Annandale",
 ];
-
-function ItemCard({ item }: { item: MarketplaceItem }) {
-  const router = useRouter();
-
-  return (
-    <button
-      onClick={() => router.push(`/marketplace/${item.eventId}`)}
-      className="group text-left rounded-2xl bg-surface-container border border-outline-variant/10 hover:border-outline-variant/30 hover:bg-surface-container-high transition-all p-5 flex flex-col gap-3"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-on-surface truncate">{item.name}</p>
-          <p className="text-xs text-outline mt-0.5">{item.brand}</p>
-        </div>
-        {item.price != null && (
-          <span className="shrink-0 text-sm font-black text-tertiary">
-            ${item.price.toFixed(0)}
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest font-black text-outline bg-surface-container-high px-2 py-0.5 rounded-full">
-          {item.condition}
-        </span>
-        {item.bundleName && (
-          <span className="text-[10px] uppercase tracking-widest text-outline/70 flex items-center gap-1">
-            <Tag size={9} />
-            {item.bundleName}
-          </span>
-        )}
-      </div>
-
-      <p className="text-[10px] uppercase tracking-widest text-primary group-hover:underline mt-auto">
-        View sale →
-      </p>
-    </button>
-  );
-}
 
 export default function MarketplacePage() {
   const [searchInput, setSearchInput] = useState("");
@@ -62,7 +22,8 @@ export default function MarketplacePage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["marketplace", submittedSearch.q, submittedSearch.suburb],
-    queryFn: () => searchMarketplace(submittedSearch.q || undefined, submittedSearch.suburb || undefined),
+    queryFn: () =>
+      searchMarketplace(submittedSearch.q || undefined, submittedSearch.suburb || undefined),
     staleTime: 60_000,
   });
 
@@ -86,10 +47,12 @@ export default function MarketplacePage() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-3 mb-8 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
+          <Search
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none"
+          />
           <input
             type="text"
             placeholder="Search items…"
@@ -101,7 +64,10 @@ export default function MarketplacePage() {
         </div>
 
         <div className="relative">
-          <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
+          <MapPin
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none"
+          />
           <select
             value={suburb}
             onChange={(e) => setSuburb(e.target.value)}
@@ -109,7 +75,9 @@ export default function MarketplacePage() {
           >
             <option value="">All suburbs</option>
             {SYDNEY_SUBURBS.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
@@ -122,7 +90,6 @@ export default function MarketplacePage() {
         </button>
       </div>
 
-      {/* Results */}
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -158,7 +125,7 @@ export default function MarketplacePage() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {data.items.map((item) => (
-              <ItemCard key={`${item.eventId}-${item.id}`} item={item} />
+              <MarketplaceItemCard key={`${item.eventId}-${item.id}`} item={item} />
             ))}
           </div>
         </>
