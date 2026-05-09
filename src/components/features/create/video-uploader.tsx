@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileVideo } from "lucide-react";
+import { toast } from "sonner";
 import { initSale, startProcessing } from "@/lib/api";
 
 export function VideoUploader() {
@@ -51,9 +52,8 @@ export function VideoUploader() {
       router.push(`/inventory/${event_id}`);
 
     } catch (error) {
-      console.error("Upload failed:", error);
+      toast.error(error instanceof Error ? error.message : "Upload failed. Check backend/CORS settings.");
       setStatus("idle");
-      alert("Upload failed. Check backend/CORS settings.");
     }
   };
 

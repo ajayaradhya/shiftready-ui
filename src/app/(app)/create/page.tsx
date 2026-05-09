@@ -9,6 +9,7 @@ import {
   MAX_VIDEO_SIZE_MB,
 } from "@/lib/constants";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import { Upload, Sparkles, Video, Loader2 } from "lucide-react";
 
 export default function CreateSalePage() {
@@ -39,21 +40,27 @@ export default function CreateSalePage() {
       // 1. Handshake with backend — user.uid is the authenticated seller identity
       const { event_id, upload_url } = await initSale(user.uid, file.name);
 
-      // 2. Upload to GCS via signed URL
-      // TODO(Phase 2): Replace with XHR for real progress tracking
-      const uploadInterval = setInterval(() => {
-        setUploadProgress((prev) => (prev >= 95 ? 95 : prev + 2));
-      }, 150);
-
-      const uploadRes = await fetch(upload_url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
+      // 2. Upload to GCS via signed URL with real XHR progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", upload_url);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadProgress(100);
+            resolve();
+          } else {
+            reject(new Error(`GCS upload failed (${xhr.status})`));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.send(file);
       });
-
-      clearInterval(uploadInterval);
-      if (!uploadRes.ok) throw new Error("GCS Upload failed");
-      setUploadProgress(100);
 
       // 3. Trigger Stage 1 AI extraction
       setStatus("processing");
@@ -66,6 +73,7 @@ export default function CreateSalePage() {
       const message =
         err instanceof Error ? err.message : "Upload failed. Please try again.";
       setFileError(message);
+      toast.error(message);
       setStatus("idle");
       setUploadProgress(0);
     }
