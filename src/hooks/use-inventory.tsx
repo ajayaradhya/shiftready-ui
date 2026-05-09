@@ -1,69 +1,84 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSummary, getStatus } from "@/lib/api";
 import { SaleSummary } from "@/lib/types";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
+import { useWebSocket, type WsMessage } from "./use-websocket";
+import { useAuth } from "@/contexts/auth-context";
+import { FALLBACK_POLLING_MS } from "@/lib/constants";
 
-/**
- * HOOK: useInventory
- * Manages the lifecycle of a ShiftReady sale. 
- * Orchestrates background AI polling and data refetching.
- */
 export function useInventory(eventId: string) {
+  const { idToken } = useAuth();
+  const queryClient = useQueryClient();
+
   // Ref tracks previous status purely for transition detection inside useEffect.
   // Never read during render — that would violate React 19 ref rules.
   const lastStatus = useRef<string | null | undefined>(null);
 
-  // 1. STATUS POLLING
-  // Monitors the AI pipeline (Walkthrough extraction or Gemini Pricing)
+  // 1. WEBSOCKET STATUS STREAM
+  // Receives real-time STATUS_UPDATE frames from the backend pipeline notifier.
+  const handleWsMessage = useCallback(
+    (msg: WsMessage) => {
+      if (msg.type === "STATUS_UPDATE" && msg.status) {
+        queryClient.setQueryData(["status", eventId], { status: msg.status });
+      }
+    },
+    [eventId, queryClient]
+  );
+
+  const { isConnected } = useWebSocket(eventId, idToken, handleWsMessage);
+
+  // 2. STATUS QUERY
+  // Fetches the authoritative status on mount and falls back to polling when the
+  // WebSocket is disconnected (e.g. network drop, backend restart).
   const { data: statusData, error: statusError } = useQuery({
     queryKey: ["status", eventId],
     queryFn: () => getStatus(eventId),
     enabled: !!eventId,
     refetchInterval: (query) => {
+      if (isConnected) return false; // WS delivers updates; no polling needed
       const s = query.state.data?.status ?? "idle";
-      // Polling is active only during AI-heavy workloads
-      return ["processing", "pricing_in_progress"].includes(s) ? 1500 : false;
+      return ["processing", "pricing_in_progress"].includes(s)
+        ? FALLBACK_POLLING_MS
+        : false;
     },
   });
 
   const currentStatus = statusData?.status;
 
-  // 2. SUMMARY DATA
-  // Fetches the full hierarchical inventory (Bundles -> Items)
-  const { 
-    data: summary, 
-    isLoading, 
-    refetch, 
-    isFetching 
+  // 3. SUMMARY DATA
+  // Fetches the full hierarchical inventory (Bundles → Items).
+  const {
+    data: summary,
+    isLoading,
+    refetch,
+    isFetching,
   } = useQuery<SaleSummary>({
     queryKey: ["summary", eventId],
     queryFn: () => getSummary(eventId),
     enabled: !!eventId,
-    refetchOnWindowFocus: false, 
-    staleTime: 1000 * 60 * 5, // 5 min cache for static inventory edits
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
   });
 
-  /**
-   * AUTOMATIC SYNC LOGIC
-   * Triggers a full inventory refetch the moment Gemini finishes its analysis.
-   */
+  // AUTOMATIC SYNC LOGIC
+  // Triggers a full inventory refetch the moment Gemini finishes its analysis.
   useEffect(() => {
-    const isTransitioningFromBusyToReady = 
-      (lastStatus.current === "processing" || lastStatus.current === "pricing_in_progress") &&
-      (currentStatus === "ready_for_review" || currentStatus === "live" || currentStatus === "failed");
+    const isTransitioningFromBusyToReady =
+      (lastStatus.current === "processing" ||
+        lastStatus.current === "pricing_in_progress") &&
+      (currentStatus === "ready_for_review" ||
+        currentStatus === "live" ||
+        currentStatus === "failed");
 
     if (isTransitioningFromBusyToReady) {
       refetch();
     }
-    
-    // Update ref for the next render cycle
+
     lastStatus.current = currentStatus;
   }, [currentStatus, refetch]);
 
-  // Derived UI Flags — driven by currentStatus only.
-  // isSyncing (isFetching) covers the brief transition window after status changes.
   const isPricing = currentStatus === "pricing_in_progress";
   const isProcessing = currentStatus === "processing";
 
@@ -72,21 +87,23 @@ export function useInventory(eventId: string) {
     summary,
     status: currentStatus,
     error: statusError,
-    
+
     // AI Pipeline Flags
     isProcessing,
-    isPricing, 
+    isPricing,
     isFailed: currentStatus === "failed",
-    
+
     // Global UI States
-    isSyncing: isFetching, 
+    isSyncing: isFetching,
     isLoading: isLoading && !summary,
     refetchSummary: refetch,
-    
+
     // Marketplace Flags
     isLive: currentStatus === "live" || currentStatus === "partially_sold",
     isDraft: currentStatus === "ready_for_review",
     isArchived: currentStatus === "archived",
-    isSoldOut: currentStatus === "partially_sold" && summary?.bundles?.every(b => b.items.length === 0)
+    isSoldOut:
+      currentStatus === "partially_sold" &&
+      summary?.bundles?.every((b) => b.items.length === 0),
   };
 }
