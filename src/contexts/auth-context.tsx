@@ -32,6 +32,7 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
+  idToken: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -76,19 +77,22 @@ const DEV_USER: AuthUser = {
   photoURL: null,
 };
 
+const DEV_TOKEN = `dev_${DEV_USER_ID}`;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Lazy initializer: in dev-bypass mode the user and loading state are known
   // synchronously — avoids calling setState inside a useEffect body.
   const [user, setUser] = useState<AuthUser | null>(() =>
     isFirebaseConfigured ? null : DEV_USER
   );
+  const [idToken, setIdToken] = useState<string | null>(() =>
+    isFirebaseConfigured ? null : DEV_TOKEN
+  );
   const [loading, setLoading] = useState<boolean>(isFirebaseConfigured);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
-      // Dev-bypass: set module-level token so api.ts includes it in requests.
-      // Matches the backend's dev_ prefix bypass (no K_SERVICE env var).
-      _setIdToken(`dev_${DEV_USER_ID}`);
+      _setIdToken(DEV_TOKEN);
       return;
     }
 
@@ -98,9 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
         _setIdToken(token);
+        setIdToken(token);
         setUser(toAuthUser(firebaseUser));
       } else {
         _setIdToken(null);
+        setIdToken(null);
         setUser(null);
       }
       setLoading(false);
@@ -132,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await firebaseSignOut(auth);
     }
     _setIdToken(null);
+    setIdToken(null);
     setUser(null);
   }, []);
 
@@ -149,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithGoogle, signOut, register }}>
+    <AuthContext.Provider value={{ user, idToken, loading, signIn, signInWithGoogle, signOut, register }}>
       {children}
     </AuthContext.Provider>
   );
