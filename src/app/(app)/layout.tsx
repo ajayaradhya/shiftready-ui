@@ -33,9 +33,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-xl focus:text-xs focus:font-black focus:uppercase focus:tracking-widest"
+      >
+        Skip to content
+      </a>
       <Sidebar />
       <Header />
-      <main className="pl-64 pt-16 min-h-screen relative">{children}</main>
+      <main id="main-content" className="pt-16 pl-0 md:pl-20 min-h-screen relative">
+        {children}
+      </main>
     </>
   );
 }
