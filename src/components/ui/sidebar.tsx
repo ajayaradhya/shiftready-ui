@@ -13,14 +13,17 @@ import { usePathname } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useState } from "react";
+import { isEnabled } from "@/lib/feature-flags";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Box, label: "Inventory", href: "/create" },
-  { icon: ShoppingBag, label: "Marketplace", href: "/marketplace" },
-  { icon: CreditCard, label: "Finances", href: "#" },
-  { icon: Headphones, label: "Concierge", href: "#" },
+const baseNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", flag: null },
+  { icon: Box, label: "Inventory", href: "/create", flag: null },
+  { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", flag: null },
+  { icon: CreditCard, label: "Finances", href: "#", flag: "FINANCES_NAV" as const },
+  { icon: Headphones, label: "Concierge", href: "#", flag: "CONCIERGE_NAV" as const },
 ];
+
+const navItems = baseNavItems.filter((item) => !item.flag || isEnabled(item.flag));
 
 function NavItem({
   icon: Icon,

@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "inventory": "Inventario",
+    "marketplace": "Mercado",
+    "finances": "Finanzas",
+    "concierge": "Conserje",
+    "openMenu": "Abrir menú de navegación"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "createAccount": "Crear cuenta",
+    "signingIn": "Iniciando sesión...",
+    "creatingAccount": "Creando cuenta...",
+    "continueWithGoogle": "Continuar con Google",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "fullName": "Nombre completo",
+    "noAccount": "¿No tienes cuenta?",
+    "createOne": "Crear una",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "signedInAs": "Conectado como",
+    "tagline": "Inicia sesión para gestionar tu mudanza",
+    "registerTagline": "Crea tu cuenta para empezar a vender"
+  },
+  "dashboard": {
+    "title": "Mis ventas",
+    "subtitle": "Gestiona tus ventas de mudanza de principio a fin.",
+    "newSale": "Nueva venta",
+    "noSales": "Sin ventas aún",
+    "startFirstSale": "Inicia tu primera venta",
+    "loadingError": "Error al cargar las ventas. Por favor recarga."
+  },
+  "inventory": {
+    "reAnalysePrices": "Re-analizar precios",
+    "endOfCatalog": "Fin del catálogo",
+    "publishSale": "Publicar venta",
+    "unpublish": "Despublicar",
+    "addBundle": "Agregar paquete",
+    "addManualAsset": "Agregar activo manual",
+    "assetsFound": "{count} activos encontrados",
+    "deleteRoom": "Eliminar habitación",
+    "deleteRoomDesc": "\"{name}\" y todos sus artículos serán eliminados permanentemente.",
+    "deleteItem": "¿Eliminación permanente?",
+    "deleteItemDesc": "\"{name}\" será eliminado permanentemente y no podrá recuperarse.",
+    "unpublishTitle": "¿Despublicar venta?",
+    "unpublishDesc": "Esta publicación será eliminada del mercado de inmediato.",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "liveStatus": "Publicación activa",
+    "draftStatus": "Revisión de borrador"
+  },
+  "marketplace": {
+    "title": "Mercado",
+    "searchPlaceholder": "Buscar artículos...",
+    "suburbFilter": "Filtrar por suburbio",
+    "noResults": "No se encontraron artículos",
+    "bundleDiscount": "{pct}% descuento en paquete"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "authenticating": "Autenticando...",
+    "skipToContent": "Saltar al contenido",
+    "closeMenu": "Cerrar navegación",
+    "notifications": "Notificaciones",
+    "userMenu": "Menú de usuario para {name}"
+  },
+  "errors": {
+    "serverError": "No se pudo contactar el servidor. Reintentando…",
+    "requestFailed": "La solicitud falló",
+    "actionFailed": "La acción falló"
+  }
+}
