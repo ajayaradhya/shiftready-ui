@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useInventory } from "@/hooks/use-inventory";
 import { VideoPreview } from "@/components/features/inventory/video-preview";
@@ -11,11 +11,12 @@ import {
   ShieldCheck, Power, Send, Plus, Trash2, 
   PlusCircle, X, Check 
 } from "lucide-react";
-import { 
-  publishSale, unpublishSale, triggerReestimation, 
-  createBundle, deleteBundle, createItem 
+import {
+  publishSale, unpublishSale, triggerReestimation,
+  createBundle, deleteBundle, createItem
 } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function InventoryReviewPage() {
   const { eventId } = useParams() as { eventId: string };
@@ -28,14 +29,22 @@ export default function InventoryReviewPage() {
   const [isConfirmingUnpublish, setIsConfirmingUnpublish] = useState(false);
 
   // 2. Data Fetching
-  const { summary, isProcessing, isPricing, isLoading, status, isLive } = useInventory(eventId);
+  const { summary, isProcessing, isPricing, isLoading, status, isLive, error } = useInventory(eventId);
   const activeMutations = useIsMutating();
+
+  useEffect(() => {
+    if (error) toast.error("Could not reach the server. Retrying…");
+  }, [error]);
 
   // 3. Mutations
   const addBundleMutation = useMutation({
     mutationFn: (name: string) => createBundle(eventId, name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      setIsAddingBundle(false);
+      setNewBundleName("");
+    },
+    onError: () => {
       setIsAddingBundle(false);
       setNewBundleName("");
     },
@@ -47,6 +56,7 @@ export default function InventoryReviewPage() {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       setBundleToDelete(null);
     },
+    onError: () => setBundleToDelete(null),
   });
 
   const addItemMutation = useMutation({
@@ -59,6 +69,7 @@ export default function InventoryReviewPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });
+      toast.success("Sale is now live!");
     },
   });
 
@@ -68,7 +79,9 @@ export default function InventoryReviewPage() {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });
       setIsConfirmingUnpublish(false);
+      toast.success("Sale unpublished.");
     },
+    onError: () => setIsConfirmingUnpublish(false),
   });
 
   const reestimateMutation = useMutation({
