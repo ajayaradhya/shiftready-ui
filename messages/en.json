@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "marketplace": "Marketplace",
+    "finances": "Finances",
+    "concierge": "Concierge",
+    "openMenu": "Open navigation menu"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "createAccount": "Create Account",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "continueWithGoogle": "Continue with Google",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "noAccount": "No account?",
+    "createOne": "Create one",
+    "haveAccount": "Already have an account?",
+    "signedInAs": "Signed in as",
+    "tagline": "Sign in to manage your move",
+    "registerTagline": "Create your account to start selling"
+  },
+  "dashboard": {
+    "title": "My Sales",
+    "subtitle": "Manage your relocation sales from start to live.",
+    "newSale": "New Sale",
+    "noSales": "No sales yet",
+    "startFirstSale": "Start your first sale",
+    "loadingError": "Failed to load sales. Please refresh."
+  },
+  "inventory": {
+    "reAnalysePrices": "Re-Analyse Prices",
+    "endOfCatalog": "End of Catalog",
+    "publishSale": "Publish Sale",
+    "unpublish": "Unpublish",
+    "addBundle": "Add Bundle",
+    "addManualAsset": "Add Manual Asset",
+    "assetsFound": "{count} Assets Found",
+    "deleteRoom": "Delete Room",
+    "deleteRoomDesc": "\"{name}\" and all its items will be permanently deleted.",
+    "deleteItem": "Permanent Removal?",
+    "deleteItemDesc": "\"{name}\" will be permanently deleted and cannot be recovered.",
+    "unpublishTitle": "Unpublish Sale?",
+    "unpublishDesc": "This listing will be removed from the marketplace immediately.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "liveStatus": "Live Listing",
+    "draftStatus": "Draft Review"
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "searchPlaceholder": "Search items...",
+    "suburbFilter": "Filter by suburb",
+    "noResults": "No items found",
+    "bundleDiscount": "{pct}% bundle discount"
+  },
+  "common": {
+    "loading": "Loading...",
+    "authenticating": "Authenticating...",
+    "skipToContent": "Skip to content",
+    "closeMenu": "Close navigation",
+    "notifications": "Notifications",
+    "userMenu": "User menu for {name}"
+  },
+  "errors": {
+    "serverError": "Could not reach the server. Retrying…",
+    "requestFailed": "Request failed",
+    "actionFailed": "Action failed"
+  }
+}
