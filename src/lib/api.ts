@@ -1,24 +1,21 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://shiftready-api-12644234558.australia-southeast1.run.app";
+import type { SaleSummary, InventoryItem } from "./types";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 const API_BASE = `${API_URL}/api/v1`;
 
-console.log("Monolith Initialized at:", API_BASE); // Debugging line
+type EmptyResponse = Record<string, never>;
 
-/**
- * UTILITY: Centralized fetch wrapper.
- * Ensures all errors are parsed for FastAPI 'detail' messages to avoid generic alerts.
- */
+export type PatchItemPayload = Partial<InventoryItem>;
+
 async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
 
-  // If the response is 204 No Content (often for DELETE), return empty object as T
   if (res.status === 204) {
     return {} as T;
   }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    // Throwing the specific detail helps the UI show "Sale is already live" 
-    // instead of "API Request failed: 400"
     throw new Error(errorData.detail || `API Request failed: ${res.status}`);
   }
 
@@ -27,15 +24,18 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
 
 // --- Sale Core Operations ---
 
-export async function getSummary(eventId: string) {
-  return apiRequest<any>(`${API_BASE}/sales/${eventId}/summary`);
+export async function getSummary(eventId: string): Promise<SaleSummary> {
+  return apiRequest<SaleSummary>(`${API_BASE}/sales/${eventId}/summary`);
 }
 
-export async function getStatus(eventId: string) {
+export async function getStatus(eventId: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/status`);
 }
 
-export async function initSale(userId: string, filename: string) {
+export async function initSale(
+  userId: string,
+  filename: string
+): Promise<{ event_id: string; upload_url: string; gcs_uri: string }> {
   return apiRequest<{ event_id: string; upload_url: string; gcs_uri: string }>(
     `${API_BASE}/sales/init`,
     {
@@ -46,19 +46,22 @@ export async function initSale(userId: string, filename: string) {
   );
 }
 
-export async function startProcessing(eventId: string) {
-  return apiRequest<any>(`${API_BASE}/sales/${eventId}/process`, { 
-    method: "POST" 
+export async function startProcessing(eventId: string): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`${API_BASE}/sales/${eventId}/process`, {
+    method: "POST",
   });
 }
 
-export async function triggerReestimation(eventId: string) {
+export async function triggerReestimation(eventId: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/estimate`, {
     method: "POST",
   });
 }
 
-export async function publishSale(eventId: string, moveOutDate: string) {
+export async function publishSale(
+  eventId: string,
+  moveOutDate: string
+): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/publish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -66,13 +69,13 @@ export async function publishSale(eventId: string, moveOutDate: string) {
   });
 }
 
-export async function unpublishSale(eventId: string) {
+export async function unpublishSale(eventId: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/unpublish`, {
     method: "POST",
   });
 }
 
-export async function archiveSale(eventId: string) {
+export async function archiveSale(eventId: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/archive`, {
     method: "POST",
   });
@@ -80,7 +83,10 @@ export async function archiveSale(eventId: string) {
 
 // --- Bundle Management (CRUD) ---
 
-export async function createBundle(eventId: string, name: string) {
+export async function createBundle(
+  eventId: string,
+  name: string
+): Promise<{ bundle_id: string }> {
   return apiRequest<{ bundle_id: string }>(`${API_BASE}/sales/${eventId}/bundles`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -88,15 +94,23 @@ export async function createBundle(eventId: string, name: string) {
   });
 }
 
-export async function deleteBundle(eventId: string, bundleId: string) {
-  return apiRequest<any>(`${API_BASE}/sales/${eventId}/bundles/${bundleId}`, {
-    method: "DELETE",
-  });
+export async function deleteBundle(
+  eventId: string,
+  bundleId: string
+): Promise<EmptyResponse> {
+  return apiRequest<EmptyResponse>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}`,
+    { method: "DELETE" }
+  );
 }
 
 // --- Item Management (CRUD) ---
 
-export async function createItem(eventId: string, bundleId: string, name: string) {
+export async function createItem(
+  eventId: string,
+  bundleId: string,
+  name: string
+): Promise<{ item_id: string }> {
   return apiRequest<{ item_id: string }>(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items`,
     {
@@ -116,8 +130,8 @@ export async function patchItem(
   eventId: string,
   bundleId: string,
   itemId: string,
-  updates: any
-) {
+  updates: PatchItemPayload
+): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`,
     {
@@ -128,8 +142,13 @@ export async function patchItem(
   );
 }
 
-export async function deleteItem(eventId: string, bundleId: string, itemId: string) {
-  return apiRequest<any>(`${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`, {
-    method: "DELETE",
-  });
+export async function deleteItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<EmptyResponse> {
+  return apiRequest<EmptyResponse>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`,
+    { method: "DELETE" }
+  );
 }

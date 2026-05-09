@@ -2,22 +2,34 @@
 
 import { Sparkles } from "lucide-react";
 
-export function CardPricingGrid({ 
-  retail, 
-  listing, 
-  onRetailUpdate, 
-  onListingUpdate, 
-  hasReasoning, 
-  isReasoningOpen, 
-  onToggleReasoning 
-}: any) {
+interface CardPricingGridProps {
+  retail: number | undefined;
+  listing: number | undefined;
+  onRetailUpdate: (value: string) => void;
+  onListingUpdate: (value: string) => void;
+  hasReasoning: boolean;
+  isReasoningOpen: boolean;
+  onToggleReasoning: () => void;
+}
+
+export function CardPricingGrid({
+  retail,
+  listing,
+  onRetailUpdate,
+  onListingUpdate,
+  hasReasoning,
+  isReasoningOpen,
+  onToggleReasoning,
+}: CardPricingGridProps) {
   return (
     <div className="grid grid-cols-2 gap-8 py-2 border-t border-outline-variant/5">
       <div className="flex flex-col gap-2">
-        <span className="text-[9px] text-outline uppercase tracking-[0.2em] font-black">Original Retail</span>
+        <span className="text-[9px] text-outline uppercase tracking-[0.2em] font-black">
+          Original Retail
+        </span>
         <div className="flex items-center gap-1">
           <span className="text-sm font-medium opacity-40">$</span>
-          <input 
+          <input
             type="text"
             className="bg-transparent border-none p-0 text-base font-bold text-on-surface w-full outline-none"
             defaultValue={retail}
@@ -28,16 +40,21 @@ export function CardPricingGrid({
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] text-tertiary uppercase tracking-[0.2em] font-black">Listing Value</span>
+          <span className="text-[9px] text-tertiary uppercase tracking-[0.2em] font-black">
+            Listing Value
+          </span>
           {hasReasoning && (
-            <button onClick={onToggleReasoning} className={`transition-all ${isReasoningOpen ? 'text-tertiary scale-110' : 'text-tertiary/40'}`}>
+            <button
+              onClick={onToggleReasoning}
+              className={`transition-all ${isReasoningOpen ? "text-tertiary scale-110" : "text-tertiary/40"}`}
+            >
               <Sparkles size={12} fill={isReasoningOpen ? "currentColor" : "none"} />
             </button>
           )}
         </div>
         <div className="flex items-center gap-1">
           <span className="text-lg font-black text-tertiary">$</span>
-          <input 
+          <input
             type="text"
             className="bg-transparent border-none p-0 text-2xl font-black text-tertiary w-full outline-none"
             defaultValue={listing}
@@ -49,7 +66,6 @@ export function CardPricingGrid({
   );
 }
 
-// Separate component for the actual reasoning text
 export function CardAiReasoning({ text }: { text: string }) {
   return (
     <div className="animate-in slide-in-from-top-2 fade-in duration-300 p-4 rounded-xl bg-surface/40 border border-tertiary/10">

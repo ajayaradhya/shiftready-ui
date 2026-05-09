@@ -233,10 +233,20 @@ export default function InventoryReviewPage() {
               
               <div className="grid gap-4">
                 {bundle.items.map((item) => (
-                  <InventoryCard key={item.id} item={item} bundleId={bundle.id} onSeek={(s:any) => {
-                    const v = document.getElementById('inventory-video') as HTMLVideoElement;
-                    if (v) { v.currentTime = s; v.play(); }
-                  }} />
+                  <InventoryCard
+                    key={item.id}
+                    item={item}
+                    bundleId={bundle.id}
+                    onSeek={(s: number) => {
+                      const v = document.getElementById(
+                        "inventory-video"
+                      ) as HTMLVideoElement | null;
+                      if (v) {
+                        v.currentTime = s;
+                        v.play();
+                      }
+                    }}
+                  />
                 ))}
                 {!isLive && (
                   <button 

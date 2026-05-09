@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Bell, UserCircle } from "lucide-react";
 
 interface HeaderProps {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getSummary, getStatus } from "@/lib/api";
 import { SaleSummary } from "@/lib/types";
 import { useEffect, useRef } from "react";
@@ -11,10 +11,8 @@ import { useEffect, useRef } from "react";
  * Orchestrates background AI polling and data refetching.
  */
 export function useInventory(eventId: string) {
-  const queryClient = useQueryClient();
-  
-  // Ref to track the previous status to detect transitions (e.g., Processing -> Ready)
-  // without triggering extra renders.
+  // Ref tracks previous status purely for transition detection inside useEffect.
+  // Never read during render — that would violate React 19 ref rules.
   const lastStatus = useRef<string | null | undefined>(null);
 
   // 1. STATUS POLLING
@@ -64,12 +62,10 @@ export function useInventory(eventId: string) {
     lastStatus.current = currentStatus;
   }, [currentStatus, refetch]);
 
-  // Derived UI Flags - 2026 ShiftReady State Machine
-  const isPricing = currentStatus === "pricing_in_progress" || 
-                    (lastStatus.current === "pricing_in_progress" && isFetching);
-
-  const isProcessing = currentStatus === "processing" || 
-                       (lastStatus.current === "processing" && isFetching);
+  // Derived UI Flags — driven by currentStatus only.
+  // isSyncing (isFetching) covers the brief transition window after status changes.
+  const isPricing = currentStatus === "pricing_in_progress";
+  const isProcessing = currentStatus === "processing";
 
   return {
     // Data

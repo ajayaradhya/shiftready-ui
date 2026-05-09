@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileVideo, CheckCircle2, Loader2 } from "lucide-react";
+import { Upload, FileVideo } from "lucide-react";
 import { initSale, startProcessing } from "@/lib/api";
 
 export function VideoUploader() {
