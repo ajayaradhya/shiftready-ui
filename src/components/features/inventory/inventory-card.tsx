@@ -46,23 +46,22 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
   return (
     <div
       className={`group relative flex flex-col gap-5 rounded-2xl p-6 transition-all duration-500 border ${
-        isConfirmingDelete
-          ? "border-error/50 scale-[0.98]"
-          : item.confidence < 0.75
-            ? "bg-amber-500/[0.02] border-amber-500/10 hover:border-amber-500/30"
-            : "bg-surface-container-high border-transparent hover:border-primary/10"
+        item.confidence < 0.75
+          ? "bg-amber-500/[0.02] border-amber-500/10 hover:border-amber-500/30"
+          : "bg-surface-container-high border-transparent hover:border-primary/10"
       } ${mutation.isPending || deleteMutation.isPending ? "opacity-70 grayscale" : "opacity-100"}`}
     >
-      {isConfirmingDelete && (
-        <CardDeleteOverlay
-          onCancel={() => setIsConfirmingDelete(false)}
-          onConfirm={() => deleteMutation.mutate()}
-        />
-      )}
+      <CardDeleteOverlay
+        open={isConfirmingDelete}
+        itemName={item.name}
+        onCancel={() => setIsConfirmingDelete(false)}
+        onConfirm={() => {
+          deleteMutation.mutate();
+          setIsConfirmingDelete(false);
+        }}
+      />
 
-      <div
-        className={`flex flex-col gap-5 transition-all duration-500 ${isConfirmingDelete ? "blur-sm grayscale" : ""}`}
-      >
+      <div className="flex flex-col gap-5">
         <CardHeader
           isLowConfidence={item.confidence < 0.75}
           isSyncing={mutation.isPending}

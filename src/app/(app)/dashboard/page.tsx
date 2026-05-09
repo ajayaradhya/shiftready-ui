@@ -19,15 +19,15 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/create"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
-          <Plus size={14} />
+          <Plus size={14} aria-hidden />
           New Sale
         </Link>
       </div>
 
       {isLoading && (
-        <div className="grid gap-4">
+        <div className="grid gap-4" aria-busy="true" aria-label="Loading sales…">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-28 rounded-2xl bg-surface-container animate-pulse" />
           ))}
@@ -35,7 +35,7 @@ export default function DashboardPage() {
       )}
 
       {error && (
-        <div className="rounded-2xl border border-error/20 bg-error/5 px-6 py-5 text-sm text-error">
+        <div role="alert" className="rounded-2xl border border-error/20 bg-error/5 px-6 py-5 text-sm text-error">
           Failed to load sales. Please refresh.
         </div>
       )}

@@ -32,6 +32,17 @@
   body {
     @apply bg-surface text-on-surface font-sans antialiased;
   }
+
+  /* Global focus-visible ring for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus outline — components handle their own via focus-visible utilities */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 /* Header AI pulse animation */

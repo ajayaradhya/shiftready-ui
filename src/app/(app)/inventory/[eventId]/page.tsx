@@ -108,7 +108,18 @@ export default function InventoryReviewPage() {
   const totalItems = summary?.bundles?.reduce((acc, b) => acc + b.items.length, 0) ?? 0;
 
   return (
-    <div className="relative">
+    <div className="relative" aria-busy={isGlobalLoading}>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {isProcessing && "Processing your inventory video…"}
+        {isPricing && "AI is pricing your items…"}
+        {reestimateMutation.isPending && "Re-analysing prices…"}
+      </div>
+
       {isGlobalLoading && (
         <LoadingOverlay
           isPricing={isPricing}
@@ -148,15 +159,16 @@ export default function InventoryReviewPage() {
             <button
               onClick={() => reestimateMutation.mutate()}
               disabled={isGlobalLoading}
-              className="flex items-center gap-3 bg-primary text-surface px-8 py-5 rounded-full font-black uppercase tracking-tighter shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+              aria-busy={reestimateMutation.isPending}
+              className="flex items-center gap-3 bg-primary text-surface px-8 py-5 rounded-full font-black uppercase tracking-tighter shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             >
-              <Sparkles size={20} fill="currentColor" />
+              <Sparkles size={20} fill="currentColor" aria-hidden />
               Re-Analyse Prices
             </button>
           </div>
         )}
 
-        <section className="flex-1 overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-16 pb-24">
+        <section aria-label="Inventory bundles" className="flex-1 overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-16 pb-24">
           {summary?.bundles?.map((bundle) => (
             <BundleSection
               key={bundle.id}
