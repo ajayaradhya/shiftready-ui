@@ -8,20 +8,19 @@ import {
   MAX_VIDEO_SIZE_BYTES,
   MAX_VIDEO_SIZE_MB,
 } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 import { Upload, Sparkles, Video, Loader2 } from "lucide-react";
-
-// TODO(Phase 1): Replace with authenticated user ID from Firebase Auth
-const DEV_USER_ID = process.env.NEXT_PUBLIC_DEV_USER_ID ?? "dev_user";
 
 export default function CreateSalePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "uploading" | "processing">("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     setFileError(null);
 
@@ -37,8 +36,8 @@ export default function CreateSalePage() {
     try {
       setStatus("uploading");
 
-      // 1. Handshake with backend
-      const { event_id, upload_url } = await initSale(DEV_USER_ID, file.name);
+      // 1. Handshake with backend — user.uid is the authenticated seller identity
+      const { event_id, upload_url } = await initSale(user.uid, file.name);
 
       // 2. Upload to GCS via signed URL
       // TODO(Phase 2): Replace with XHR for real progress tracking
