@@ -1,4 +1,10 @@
-import type { SaleSummary, InventoryItem } from "./types";
+import type {
+  SaleSummary,
+  InventoryItem,
+  SaleListing,
+  MarketplaceSearchResult,
+  PublicSaleDetail,
+} from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 const API_BASE = `${API_URL}/api/v1`;
@@ -155,6 +161,33 @@ export async function patchItem(
     }
   );
 }
+
+// --- Seller Dashboard ---
+
+export async function listSales(): Promise<SaleListing[]> {
+  return apiRequest<SaleListing[]>(`${API_BASE}/sales/`);
+}
+
+// --- Marketplace ---
+
+export async function searchMarketplace(
+  q?: string,
+  suburb?: string
+): Promise<MarketplaceSearchResult> {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (suburb) params.set("suburb", suburb);
+  const qs = params.toString();
+  return apiRequest<MarketplaceSearchResult>(
+    `${API_BASE}/marketplace/search${qs ? `?${qs}` : ""}`
+  );
+}
+
+export async function getPublicSale(eventId: string): Promise<PublicSaleDetail> {
+  return apiRequest<PublicSaleDetail>(`${API_BASE}/marketplace/sales/${eventId}`);
+}
+
+// --- Item Management (CRUD) ---
 
 export async function deleteItem(
   eventId: string,
