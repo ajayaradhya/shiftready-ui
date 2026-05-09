@@ -11,9 +11,8 @@ export const DURATION_MS = {
   slow: 500,
 } as const;
 
-export const POLLING_MS = {
-  active: 1500,
-} as const;
+// Used only as a fallback when the WebSocket connection is unavailable.
+export const FALLBACK_POLLING_MS = 5_000;
 
 export const ACCEPTED_VIDEO_TYPES = [
   "video/mp4",
