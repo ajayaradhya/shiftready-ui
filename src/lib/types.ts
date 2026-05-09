@@ -1,3 +1,14 @@
+export type SaleStatus =
+  | "pending_upload"
+  | "processing"
+  | "ready_for_review"
+  | "pricing_in_progress"
+  | "live"
+  | "partially_sold"
+  | "expired"
+  | "failed"
+  | "archived";
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -6,15 +17,15 @@ export interface InventoryItem {
   video_timestamp: number;
   timestamp_label: string;
   confidence: number;
-  
+
   // Pricing Fields
   predicted_original_price?: number;
-  actual_original_price?: number;
+  actual_original_price?: number | null;
   predicted_listing_price?: number;
-  actual_listing_price?: number;
+  actual_listing_price?: number | null;
   pricing_reasoning?: string;
-  
-  // New Metadata from JSON
+
+  // Purchase Metadata
   predicted_year_of_purchase?: number;
   actual_year_of_purchase?: number | null;
 }
@@ -30,7 +41,7 @@ export interface RoomBundle {
 
 export interface SaleSummary {
   id: string;
-  status: 'processing' | 'ready_for_review' | 'live' | 'failed' | 'pricing_in_progress';
+  status: SaleStatus;
   videoUrl: string;
   bundles: RoomBundle[];
   moveOutDate?: string;

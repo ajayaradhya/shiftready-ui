@@ -80,7 +80,7 @@ export function VideoPreview({ videoUrl, status, itemCount }: VideoPreviewProps)
         </div>
         <div className="bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high">
           <span className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Location</span>
-          <p className="text-xl font-bold text-on-surface mt-2">Sydney, AU</p>
+          <p className="text-xl font-bold text-on-surface mt-2">—</p>
         </div>
       </div>
     </div>
