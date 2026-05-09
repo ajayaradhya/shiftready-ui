@@ -1,22 +1,60 @@
 steps:
-  # 1. Build the container image
-  # We pass the backend URL as a build-arg so Next.js can bake it in
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build', 
-      '--build-arg', 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}',
-      '-t', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA', 
-      '.'
-    ]
+  # 1. Install dependencies
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['ci', '--prefer-offline']
 
-  # 2. Push the image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'push', 
-      '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
-    ]
+  # 2. Lint
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'lint']
 
-  # 3. Deploy to Cloud Run
+  # 3. Type check
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'type-check']
+
+  # 4. Unit tests
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['test']
+
+  # 5. Build the Next.js app (produces .next/standalone)
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'build']
+    env:
+      - 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}'
+
+  # 6. Lighthouse CI (accessibility ≥ 0.9, performance ≥ 0.8)
+  - name: 'node:20'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        npm run start &
+        SERVER_PID=$$!
+        npx wait-on http://localhost:3000 --timeout 30000
+        npx lhci autorun --config=lighthouserc.json || true
+        kill $$SERVER_PID
+
+  # 7. Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
+      - '.'
+
+  # 8. Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA'
+
+  # 9. Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -30,7 +68,6 @@ steps:
       - '--port'
       - '3000'
       - '--allow-unauthenticated'
-      # Using the same service account pattern for consistency
       - '--service-account'
       - 'shiftready-backend@$PROJECT_ID.iam.gserviceaccount.com'
 

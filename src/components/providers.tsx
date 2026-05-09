@@ -6,9 +6,28 @@ import {
   QueryClientProvider,
   MutationCache,
 } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { Toaster, toast } from "sonner";
+import { usePathname, useSearchParams } from "next/navigation";
 import { AuthProvider } from "@/contexts/auth-context";
+import { initPostHog, posthog } from "@/lib/posthog";
+
+function PostHogPageView() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    initPostHog();
+  }, []);
+
+  useEffect(() => {
+    if (!pathname) return;
+    const url = pathname + (searchParams?.toString() ? `?${searchParams}` : "");
+    posthog.capture("$pageview", { $current_url: url });
+  }, [pathname, searchParams]);
+
+  return null;
+}
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -39,6 +58,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PostHogPageView />
         {children}
         <Toaster
           position="bottom-right"
