@@ -30,7 +30,13 @@
   }
 }
 
-/* Your custom Stitch scrollbar logic */
+/* Header AI pulse animation */
+@keyframes pan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* Custom Stitch scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

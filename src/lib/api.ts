@@ -3,12 +3,26 @@ import type { SaleSummary, InventoryItem } from "./types";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 const API_BASE = `${API_URL}/api/v1`;
 
+// Module-level token store. AuthProvider calls _setIdToken on every token change
+// (sign-in, sign-out, and automatic refresh via onIdTokenChanged).
+let _idToken: string | null = null;
+
+export function _setIdToken(token: string | null): void {
+  _idToken = token;
+}
+
 type EmptyResponse = Record<string, never>;
 
 export type PatchItemPayload = Partial<InventoryItem>;
 
 async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, options);
+  const existingHeaders = (options?.headers as Record<string, string>) ?? {};
+  const headers: Record<string, string> = {
+    ...existingHeaders,
+    ...(_idToken ? { Authorization: `Bearer ${_idToken}` } : {}),
+  };
+
+  const res = await fetch(url, { ...options, headers });
 
   if (res.status === 204) {
     return {} as T;
