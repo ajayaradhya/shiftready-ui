@@ -16,7 +16,7 @@ export default function CreateError({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[90vh] gap-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-6 text-center bg-surface">
       <div className="w-20 h-20 bg-error/10 rounded-3xl flex items-center justify-center text-error">
         <AlertTriangle size={40} />
       </div>
