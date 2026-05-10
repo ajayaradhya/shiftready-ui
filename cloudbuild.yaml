@@ -3,9 +3,15 @@ steps:
   # We pass the backend URL as a build-arg so Next.js can bake it in
   - name: 'gcr.io/cloud-builders/docker'
     args: [
-      'build', 
+      'build',
       '--build-arg', 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}',
-      '-t', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA', 
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_API_KEY=${_FIREBASE_API_KEY}',
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_FIREBASE_AUTH_DOMAIN}',
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_FIREBASE_PROJECT_ID}',
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_FIREBASE_STORAGE_BUCKET}',
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_FIREBASE_MESSAGING_SENDER_ID}',
+      '--build-arg', 'NEXT_PUBLIC_FIREBASE_APP_ID=${_FIREBASE_APP_ID}',
+      '-t', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:$COMMIT_SHA',
       '.'
     ]
 
@@ -46,3 +52,9 @@ substitutions:
   _REPO_NAME: shiftready-repo
   _SERVICE_NAME: shiftready-ui
   _NEXT_PUBLIC_API_URL: https://shiftready-api-12644234558.australia-southeast1.run.app
+  _FIREBASE_API_KEY: your-firebase-api-key
+  _FIREBASE_AUTH_DOMAIN: your-project.firebaseapp.com
+  _FIREBASE_PROJECT_ID: your-project-id
+  _FIREBASE_STORAGE_BUCKET: your-project.appspot.com
+  _FIREBASE_MESSAGING_SENDER_ID: '123456789'
+  _FIREBASE_APP_ID: 1:123456789:web:abcdef123456
