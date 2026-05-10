@@ -4,6 +4,7 @@ import type {
   SaleListing,
   MarketplaceSearchResult,
   PublicSaleDetail,
+  ActiveSaleSummary,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -193,6 +194,10 @@ export async function searchMarketplace(
 
 export async function getPublicSale(eventId: string): Promise<PublicSaleDetail> {
   return apiRequest<PublicSaleDetail>(`${API_BASE}/marketplace/sales/${eventId}`);
+}
+
+export async function getActiveSales(): Promise<ActiveSaleSummary[]> {
+  return apiRequest<ActiveSaleSummary[]>(`${API_BASE}/marketplace/sales`);
 }
 
 // --- Item Management (CRUD) ---
