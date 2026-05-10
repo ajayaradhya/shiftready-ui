@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { initSale, startProcessing } from "@/lib/api";
 import {
   ACCEPTED_VIDEO_TYPES,
@@ -13,23 +12,32 @@ import { toast } from "sonner";
 
 export type UploadStatus = "idle" | "uploading" | "processing";
 
+export interface UploadedFile {
+  name: string;
+  size: number;
+  durationLabel?: string;
+}
+
 export interface UseUploadReturn {
   status: UploadStatus;
   uploadProgress: number;
   fileError: string | null;
+  eventId: string | null;
+  uploadedFile: UploadedFile | null;
+  uploadFile: (file: File) => Promise<void>;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
 }
 
 export function useUpload(): UseUploadReturn {
-  const router = useRouter();
   const { user } = useAuth();
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  const uploadFile = async (file: File) => {
+    if (!user) return;
 
     setFileError(null);
 
@@ -44,6 +52,7 @@ export function useUpload(): UseUploadReturn {
 
     try {
       setStatus("uploading");
+      setUploadProgress(0);
 
       const { event_id, upload_url } = await initSale(user.uid, file.name);
 
@@ -68,12 +77,11 @@ export function useUpload(): UseUploadReturn {
         xhr.send(file);
       });
 
-      setStatus("processing");
       await startProcessing(event_id);
 
-      setTimeout(() => {
-        router.push(`/inventory/${event_id}`);
-      }, 1500);
+      setEventId(event_id);
+      setUploadedFile({ name: file.name, size: file.size });
+      setStatus("processing");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Upload failed. Please try again.";
@@ -84,5 +92,11 @@ export function useUpload(): UseUploadReturn {
     }
   };
 
-  return { status, uploadProgress, fileError, handleFileUpload };
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadFile(file);
+  };
+
+  return { status, uploadProgress, fileError, eventId, uploadedFile, uploadFile, handleFileUpload };
 }
