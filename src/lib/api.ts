@@ -78,14 +78,22 @@ export async function triggerReestimation(eventId: string): Promise<{ status: st
   });
 }
 
+export interface PublishPayload {
+  move_out_date: string;
+  street_address: string;
+  suburb: string;
+  pincode: string;
+  state?: string;
+}
+
 export async function publishSale(
   eventId: string,
-  moveOutDate: string
+  payload: PublishPayload
 ): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/publish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ move_out_date: moveOutDate }),
+    body: JSON.stringify({ state: "NSW", ...payload }),
   });
 }
 

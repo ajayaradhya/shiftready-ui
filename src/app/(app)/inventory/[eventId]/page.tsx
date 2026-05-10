@@ -60,7 +60,7 @@ export default function InventoryReviewPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (date: string) => publishSale(eventId, date),
+    mutationFn: (payload: import("@/lib/api").PublishPayload) => publishSale(eventId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });
@@ -142,11 +142,7 @@ export default function InventoryReviewPage() {
           }}
           onBundleNameChange={setNewBundleName}
           onBundleSubmit={() => addBundleMutation.mutate(newBundleName)}
-          onPublish={() =>
-            publishMutation.mutate(
-              summary?.moveOutDate ?? new Date().toISOString().split("T")[0]
-            )
-          }
+          onPublish={(payload) => publishMutation.mutate(payload)}
           onUnpublish={() => unpublishMutation.mutate()}
         />
       </Header>

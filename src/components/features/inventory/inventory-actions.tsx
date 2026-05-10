@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import type { PublishPayload } from "@/lib/api";
 
 interface InventoryActionsProps {
   isLive: boolean;
@@ -23,9 +24,19 @@ interface InventoryActionsProps {
   onAddBundleClose: () => void;
   onBundleNameChange: (name: string) => void;
   onBundleSubmit: () => void;
-  onPublish: () => void;
+  onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
 }
+
+const today = new Date().toISOString().split("T")[0];
+
+const emptyForm = (): PublishPayload => ({
+  move_out_date: today,
+  street_address: "",
+  suburb: "",
+  pincode: "",
+  state: "NSW",
+});
 
 export function InventoryActions({
   isLive,
@@ -41,9 +52,123 @@ export function InventoryActions({
   onUnpublish,
 }: InventoryActionsProps) {
   const [isConfirmingUnpublish, setIsConfirmingUnpublish] = useState(false);
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [publishForm, setPublishForm] = useState<PublishPayload>(emptyForm);
+
+  const setField = (field: keyof PublishPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setPublishForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const isFormValid =
+    publishForm.street_address.trim() &&
+    publishForm.suburb.trim() &&
+    publishForm.pincode.trim() &&
+    publishForm.move_out_date;
+
+  const handlePublishSubmit = () => {
+    if (!isFormValid) return;
+    onPublish(publishForm);
+    setIsPublishDialogOpen(false);
+    setPublishForm(emptyForm());
+  };
 
   return (
     <div className="flex items-center gap-4 ml-6 border-l border-outline-variant/20 pl-6">
+      {/* Publish details dialog */}
+      <Dialog
+        open={isPublishDialogOpen}
+        onOpenChange={(v) => {
+          setIsPublishDialogOpen(v);
+          if (!v) setPublishForm(emptyForm());
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Publish Sale</DialogTitle>
+            <DialogDescription>
+              Buyers will see your address and move-out date on the marketplace.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                Street Address
+              </label>
+              <Input
+                placeholder="12 Example St"
+                value={publishForm.street_address}
+                onChange={setField("street_address")}
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                  Suburb
+                </label>
+                <Input
+                  placeholder="Waterloo"
+                  value={publishForm.suburb}
+                  onChange={setField("suburb")}
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-28">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                  Postcode
+                </label>
+                <Input
+                  placeholder="2017"
+                  value={publishForm.pincode}
+                  onChange={setField("pincode")}
+                  maxLength={4}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                  Move-Out Date
+                </label>
+                <Input
+                  type="date"
+                  value={publishForm.move_out_date}
+                  onChange={setField("move_out_date")}
+                  min={today}
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-24">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                  State
+                </label>
+                <Input
+                  placeholder="NSW"
+                  value={publishForm.state}
+                  onChange={setField("state")}
+                  maxLength={3}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPublishDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!isFormValid || isPublishing}
+              aria-busy={isPublishing}
+              onClick={handlePublishSubmit}
+            >
+              {isPublishing ? (
+                <Loader2 className="animate-spin" size={12} aria-hidden />
+              ) : (
+                <Send size={12} aria-hidden />
+              )}
+              Publish
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unpublish confirm dialog */}
       <Dialog
         open={isConfirmingUnpublish}
         onOpenChange={(v) => !v && setIsConfirmingUnpublish(false)}
@@ -137,7 +262,7 @@ export function InventoryActions({
             <Button
               variant="primary"
               size="md"
-              onClick={onPublish}
+              onClick={() => setIsPublishDialogOpen(true)}
               disabled={isPublishing}
               aria-busy={isPublishing}
             >
