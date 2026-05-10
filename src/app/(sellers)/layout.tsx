@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { SellerSidebar } from "@/components/ui/seller-sidebar";
+import { Header } from "@/components/ui/header";
 
 export default function SellersLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,5 +31,13 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
 
   if (!user) return null;
 
-  return <>{children}</>;
+  return (
+    <>
+      <SellerSidebar />
+      <Header section="Seller Studio" />
+      <main className="pt-16 pl-0 md:pl-20 min-h-screen relative">
+        {children}
+      </main>
+    </>
+  );
 }
