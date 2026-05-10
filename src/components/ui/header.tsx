@@ -16,9 +16,10 @@ import {
 interface HeaderProps {
   isProcessing?: boolean;
   children?: React.ReactNode;
+  section?: string;
 }
 
-export function Header({ isProcessing, children }: HeaderProps) {
+export function Header({ isProcessing, children, section }: HeaderProps) {
   const { user, signOut } = useAuth();
   const router = useRouter();
 
@@ -40,7 +41,16 @@ export function Header({ isProcessing, children }: HeaderProps) {
 
       <div className="flex items-center gap-4">
         <h1 className="text-sm font-medium uppercase tracking-[0.2em] text-outline">
-          Inventory <span className="text-on-surface">Review</span>
+          {section ? (
+            (() => {
+              const parts = section.split(" ");
+              const dim = parts.slice(0, -1).join(" ");
+              const bright = parts[parts.length - 1];
+              return dim ? <>{dim} <span className="text-on-surface">{bright}</span></> : <span className="text-on-surface">{bright}</span>;
+            })()
+          ) : (
+            <>Inventory <span className="text-on-surface">Review</span></>
+          )}
         </h1>
         {children}
       </div>

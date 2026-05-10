@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Package, Search as SearchIcon, MapPin } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
@@ -231,7 +232,7 @@ export default function LandingPage() {
       <header className={s.header}>
         <div className={s.headerInner}>
           <Link href="/" className={s.brand}>
-            <div className={s.brandMark}>S</div>
+            <Image src="/logo-mark.svg" alt="ShiftReady" width={30} height={30} priority />
             <span className={s.brandName}>ShiftReady</span>
           </Link>
 
@@ -403,7 +404,7 @@ export default function LandingPage() {
       <div className={s.footerBand}>
         <footer className={s.footer}>
           <div className={s.footerBrand}>
-            <div className={s.footerBrandMark}>S</div>
+            <Image src="/logo-mark.svg" alt="ShiftReady" width={24} height={24} />
             ShiftReady
           </div>
           <div className={s.footerLinks}>
