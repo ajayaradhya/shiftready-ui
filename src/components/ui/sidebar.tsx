@@ -8,6 +8,7 @@ import {
   Headphones,
   Menu,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -72,6 +73,9 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
         aria-label="Main navigation"
         className="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center py-8 gap-10 bg-surface-container-lowest border-r border-outline-variant/10 z-50"
       >
+        <Link href="/dashboard" aria-label="ShiftReady home">
+          <Image src="/logo-mark.svg" alt="ShiftReady" width={36} height={36} priority />
+        </Link>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -109,11 +113,14 @@ function MobileNav({ pathname }: { pathname: string }) {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left">
-          <SheetTitle>Navigation</SheetTitle>
-          <SheetDescription>Main site navigation links</SheetDescription>
+          <SheetTitle className="flex items-center gap-3">
+            <Image src="/logo-mark.svg" alt="ShiftReady" width={28} height={28} />
+            ShiftReady
+          </SheetTitle>
+          <SheetDescription className="sr-only">Main site navigation links</SheetDescription>
           <nav
             aria-label="Mobile navigation"
-            className="flex flex-col items-start pt-16 px-4 gap-2"
+            className="flex flex-col items-start pt-8 px-4 gap-2"
           >
             {navItems.map((item) => {
               const active = isActive(item.href);

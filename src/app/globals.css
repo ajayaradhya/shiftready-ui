@@ -1,7 +1,14 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
 
-/* ── ShiftReady design tokens (light palette used by create/sell flow) ── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   ShiftReady Design Tokens — SINGLE SOURCE OF TRUTH
+   • Raw palette  →  :root  (primitive values only)
+   • Tailwind utilities  →  @theme  (semantic tokens, dark app shell)
+   • To change a color: edit the hex in @theme, it propagates everywhere.
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Primitive palette — do not use these directly in components */
 :root {
   --clay-50: #FBF1EC; --clay-100: #F5DDCF; --clay-200: #ECC2AB; --clay-300: #E0A285;
   --clay-400: #D58A6B; --clay-500: #CC785C; --clay-600: #B5604A; --clay-700: #944A39;
@@ -18,47 +25,7 @@
   --honey-50: #FAF0DC; --honey-100: #F2DCAA; --honey-500: #C99935; --honey-600: #A77E25; --honey-700: #855F18;
   --rust-50: #FAEDE8; --rust-100: #F2D0C5; --rust-500: #B14F3B;
 
-  --sr-bg-app: #FAFAF7;
-  --sr-bg-card: #FFFFFF;
-  --sr-bg-paper: var(--cream-50);
-
-  --sr-text-primary: var(--ink-800);
-  --sr-text-secondary: var(--ink-500);
-  --sr-text-muted: var(--ink-400);
-  --sr-text-link: var(--clay-600);
-
-  --sr-border-subtle: var(--cream-300);
-  --sr-border-default: var(--cream-400);
-  --sr-border-strong: var(--ink-300);
-
-  --sr-font-serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
-  --sr-font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --sr-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
-
-  --sr-radius-sm: 6px; --sr-radius-md: 10px;
-  --sr-radius-lg: 14px; --sr-radius-xl: 20px; --sr-radius-full: 9999px;
-
-  --sr-shadow-xs: 0 1px 2px rgba(74,37,25,0.04);
-  --sr-shadow-sm: 0 1px 2px rgba(74,37,25,0.05), 0 2px 4px rgba(74,37,25,0.04);
-}
-
-/* ── ShiftReady landing page design tokens ── */
-:root {
-  --clay-50: #FBF1EC; --clay-100: #F5DDCF; --clay-200: #ECC2AB; --clay-300: #E0A285;
-  --clay-400: #D58A6B; --clay-500: #CC785C; --clay-600: #B5604A; --clay-700: #944A39;
-  --clay-800: #6E3829; --clay-900: #4A2519;
-
-  --cream-50: #FBF8F3; --cream-100: #F5F0E8; --cream-200: #EDE5D6; --cream-300: #E0D5C0;
-  --cream-400: #C9BBA1; --cream-500: #A8987C;
-
-  --ink-50: #F4F1EC; --ink-100: #E5DFD4; --ink-200: #C9C0AF; --ink-300: #A09683;
-  --ink-400: #756B5A; --ink-500: #4F4838; --ink-600: #3A3528; --ink-700: #2A2620;
-  --ink-800: #1F1B17; --ink-900: #14110D;
-
-  --moss-50: #EFF2E8; --moss-100: #DAE2C7; --moss-500: #6B8A4E; --moss-600: #557239; --moss-700: #3F5728;
-  --honey-50: #FAF0DC; --honey-100: #F2DCAA; --honey-500: #C99935; --honey-600: #A77E25; --honey-700: #855F18;
-  --rust-50: #FAEDE8; --rust-100: #F2D0C5; --rust-500: #B14F3B;
-
+  /* Semantic aliases (light-mode flows: landing, create) */
   --sr-bg-app: #FAFAF7;
   --sr-bg-card: #FFFFFF;
   --sr-bg-paper: var(--cream-50);
@@ -86,30 +53,30 @@
   --sr-shadow-focus: 0 0 0 3px rgba(204,120,92,0.22);
 }
 
+/* ── Tailwind semantic tokens (dark app shell) ──────────────────────────────
+   These map directly to Tailwind utilities: bg-primary, text-on-surface, etc.
+   EDIT HERE to change app-wide colors.
+─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* ShiftReady Tonal Architecture (2026) */
-  --color-primary: #adc6ff;    /* Electric Blue */
-  --color-tertiary: #4edea3;   /* Subtle Green (Pricing) */
-  --color-surface: #131313;    /* Deep Charcoal */
-  
-  --color-surface-container-lowest: #0e0e0e;
-  --color-surface-container-low: #1b1b1b;
-  --color-surface-container-high: #2b2b2b;
-  --color-surface-container-highest: #353534;
-  
-  --color-surface-container: #1f1f1f;
+  --color-primary: #adc6ff;                  /* Electric Blue — accent, active nav, links */
+  --color-tertiary: #4edea3;                 /* Green — pricing, positive indicators */
+  --color-surface: #131313;                  /* App background */
 
-  --color-on-surface: #e3e2e2;
-  --color-on-surface-variant: #c4c6cf;
-  --color-on-primary: #002b74;
-  --color-outline: #8e9099;
-  --color-outline-variant: #44474f;
-  --color-error: #ffb4ab;
+  --color-surface-container-lowest: #0e0e0e; /* Sidebar, deepest wells */
+  --color-surface-container-low: #1b1b1b;    /* Cards, subtle containers */
+  --color-surface-container: #1f1f1f;        /* Default container */
+  --color-surface-container-high: #2b2b2b;   /* Elevated containers */
+  --color-surface-container-highest: #353534;/* Highest elevation */
 
-  /* Custom Border Radius from Stitch DESIGN.md */
+  --color-on-surface: #e3e2e2;               /* Primary text */
+  --color-on-surface-variant: #c4c6cf;       /* Secondary text */
+  --color-on-primary: #002b74;               /* Text on primary-colored bg */
+  --color-outline: #8e9099;                  /* Borders, muted icons */
+  --color-outline-variant: #44474f;          /* Subtle dividers */
+  --color-error: #ffb4ab;                    /* Error states */
+
   --radius-xl: 12px;
-  
-  /* Typography */
+
   --font-sans: "Inter", ui-sans-serif, system-ui;
 }
 
