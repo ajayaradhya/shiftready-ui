@@ -62,25 +62,7 @@ export function SellerHeader() {
           color: "var(--sr-text-primary)",
         }}
       >
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 7,
-            background: "var(--clay-500)",
-            display: "grid",
-            placeItems: "center",
-            color: "var(--cream-50)",
-            fontFamily: "var(--sr-font-serif)",
-            fontSize: 16,
-            fontWeight: 600,
-            letterSpacing: "-0.02em",
-            flexShrink: 0,
-            boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.1)",
-          }}
-        >
-          S
-        </div>
+        <Image src="/logo-mark.svg" alt="ShiftReady" width={28} height={28} priority />
         <span
           style={{
             fontFamily: "var(--sr-font-serif)",
