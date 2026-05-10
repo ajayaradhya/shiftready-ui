@@ -1,11 +1,8 @@
 "use client";
 
-import { Package, PlusCircle, MessageCircle, Menu } from "lucide-react";
-import Image from "next/image";
+import { Package, PlusCircle, MessageCircle, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useState } from "react";
 
 const sellerNavItems = [
@@ -22,7 +19,7 @@ function NavItem({
   disabled,
   onClick,
 }: {
-  icon: React.ComponentType<{ size: number; strokeWidth: number; className?: string }>;
+  icon: React.ComponentType<{ size: number; strokeWidth: number }>;
   label: string;
   href: string;
   active: boolean;
@@ -35,26 +32,65 @@ function NavItem({
       onClick={disabled ? undefined : onClick}
       aria-label={label}
       aria-current={active ? "page" : undefined}
-      className={`flex flex-col items-center gap-1.5 group transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-xl p-2 ${
-        disabled
-          ? "opacity-35 cursor-not-allowed pointer-events-none"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 5,
+        padding: "10px 8px",
+        borderRadius: "var(--sr-radius-lg)",
+        textDecoration: "none",
+        transition: "all 140ms",
+        background: active ? "var(--clay-50)" : "transparent",
+        color: disabled
+          ? "var(--ink-200)"
           : active
-          ? "text-primary"
-          : "text-outline hover:text-primary"
-      }`}
+          ? "var(--clay-600)"
+          : "var(--ink-400)",
+        pointerEvents: disabled ? "none" : undefined,
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.4 : 1,
+        width: "100%",
+      }}
+      onMouseEnter={(e) => {
+        if (!active && !disabled) {
+          (e.currentTarget as HTMLElement).style.background = "var(--cream-100)";
+          (e.currentTarget as HTMLElement).style.color = "var(--ink-700)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active && !disabled) {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = "var(--ink-400)";
+        }
+      }}
     >
-      <Icon
-        size={24}
-        strokeWidth={active ? 2.5 : 1.5}
-        className="transition-transform group-hover:scale-110"
-      />
+      <Icon size={22} strokeWidth={active ? 2 : 1.5} />
       <span
-        className={`text-[10px] uppercase tracking-widest font-medium ${active ? "font-bold" : ""}`}
+        style={{
+          fontFamily: "var(--sr-font-sans)",
+          fontSize: 10,
+          fontWeight: active ? 600 : 500,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          lineHeight: 1,
+        }}
       >
         {label}
       </span>
       {disabled && (
-        <span className="text-[8px] uppercase tracking-[0.15em] text-outline/50">Soon</span>
+        <span
+          style={{
+            fontFamily: "var(--sr-font-mono)",
+            fontSize: 8,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            color: "var(--ink-200)",
+            lineHeight: 1,
+          }}
+        >
+          Soon
+        </span>
       )}
     </Link>
   );
@@ -68,36 +104,30 @@ function DesktopSellerSidebar({ pathname }: { pathname: string }) {
   }
 
   return (
-    <TooltipProvider delayDuration={400}>
-      <nav
-        aria-label="Seller navigation"
-        className="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center py-8 gap-10 bg-surface-container-lowest border-r border-outline-variant/10 z-50"
-      >
-        <Link href="/dashboard" aria-label="ShiftReady home">
-          <Image src="/logo-mark.svg" alt="ShiftReady" width={36} height={36} priority />
-        </Link>
-        {sellerNavItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Tooltip key={item.label}>
-              <TooltipTrigger asChild>
-                <NavItem
-                  icon={item.icon}
-                  label={item.label}
-                  href={item.href}
-                  active={active}
-                  disabled={item.disabled}
-                />
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {item.label}
-                {item.disabled ? " — coming soon" : ""}
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </nav>
-    </TooltipProvider>
+    <nav
+      aria-label="Seller navigation"
+      className="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center z-40"
+      style={{
+        paddingTop: 80,
+        paddingBottom: 24,
+        paddingLeft: 8,
+        paddingRight: 8,
+        gap: 4,
+        background: "var(--sr-bg-card)",
+        borderRight: "1px solid var(--sr-border-subtle)",
+      }}
+    >
+      {sellerNavItems.map((item) => (
+        <NavItem
+          key={item.label}
+          icon={item.icon}
+          label={item.label}
+          href={item.href}
+          active={isActive(item.href)}
+          disabled={item.disabled}
+        />
+      ))}
+    </nav>
   );
 }
 
@@ -112,54 +142,148 @@ function MobileSellerNav({ pathname }: { pathname: string }) {
 
   return (
     <>
+      {/* Hamburger — only shows on mobile (below md) */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open seller menu"
-        className="md:hidden fixed left-4 top-4 z-50 rounded-xl p-2 text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        style={{
+          position: "fixed",
+          left: 16,
+          top: 14,
+          zIndex: 60,
+          width: 36,
+          height: 36,
+          borderRadius: "var(--sr-radius-md)",
+          border: "1px solid var(--sr-border-subtle)",
+          background: "var(--sr-bg-card)",
+          display: "grid",
+          placeItems: "center",
+          cursor: "pointer",
+          color: "var(--ink-500)",
+        }}
+        className="md:hidden"
       >
-        <Menu size={20} strokeWidth={1.5} />
+        <Menu size={18} strokeWidth={1.5} />
       </button>
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left">
-          <SheetTitle className="flex items-center gap-3">
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={28} height={28} />
-            ShiftReady — Seller
-          </SheetTitle>
-          <SheetDescription className="sr-only">Seller navigation links</SheetDescription>
+      {/* Drawer */}
+      {open && (
+        <>
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(31,27,23,0.3)",
+              zIndex: 70,
+              backdropFilter: "blur(2px)",
+            }}
+          />
           <nav
             aria-label="Mobile seller navigation"
-            className="flex flex-col items-start pt-8 px-4 gap-2"
+            style={{
+              position: "fixed",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 240,
+              background: "var(--sr-bg-card)",
+              borderRight: "1px solid var(--sr-border-subtle)",
+              zIndex: 80,
+              display: "flex",
+              flexDirection: "column",
+              padding: "20px 16px",
+              fontFamily: "var(--sr-font-sans)",
+            }}
           >
-            {sellerNavItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.disabled ? "#" : item.href}
-                  onClick={() => !item.disabled && setOpen(false)}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                    item.disabled
-                      ? "opacity-35 pointer-events-none text-outline"
-                      : active
-                      ? "text-primary bg-primary/5"
-                      : "text-outline hover:text-on-surface hover:bg-surface-container-high"
-                  }`}
-                >
-                  <item.icon size={20} strokeWidth={active ? 2.5 : 1.5} aria-hidden />
-                  <span>{item.label}</span>
-                  {item.disabled && (
-                    <span className="text-[10px] uppercase tracking-widest text-outline/50 ml-auto">
-                      Soon
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 28,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "var(--sr-font-serif)",
+                  fontSize: 17,
+                  fontWeight: 600,
+                  color: "var(--sr-text-primary)",
+                }}
+              >
+                ShiftReady
+              </span>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "var(--sr-radius-md)",
+                  border: "none",
+                  background: "var(--cream-100)",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  color: "var(--ink-500)",
+                }}
+              >
+                <X size={16} strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {sellerNavItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.disabled ? "#" : item.href}
+                    onClick={() => !item.disabled && setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 12px",
+                      borderRadius: "var(--sr-radius-md)",
+                      textDecoration: "none",
+                      fontSize: 14,
+                      fontWeight: active ? 600 : 500,
+                      color: item.disabled
+                        ? "var(--ink-200)"
+                        : active
+                        ? "var(--clay-600)"
+                        : "var(--ink-500)",
+                      background: active ? "var(--clay-50)" : "transparent",
+                      opacity: item.disabled ? 0.4 : 1,
+                      pointerEvents: item.disabled ? "none" : undefined,
+                    }}
+                  >
+                    <item.icon size={18} strokeWidth={active ? 2 : 1.5} aria-hidden />
+                    <span>{item.label}</span>
+                    {item.disabled && (
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          fontSize: 10,
+                          fontFamily: "var(--sr-font-mono)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.12em",
+                          color: "var(--ink-300)",
+                        }}
+                      >
+                        Soon
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
-        </SheetContent>
-      </Sheet>
+        </>
+      )}
     </>
   );
 }
