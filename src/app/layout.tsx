@@ -6,7 +6,7 @@ import Providers from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ShiftReady — Sell Everything. One Video. Done.",
+  title: "Shift Ready",
   description:
     "AI-powered residential relocation marketplace. Record a walkthrough, let Gemini identify and price your items, then sell as a bundle.",
 };

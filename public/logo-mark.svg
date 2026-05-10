@@ -4,33 +4,26 @@
       <circle cx="80" cy="80" r="68"/>
     </clipPath>
 
-    <!-- Mask: white = visible. Rotated lines clipped to circle. -->
     <mask id="lines">
       <rect width="160" height="160" fill="black"/>
       <g clip-path="url(#circle)" transform="rotate(45, 80, 80)">
-        <line x1="0" y1="15"  x2="160" y2="15"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="28"  x2="160" y2="28"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="41"  x2="160" y2="41"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="54"  x2="160" y2="54"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="67"  x2="160" y2="67"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="80"  x2="160" y2="80"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="93"  x2="160" y2="93"  stroke="white" stroke-width="10"/>
-        <line x1="0" y1="106" x2="160" y2="106" stroke="white" stroke-width="10"/>
-        <line x1="0" y1="119" x2="160" y2="119" stroke="white" stroke-width="10"/>
-        <line x1="0" y1="132" x2="160" y2="132" stroke="white" stroke-width="10"/>
-        <line x1="0" y1="145" x2="160" y2="145" stroke="white" stroke-width="10"/>
+        <line x1="-20" y1="17"  x2="180" y2="17"  stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="38"  x2="180" y2="38"  stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="59"  x2="180" y2="59"  stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="80"  x2="180" y2="80"  stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="101" x2="180" y2="101" stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="122" x2="180" y2="122" stroke="white" stroke-width="16"/>
+        <line x1="-20" y1="143" x2="180" y2="143" stroke="white" stroke-width="16"/>
       </g>
     </mask>
 
-    <!-- Gradient in canvas space: pure top→bottom, no rotation -->
     <linearGradient id="grad" x1="0" y1="12" x2="0" y2="148" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFD4A8"/>
-      <stop offset="40%"  stop-color="#F09040"/>
-      <stop offset="70%"  stop-color="#CC5C10"/>
-      <stop offset="100%" stop-color="#541604"/>
+      <stop offset="0%"   stop-color="#FFE4B8"/>
+      <stop offset="35%"  stop-color="#F09040"/>
+      <stop offset="70%"  stop-color="#D05A10"/>
+      <stop offset="100%" stop-color="#C84810"/>
     </linearGradient>
   </defs>
 
-  <!-- Gradient rect painted in canvas space, revealed only through the line mask -->
   <rect width="160" height="160" fill="url(#grad)" mask="url(#lines)"/>
 </svg>
