@@ -1,5 +1,15 @@
 // --- Marketplace & Dashboard types ---
 
+export interface ActiveSaleSummary {
+  eventId: string;
+  suburb: string | null;
+  state: string | null;
+  itemCount: number;
+  minPrice: number | null;
+  publishedAt: string | null;
+}
+
+
 export interface MarketplaceItem {
   id: string;
   name: string;
