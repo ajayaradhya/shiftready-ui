@@ -2,7 +2,14 @@
 const nextConfig = {
   output: 'standalone', // Critical for Docker/Cloud Run
   images: {
-    unoptimized: true, // Recommended if not using a dedicated Image Optimizer service
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
