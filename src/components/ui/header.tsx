@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Bell, UserCircle, LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -73,17 +73,14 @@ export function Header({ isProcessing, children, section }: HeaderProps) {
               <span className="text-xs font-medium uppercase tracking-widest hidden sm:block">
                 {displayName}
               </span>
-              {user?.photoURL ? (
-                <Image
-                  src={user.photoURL}
-                  alt={`${displayName} avatar`}
-                  width={28}
-                  height={28}
-                  className="rounded-full ring-1 ring-outline-variant/20"
-                />
-              ) : (
-                <UserCircle size={24} strokeWidth={1.5} aria-hidden />
-              )}
+              <Image
+                src={user?.photoURL ?? "/default-avatar.png"}
+                alt={`${displayName} avatar`}
+                width={28}
+                height={28}
+                className="rounded-full ring-1 ring-outline-variant/20"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/default-avatar.png"; }}
+              />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
