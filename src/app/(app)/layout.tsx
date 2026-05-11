@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { Sidebar } from "@/components/ui/sidebar";
-import { Header } from "@/components/ui/header";
+import { AppSidebar } from "@/components/ui/app-sidebar";
+import { AppHeader } from "@/components/ui/app-header";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -18,10 +19,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-surface">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <span className="text-[10px] uppercase tracking-[0.3em] text-outline font-black">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          background: "var(--sr-bg-app)",
+          fontFamily: "var(--sr-font-sans)",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div
+            className="animate-spin"
+            style={{
+              width: 40,
+              height: 40,
+              border: "2px solid var(--clay-200)",
+              borderTopColor: "var(--clay-500)",
+              borderRadius: "50%",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.3em",
+              color: "var(--ink-400)",
+              fontWeight: 700,
+            }}
+          >
             Authenticating...
           </span>
         </div>
@@ -35,13 +62,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-xl focus:text-xs focus:font-black focus:uppercase focus:tracking-widest"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:text-xs focus:font-black focus:uppercase focus:tracking-widest"
+        style={{ background: "var(--clay-600)", color: "#fff" }}
       >
         Skip to content
       </a>
-      <Sidebar />
-      <Header />
-      <main id="main-content" className="pt-16 pl-0 md:pl-20 min-h-screen relative">
+      <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AppHeader onMenuClick={() => setSidebarOpen(true)} />
+      <main
+        id="main-content"
+        className="md:pl-20 min-h-screen relative"
+        style={{ paddingTop: 64 }}
+      >
         {children}
       </main>
     </>

@@ -7,7 +7,7 @@ import { VideoPreview } from "@/components/features/inventory/video-preview";
 import { LoadingOverlay } from "@/components/features/inventory/loading-overlay";
 import { InventoryActions } from "@/components/features/inventory/inventory-actions";
 import { BundleSection } from "@/components/features/inventory/bundle-section";
-import { Header } from "@/components/ui/header";
+import { AppHeader } from "@/components/ui/app-header";
 import { Package, Sparkles } from "lucide-react";
 import {
   publishSale,
@@ -128,7 +128,7 @@ export default function InventoryReviewPage() {
         />
       )}
 
-      <Header isProcessing={isGlobalLoading}>
+      <AppHeader isProcessing={isGlobalLoading}>
         <InventoryActions
           isLive={isLive}
           isAddingBundle={isAddingBundle}
@@ -145,7 +145,7 @@ export default function InventoryReviewPage() {
           onPublish={(payload) => publishMutation.mutate(payload)}
           onUnpublish={() => unpublishMutation.mutate()}
         />
-      </Header>
+      </AppHeader>
 
       <div className="flex h-[calc(100vh-64px)] w-full p-8 gap-12">
         <VideoPreview videoUrl={summary?.videoUrl} status={status} itemCount={totalItems} />

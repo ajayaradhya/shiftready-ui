@@ -52,31 +52,31 @@
   --sr-shadow-focus: 0 0 0 3px rgba(204,120,92,0.22);
 }
 
-/* ── Tailwind semantic tokens (dark app shell) ──────────────────────────────
+/* ── Tailwind semantic tokens (light app shell) ─────────────────────────────
    These map directly to Tailwind utilities: bg-primary, text-on-surface, etc.
    EDIT HERE to change app-wide colors.
 ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-primary: #adc6ff;                  /* Electric Blue — accent, active nav, links */
-  --color-tertiary: #4edea3;                 /* Green — pricing, positive indicators */
-  --color-surface: #131313;                  /* App background */
+  --color-primary: #B5604A;                  /* Clay-600 — brand accent, active nav */
+  --color-tertiary: #557239;                 /* Moss-600 — pricing, positive indicators */
+  --color-surface: #FAFAF7;                  /* App background */
 
-  --color-surface-container-lowest: #0e0e0e; /* Sidebar, deepest wells */
-  --color-surface-container-low: #1b1b1b;    /* Cards, subtle containers */
-  --color-surface-container: #1f1f1f;        /* Default container */
-  --color-surface-container-high: #2b2b2b;   /* Elevated containers */
-  --color-surface-container-highest: #353534;/* Highest elevation */
+  --color-surface-container-lowest: #FFFFFF; /* Cards, purest white */
+  --color-surface-container-low: #FBF8F3;    /* Cream-50 — subtle bg */
+  --color-surface-container: #F5F0E8;        /* Cream-100 — default container */
+  --color-surface-container-high: #EDE5D6;   /* Cream-200 — elevated containers */
+  --color-surface-container-highest: #E0D5C0;/* Cream-300 — highest elevation */
 
-  --color-on-surface: #e3e2e2;               /* Primary text */
-  --color-on-surface-variant: #c4c6cf;       /* Secondary text */
-  --color-on-primary: #002b74;               /* Text on primary-colored bg */
-  --color-outline: #8e9099;                  /* Borders, muted icons */
-  --color-outline-variant: #44474f;          /* Subtle dividers */
-  --color-error: #ffb4ab;                    /* Error states */
+  --color-on-surface: #1F1B17;               /* Ink-800 — primary text */
+  --color-on-surface-variant: #4F4838;       /* Ink-500 — secondary text */
+  --color-on-primary: #FFFFFF;               /* Text on primary-colored bg */
+  --color-outline: #A09683;                  /* Ink-300 — borders, muted icons */
+  --color-outline-variant: #E0D5C0;          /* Cream-300 — subtle dividers */
+  --color-error: #B14F3B;                    /* Rust-500 — error states */
 
   --radius-xl: 12px;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Geist", ui-sans-serif, system-ui;
 }
 
 /* 2026 Global Base Styles */

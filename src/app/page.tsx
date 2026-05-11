@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Package, Search as SearchIcon, MapPin } from "lucide-react";
+import { AppHeader } from "@/components/ui/app-header";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
@@ -219,51 +220,8 @@ export default function LandingPage() {
   const hasSearch = !!(searchInput || suburb);
 
   return (
-    <div className={s.landing}>
-      {/* ── FONTS ── */}
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
-      {/* ── HEADER ── */}
-      <header className={s.header}>
-        <div className={s.headerInner}>
-          <Link href="/" className={s.brand}>
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={30} height={30} priority />
-            <span className={s.brandName}>ShiftReady</span>
-          </Link>
-
-          <div className={s.search}>
-            <SearchIcon size={16} className={s.searchIcon} />
-            <input
-              className={s.searchInput}
-              type="text"
-              placeholder="Search items, brands…"
-              value={searchInput}
-              onChange={e => handleSearchChange(e.target.value)}
-            />
-            <span className={s.searchKbd}>⌘&nbsp;K</span>
-          </div>
-
-          <div className={s.headerActions}>
-            <Link className={s.headerLink} href="/dashboard">My Sales</Link>
-            <button className={s.bell} aria-label="Notifications">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
-            </button>
-            <Link href="/login" className={s.avatar} aria-label="Sign in">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className={s.landing} style={{ paddingTop: 64 }}>
+      <AppHeader />
 
       <main className={s.container}>
 
@@ -296,7 +254,22 @@ export default function LandingPage() {
 
         {/* ── FILTER BAR ── */}
         <div className={s.filterBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--sr-text-primary)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Search — moved from header */}
+            <div className={s.search} style={{ width: 260 }}>
+              <SearchIcon size={15} className={s.searchIcon} />
+              <input
+                className={s.searchInput}
+                type="text"
+                placeholder="Search items, brands…"
+                value={searchInput}
+                onChange={e => handleSearchChange(e.target.value)}
+              />
+            </div>
+
+            <div style={{ width: 1, height: 20, background: "var(--sr-border-subtle)", flexShrink: 0 }} />
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--sr-text-primary)" }}>
             <span className={s.locationPin}>
               <MapPin size={14} color="var(--clay-600)" />
             </span>
@@ -321,6 +294,7 @@ export default function LandingPage() {
               ))}
             </select>
           </div>
+          </div>{/* end left-side flex */}
 
           <div className={s.chips}>
             <button className={s.chip}>Category <span className={s.chipCaret}><ChevronDown /></span></button>
