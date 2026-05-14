@@ -52,7 +52,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         zIndex: 50,
         display: "flex",
         alignItems: "center",
-        padding: "0 32px",
+        padding: "0 16px",
         gap: 0,
         fontFamily: "var(--sr-font-sans)",
       }}
@@ -82,9 +82,9 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           aria-label="Open navigation menu"
           className="md:hidden"
           style={{
-            width: 36,
-            height: 36,
-            marginRight: 12,
+            width: 44,
+            height: 44,
+            marginRight: 8,
             borderRadius: "var(--sr-radius-md)",
             border: "1px solid var(--sr-border-subtle)",
             background: "transparent",
@@ -125,9 +125,9 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         </span>
       </Link>
 
-      {/* Sale context chip */}
+      {/* Sale context chip — hidden on mobile to prevent overflow */}
       {sale && (
-        <>
+        <div className="hidden md:contents">
           <div
             style={{
               width: 1,
@@ -161,7 +161,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
               {sale.name}
             </span>
           </div>
-        </>
+        </div>
       )}
 
       {/* Global search — hidden < md */}
@@ -221,8 +221,8 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         <button
           aria-label="Notifications"
           style={{
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             borderRadius: "50%",
             display: "grid",
             placeItems: "center",

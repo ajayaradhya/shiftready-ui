@@ -30,7 +30,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
     <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={0} stepLabel="Upload video" />
 
-      <div style={{ width: 720, margin: "0 auto", padding: "56px 0 64px", display: "flex", flexDirection: "column", gap: 32 }}>
+      <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "56px 16px 64px", display: "flex", flexDirection: "column", gap: 32 }}>
 
         {/* Heading */}
         <div style={{ textAlign: "center" }}>
@@ -83,7 +83,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
         >
           {isUploading ? (
             /* Upload progress state */
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, width: "100%", padding: "0 60px" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, width: "100%", padding: "0 24px" }}>
               <div style={{
                 width: 72, height: 72, borderRadius: 22,
                 background: "var(--clay-50)", color: "var(--clay-600)",

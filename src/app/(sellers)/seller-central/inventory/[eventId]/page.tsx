@@ -156,21 +156,23 @@ export default function SellerCentralInventoryPage() {
         />
       )}
 
-      {/* Left: video panel */}
-      <VideoPanel
-        videoUrl={summary?.videoUrl}
-        items={allItems}
-        activeItemId={activeItemId}
-        onSeek={handleSeek}
-      />
+      {/* Left: video panel — hidden on mobile */}
+      <div className="hidden md:block">
+        <VideoPanel
+          videoUrl={summary?.videoUrl}
+          items={allItems}
+          activeItemId={activeItemId}
+          onSeek={handleSeek}
+        />
+      </div>
 
       {/* Right: main inventory */}
       <div
-        style={{ flex: 1, overflowY: "auto", padding: "28px 32px 56px", fontFamily: "var(--sr-font-sans)" }}
-        className="custom-scrollbar"
+        style={{ flex: 1, overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
+        className="custom-scrollbar px-4 py-7 pb-14 md:px-8"
       >
         {/* Top bar */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3" style={{ marginBottom: 28 }}>
           <div>
             <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 5px" }}>
               {titleFromUrl ? (
@@ -238,9 +240,9 @@ export default function SellerCentralInventoryPage() {
           </div>
         </div>
 
-        {/* Bundle tray — 3-col grid */}
+        {/* Bundle tray — responsive grid */}
         {summary?.bundles && summary.bundles.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 32 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[14px] mb-8">
             {summary.bundles.map((bundle, idx) => (
               <BundleCard
                 key={bundle.id}
@@ -321,8 +323,8 @@ export default function SellerCentralInventoryPage() {
               </div>
             </div>
 
-            {/* 2-col items grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {/* items grid — 1-col mobile, 2-col sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px]">
               {selectedBundle.items.map((item) => (
                 <ItemCardV2
                   key={item.id}
@@ -352,7 +354,7 @@ export default function SellerCentralInventoryPage() {
 
         {/* Publish bar — always visible when inventory is loaded */}
         {summary && totalItems > 0 && (
-          <div style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
             <div>
               <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", letterSpacing: "-0.01em" }}>
                 {isLive ? "Currently live" : "Ready to publish"}

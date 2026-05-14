@@ -218,8 +218,8 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                 onClick={onClose}
                 aria-label="Close menu"
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 44,
+                  height: 44,
                   borderRadius: "var(--sr-radius-md)",
                   border: "none",
                   background: "var(--cream-100)",
