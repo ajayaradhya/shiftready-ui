@@ -25,6 +25,8 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [coveringId, setCoveringId] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   const sorted = [...images].sort((a, b) => (b.is_cover ? 1 : 0) - (a.is_cover ? 1 : 0));
@@ -68,13 +70,23 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
   }
 
   async function handleDelete(imageId: string) {
-    await deleteItemImage(eventId, bundleId, itemId, imageId);
-    await refresh();
+    setDeletingId(imageId);
+    try {
+      await deleteItemImage(eventId, bundleId, itemId, imageId);
+      await refresh();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleSetCover(imageId: string) {
-    await setItemImageCover(eventId, bundleId, itemId, imageId);
-    await refresh();
+    setCoveringId(imageId);
+    try {
+      await setItemImageCover(eventId, bundleId, itemId, imageId);
+      await refresh();
+    } finally {
+      setCoveringId(null);
+    }
   }
 
   const openLightbox = (idx: number) => setLightboxIdx(idx);
@@ -168,6 +180,8 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
             width={148}
             height={108}
             showCoverBadge
+            isDeleting={deletingId === cover.id}
+            isCovering={coveringId === cover.id}
             onDelete={() => handleDelete(cover.id)}
             onSetCover={() => handleSetCover(cover.id)}
             onClick={() => openLightbox(0)}
@@ -181,6 +195,8 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
             image={img}
             width={64}
             height={64}
+            isDeleting={deletingId === img.id}
+            isCovering={coveringId === img.id}
             onDelete={() => handleDelete(img.id)}
             onSetCover={() => handleSetCover(img.id)}
             onClick={() => openLightbox(i + 1)}
@@ -262,9 +278,29 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
           onClose={() => setLightboxIdx(null)}
           onDelete={handleDelete}
           onSetCover={handleSetCover}
+          deletingId={deletingId}
+          coveringId={coveringId}
         />
       )}
     </>
+  );
+}
+
+function Spinner({ color = "var(--clay-500)" }: { color?: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: 11,
+        height: 11,
+        borderRadius: "50%",
+        border: `1.5px solid transparent`,
+        borderTopColor: color,
+        borderRightColor: color,
+        animation: "spin 0.7s linear infinite",
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -273,13 +309,16 @@ interface PhotoTileProps {
   width: number;
   height: number;
   showCoverBadge?: boolean;
+  isDeleting?: boolean;
+  isCovering?: boolean;
   onDelete: () => void;
   onSetCover: () => void;
   onClick: () => void;
 }
 
-function PhotoTile({ image, width, height, showCoverBadge, onDelete, onSetCover, onClick }: PhotoTileProps) {
+function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCovering, onDelete, onSetCover, onClick }: PhotoTileProps) {
   const [hovered, setHovered] = useState(false);
+  const busy = isDeleting || isCovering;
 
   return (
     <div
@@ -292,19 +331,19 @@ function PhotoTile({ image, width, height, showCoverBadge, onDelete, onSetCover,
         flexShrink: 0,
         cursor: "pointer",
       }}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => !busy && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={image.url ?? "/item-placeholder.svg"}
         alt=""
-        onClick={onClick}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        onClick={busy ? undefined : onClick}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: busy ? 0.5 : 1, transition: "opacity 150ms" }}
       />
 
       {/* Cover badge */}
-      {showCoverBadge && (
+      {showCoverBadge && !busy && (
         <span
           style={{
             position: "absolute",
@@ -326,8 +365,32 @@ function PhotoTile({ image, width, height, showCoverBadge, onDelete, onSetCover,
         </span>
       )}
 
+      {/* Loading overlay */}
+      {busy && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(250,248,245,0.7)",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              border: "2px solid var(--clay-200)",
+              borderTopColor: "var(--clay-500)",
+              animation: "spin 0.7s linear infinite",
+            }}
+          />
+        </div>
+      )}
+
       {/* Hover overlay with actions */}
-      {hovered && (
+      {hovered && !busy && (
         <div
           style={{
             position: "absolute",
@@ -393,14 +456,17 @@ interface LightboxProps {
   onClose: () => void;
   onDelete: (id: string) => Promise<void>;
   onSetCover: (id: string) => Promise<void>;
+  deletingId: string | null;
+  coveringId: string | null;
 }
 
-function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover }: LightboxProps) {
+function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover, deletingId, coveringId }: LightboxProps) {
   const [idx, setIdx] = useState(Math.min(initialIdx, images.length - 1));
   const current = images[idx];
+  const isBusy = !!(deletingId || coveringId);
 
-  function prev() { setIdx((i) => Math.max(0, i - 1)); }
-  function next() { setIdx((i) => Math.min(images.length - 1, i + 1)); }
+  function prev() { if (!isBusy) setIdx((i) => Math.max(0, i - 1)); }
+  function next() { if (!isBusy) setIdx((i) => Math.min(images.length - 1, i + 1)); }
 
   if (!current) return null;
 
@@ -435,7 +501,8 @@ function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover }: Lig
         <div style={{ display: "flex", gap: 8 }}>
           {!current.is_cover && (
             <button
-              onClick={() => onSetCover(current.id)}
+              onClick={() => !isBusy && onSetCover(current.id)}
+              disabled={isBusy}
               style={{
                 padding: "5px 12px",
                 borderRadius: "var(--sr-radius-sm)",
@@ -444,17 +511,20 @@ function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover }: Lig
                 color: "#fff",
                 fontFamily: "var(--sr-font-sans)",
                 fontSize: 12,
-                cursor: "pointer",
+                cursor: isBusy ? "default" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 5,
+                opacity: isBusy ? 0.5 : 1,
               }}
             >
-              <Star size={11} strokeWidth={1.5} /> Set as cover
+              {coveringId === current.id ? <Spinner /> : <Star size={11} strokeWidth={1.5} />}
+              {coveringId === current.id ? "Setting…" : "Set as cover"}
             </button>
           )}
           <button
-            onClick={() => { onDelete(current.id); if (idx >= images.length - 1) setIdx(Math.max(0, idx - 1)); }}
+            onClick={() => { if (!isBusy) { onDelete(current.id); if (idx >= images.length - 1) setIdx(Math.max(0, idx - 1)); } }}
+            disabled={isBusy}
             style={{
               padding: "5px 12px",
               borderRadius: "var(--sr-radius-sm)",
@@ -463,10 +533,15 @@ function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover }: Lig
               color: "rgba(220,120,100,1)",
               fontFamily: "var(--sr-font-sans)",
               fontSize: 12,
-              cursor: "pointer",
+              cursor: isBusy ? "default" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              opacity: isBusy ? 0.5 : 1,
             }}
           >
-            Remove
+            {deletingId === current.id ? <Spinner color="rgba(220,120,100,1)" /> : null}
+            {deletingId === current.id ? "Removing…" : "Remove"}
           </button>
           <button
             onClick={onClose}

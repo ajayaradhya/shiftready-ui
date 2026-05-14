@@ -69,7 +69,7 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
         Skip to content
       </a>
       <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <AppHeader onMenuClick={() => setSidebarOpen(true)} />
+      <AppHeader />
       <main
         id="main-content"
         className="md:pl-[72px] min-h-screen relative"
