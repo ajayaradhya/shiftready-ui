@@ -130,6 +130,9 @@
   0%, 100% { box-shadow: 0 0 0 0 rgba(107,138,78,0.5); }
   50%      { box-shadow: 0 0 0 5px rgba(107,138,78,0); }
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* Custom Stitch scrollbar */
 .custom-scrollbar::-webkit-scrollbar {

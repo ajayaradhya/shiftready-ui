@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { icon: LayoutDashboard, label: "Sales",     href: "/seller-central", disabled: false },
   { icon: Package,         label: "Inventory", href: "#",               disabled: true },
-  { icon: Store,           label: "Market",    href: "/marketplace",    disabled: false },
+  { icon: Store,           label: "Market",    href: "/",               disabled: false },
   // divider before index 3
   { icon: CreditCard,      label: "Finances",  href: "#",               disabled: true },
   { icon: LifeBuoy,        label: "Help",      href: "#",               disabled: true },
@@ -18,6 +18,7 @@ const DIVIDER_BEFORE = 3;
 
 function isItemActive(href: string, pathname: string): boolean {
   if (href === "#") return false;
+  if (href === "/") return pathname === "/";
   if (href === "/seller-central") return pathname.startsWith("/seller-central");
   return pathname === href || pathname.startsWith(href + "/");
 }
