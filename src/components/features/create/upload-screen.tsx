@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FolderOpen, Shield } from "lucide-react";
+import { FolderOpen, Shield, Video } from "lucide-react";
+import Link from "next/link";
 import { HowTo } from "./how-to";
 import { StepHeader } from "./step-header";
 import type { UploadStatus } from "@/hooks/use-upload";
@@ -241,6 +242,45 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Live capture shortcut */}
+        {!isUploading && (
+          <div style={{ textAlign: "center" }}>
+            <Link
+              href="/seller-central/live-stream"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "10px 20px",
+                borderRadius: "var(--sr-radius-md)",
+                border: "1px solid var(--clay-200)",
+                background: "var(--clay-50)",
+                color: "var(--clay-700)",
+                fontSize: 13,
+                fontWeight: 500,
+                textDecoration: "none",
+                fontFamily: "var(--sr-font-sans)",
+                transition: "all 120ms",
+              }}
+            >
+              <Video size={14} strokeWidth={1.75} />
+              Try Live Capture instead
+              <span style={{
+                fontFamily: "var(--sr-font-mono)",
+                fontSize: 9,
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                color: "var(--clay-400)",
+                padding: "2px 6px",
+                border: "1px solid var(--clay-200)",
+                borderRadius: 100,
+              }}>
+                Beta
+              </span>
+            </Link>
           </div>
         )}
 
