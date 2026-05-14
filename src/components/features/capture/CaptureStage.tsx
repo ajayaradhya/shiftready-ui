@@ -2,11 +2,18 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useMediapipeDetector, type DetectionEntry } from "@/hooks/use-mediapipe-detector";
+import { pickRecordingMimeType } from "@/lib/capture/capture-types";
 import { Zap, AlertTriangle } from "lucide-react";
 
 interface Props {
   stream: MediaStream;
+  shouldStop?: boolean;
+  onNewItem?: (label: string) => void;
+  onRecordingComplete?: (blob: Blob, mimeType: string) => void;
 }
+
+// Minimum detection count before an item is "confirmed"
+const CONFIRM_THRESHOLD = 5;
 
 const LABEL_COLORS: Record<string, string> = {
   default: "var(--clay-500)",
@@ -14,7 +21,7 @@ const LABEL_COLORS: Record<string, string> = {
   chair: "var(--moss-600)",
   couch: "var(--moss-600)",
   tv: "var(--honey-600)",
-  "television": "var(--honey-600)",
+  television: "var(--honey-600)",
   bed: "var(--clay-600)",
   table: "var(--clay-500)",
   laptop: "var(--honey-600)",
@@ -22,8 +29,7 @@ const LABEL_COLORS: Record<string, string> = {
 };
 
 function getColor(label: string): string {
-  const key = label.toLowerCase();
-  return LABEL_COLORS[key] ?? LABEL_COLORS.default;
+  return LABEL_COLORS[label.toLowerCase()] ?? LABEL_COLORS.default;
 }
 
 function drawBboxes(
@@ -42,7 +48,6 @@ function drawBboxes(
   ctx.clearRect(0, 0, dW, dH);
   if (!vW || !vH || detections.length === 0) return;
 
-  // object-fit: cover scale + offset
   const scale = Math.max(dW / vW, dH / vH);
   const offsetX = (dW - vW * scale) / 2;
   const offsetY = (dH - vH * scale) / 2;
@@ -72,40 +77,95 @@ function drawBboxes(
   }
 }
 
-export function CaptureStage({ stream }: Props) {
+export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplete }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const seenCountRef = useRef<Map<string, number>>(new Map());
+  const confirmedRef = useRef<Set<string>>(new Set());
+  const onNewItemRef = useRef(onNewItem);
+  const onRecordingCompleteRef = useRef(onRecordingComplete);
+
+  useEffect(() => { onNewItemRef.current = onNewItem; }, [onNewItem]);
+  useEffect(() => { onRecordingCompleteRef.current = onRecordingComplete; }, [onRecordingComplete]);
+
   const { status, loadError, loadMs, detect } = useMediapipeDetector();
   const [detections, setDetections] = useState<DetectionEntry[]>([]);
   const [fps, setFps] = useState(0);
-  const [frameCount, setFrameCount] = useState(0);
 
-  // Attach stream to video element
+  // Attach stream to video
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     video.srcObject = stream;
     video.play().catch(() => {});
-    return () => {
-      video.srcObject = null;
-    };
+    return () => { video.srcObject = null; };
   }, [stream]);
 
   // Stop stream on unmount
   useEffect(() => {
+    return () => { stream.getTracks().forEach((t) => t.stop()); };
+  }, [stream]);
+
+  // Start MediaRecorder
+  useEffect(() => {
+    const mimeType = pickRecordingMimeType();
+
+    function attachHandlers(mr: MediaRecorder) {
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      mr.onstop = () => {
+        const actualMime = mr.mimeType || mimeType || "video/webm";
+        const blob = new Blob(chunksRef.current, { type: actualMime.split(";")[0] });
+        onRecordingCompleteRef.current?.(blob, actualMime);
+      };
+    }
+
+    // Try specific mimeType first, then bare default — both construction AND start() can throw
+    let mr: MediaRecorder | null = null;
+    if (mimeType) {
+      try {
+        const candidate = new MediaRecorder(stream, { mimeType });
+        attachHandlers(candidate);
+        candidate.start(1000);
+        mr = candidate;
+      } catch { /* fall through to default */ }
+    }
+    if (!mr) {
+      try {
+        const candidate = new MediaRecorder(stream);
+        attachHandlers(candidate);
+        candidate.start(1000);
+        mr = candidate;
+      } catch (e) {
+        console.warn("MediaRecorder unavailable:", e);
+      }
+    }
+    if (!mr) return;
+    const activeMr = mr;
+    mediaRecorderRef.current = activeMr;
+
     return () => {
-      stream.getTracks().forEach((t) => t.stop());
+      if (activeMr.state !== "inactive") activeMr.stop();
     };
   }, [stream]);
 
-  // RAF detection loop — starts once detector is ready
+  // Stop recording when requested
+  useEffect(() => {
+    if (!shouldStop) return;
+    const mr = mediaRecorderRef.current;
+    if (mr && mr.state !== "inactive") mr.stop();
+  }, [shouldStop]);
+
+  // RAF detection loop
   const runLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
-    // Sync canvas size to displayed video size
     const { clientWidth, clientHeight } = video;
     if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
       canvas.width = clientWidth;
@@ -116,8 +176,19 @@ export function CaptureStage({ stream }: Props) {
     if (result) {
       setDetections(result.detections);
       setFps(result.fps);
-      setFrameCount((n) => n + 1);
       drawBboxes(canvas, video, result.detections);
+
+      // Track new items
+      for (const det of result.detections) {
+        if (det.score < 0.6) continue;
+        const label = det.label.toLowerCase();
+        const count = (seenCountRef.current.get(label) ?? 0) + 1;
+        seenCountRef.current.set(label, count);
+        if (count >= CONFIRM_THRESHOLD && !confirmedRef.current.has(label)) {
+          confirmedRef.current.add(label);
+          onNewItemRef.current?.(label);
+        }
+      }
     }
 
     rafRef.current = requestAnimationFrame(runLoop);
@@ -133,22 +204,23 @@ export function CaptureStage({ stream }: Props) {
     fps >= 15 ? "var(--moss-600)" : fps >= 8 ? "var(--honey-600)" : "var(--rust-500)";
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "calc(100vh - 64px)", background: "#000", overflow: "hidden" }}>
-      {/* Camera feed */}
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "calc(100vh - 64px)",
+        background: "#000",
+        overflow: "hidden",
+      }}
+    >
       <video
         ref={videoRef}
         muted
         playsInline
         autoPlay
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-        }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
 
-      {/* Bbox canvas */}
       <canvas
         ref={canvasRef}
         style={{
@@ -160,7 +232,7 @@ export function CaptureStage({ stream }: Props) {
         }}
       />
 
-      {/* Top HUD: FPS + model status */}
+      {/* FPS pill (top-right) */}
       <div
         style={{
           position: "absolute",
@@ -172,7 +244,6 @@ export function CaptureStage({ stream }: Props) {
           gap: 6,
         }}
       >
-        {/* FPS pill */}
         <div
           style={{
             display: "flex",
@@ -192,27 +263,7 @@ export function CaptureStage({ stream }: Props) {
           <Zap size={12} strokeWidth={2} />
           {status === "loading" ? "…" : `${fps} fps`}
         </div>
-
-        {/* Load time pill (shown once loaded) */}
         {loadMs !== null && (
-          <div
-            style={{
-              padding: "4px 10px",
-              borderRadius: 100,
-              background: "rgba(0,0,0,0.45)",
-              backdropFilter: "blur(8px)",
-              color: "rgba(255,255,255,0.6)",
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 11,
-              letterSpacing: "0.04em",
-            }}
-          >
-            WASM {(loadMs / 1000).toFixed(1)}s init
-          </div>
-        )}
-
-        {/* Frame counter */}
-        {frameCount > 0 && (
           <div
             style={{
               padding: "4px 10px",
@@ -222,9 +273,10 @@ export function CaptureStage({ stream }: Props) {
               color: "rgba(255,255,255,0.5)",
               fontFamily: "var(--sr-font-mono)",
               fontSize: 11,
+              letterSpacing: "0.04em",
             }}
           >
-            {frameCount} frames
+            WASM {(loadMs / 1000).toFixed(1)}s init
           </div>
         )}
       </div>
@@ -299,84 +351,70 @@ export function CaptureStage({ stream }: Props) {
         >
           <AlertTriangle size={32} strokeWidth={1.5} style={{ color: "var(--rust-400)" }} />
           <div style={{ color: "#fff", fontSize: 15, fontWeight: 500 }}>Model failed to load</div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, maxWidth: 260 }}>{loadError}</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, maxWidth: 260 }}>
+            {loadError}
+          </div>
         </div>
       )}
 
-      {/* Bottom detections panel */}
+      {/* Bottom detection badges */}
       <div
         style={{
           position: "absolute",
-          bottom: 0,
+          bottom: 100,
           left: 0,
           right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)",
-          padding: "40px 20px 20px",
+          padding: "0 16px",
+          pointerEvents: "none",
         }}
       >
-        {detections.length === 0 && status === "ready" ? (
-          <p
-            style={{
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "rgba(255,255,255,0.4)",
-              textAlign: "center",
-              margin: 0,
-            }}
-          >
-            Point camera at items to detect
-          </p>
-        ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {detections.slice(0, 6).map((det, i) => (
-              <div
-                key={i}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {detections.slice(0, 5).map((det, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "4px 10px",
+                borderRadius: 100,
+                background: "rgba(0,0,0,0.55)",
+                backdropFilter: "blur(8px)",
+                border: `1px solid ${getColor(det.label)}40`,
+              }}
+            >
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: 100,
-                  background: "rgba(0,0,0,0.55)",
-                  backdropFilter: "blur(8px)",
-                  border: `1px solid ${getColor(det.label)}40`,
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: getColor(det.label),
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "var(--sr-font-sans)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#fff",
+                  textTransform: "capitalize",
                 }}
               >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: getColor(det.label),
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "var(--sr-font-sans)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "#fff",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {det.label}
-                </span>
-                <span
-                  style={{
-                    fontFamily: "var(--sr-font-mono)",
-                    fontSize: 11,
-                    color: "rgba(255,255,255,0.5)",
-                  }}
-                >
-                  {Math.round(det.score * 100)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+                {det.label}
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--sr-font-mono)",
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.5)",
+                }}
+              >
+                {Math.round(det.score * 100)}%
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
