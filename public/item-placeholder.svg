@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <pattern id="stripe" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="20" height="20" fill="#FAF6F0"/>
+      <rect width="10" height="20" fill="#F2EAE0"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="300" fill="url(#stripe)"/>
+  <rect width="400" height="300" fill="rgba(250,246,240,0.4)"/>
+  <!-- Camera icon centered -->
+  <g transform="translate(200,150)" fill="none" stroke="#C8B8A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-24" y="-16" width="48" height="36" rx="5"/>
+    <circle cx="0" cy="-1" r="9"/>
+    <path d="-10,-16 L-7,-22 L7,-22 L10,-16"/>
+  </g>
+</svg>

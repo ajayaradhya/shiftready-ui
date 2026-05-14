@@ -326,29 +326,14 @@ export default function SellerCentralInventoryPage() {
               {selectedBundle.items.map((item) => (
                 <ItemCardV2
                   key={item.id}
+                  eventId={eventId}
+                  bundleId={selectedBundle.id}
                   item={item}
                   onSeek={handleSeek}
                 />
               ))}
             </div>
 
-            {/* Publish bar */}
-            <div style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
-              <div>
-                <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", letterSpacing: "-0.01em" }}>
-                  {isLive ? "Currently live" : "Ready to publish"}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", marginTop: 2 }}>
-                  {isLive ? "Sale is visible on the marketplace." : "Review all bundles then publish to the marketplace."}
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em" }}>
-                  ${totalValue.toLocaleString()}
-                </span>
-                <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
-              </div>
-            </div>
           </div>
         ) : (
           /* No-selection hint */
@@ -362,6 +347,26 @@ export default function SellerCentralInventoryPage() {
             <p style={{ fontSize: 13, color: "var(--sr-text-muted)", maxWidth: 280, lineHeight: 1.5, margin: 0 }}>
               Tap any room card above to review and edit its items.
             </p>
+          </div>
+        )}
+
+        {/* Publish bar — always visible when inventory is loaded */}
+        {summary && totalItems > 0 && (
+          <div style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
+            <div>
+              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", letterSpacing: "-0.01em" }}>
+                {isLive ? "Currently live" : "Ready to publish"}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", marginTop: 2 }}>
+                {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed — publish to the marketplace."}
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic" }}>
+                ${totalValue.toLocaleString()}
+              </em>
+              <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
+            </div>
           </div>
         )}
       </div>

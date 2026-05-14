@@ -200,6 +200,70 @@ export async function getActiveSales(): Promise<ActiveSaleSummary[]> {
   return apiRequest<ActiveSaleSummary[]>(`${API_BASE}/marketplace/sales`);
 }
 
+// --- Item Image Management ---
+
+export interface ImageUploadUrlItem {
+  image_id: string;
+  upload_url: string;
+  gcs_path: string;
+}
+
+export async function getItemImageUploadUrls(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  files: { filename: string; content_type: string }[]
+): Promise<{ urls: ImageUploadUrlItem[] }> {
+  return apiRequest<{ urls: ImageUploadUrlItem[] }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/images/upload-urls`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ files }),
+    }
+  );
+}
+
+export async function confirmItemImages(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  images: { image_id: string; gcs_path: string }[]
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/images/confirm`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ images }),
+    }
+  );
+}
+
+export async function deleteItemImage(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  imageId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/images/${imageId}`,
+    { method: "DELETE" }
+  );
+}
+
+export async function setItemImageCover(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  imageId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/images/${imageId}/cover`,
+    { method: "PATCH" }
+  );
+}
+
 // --- Item Management (CRUD) ---
 
 export async function deleteItem(
