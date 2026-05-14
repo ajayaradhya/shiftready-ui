@@ -104,10 +104,6 @@ export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplet
     return () => { video.srcObject = null; };
   }, [stream]);
 
-  // Stop stream on unmount
-  useEffect(() => {
-    return () => { stream.getTracks().forEach((t) => t.stop()); };
-  }, [stream]);
 
   // Start MediaRecorder
   useEffect(() => {

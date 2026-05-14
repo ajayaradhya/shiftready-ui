@@ -61,6 +61,11 @@ export default function CapturePage() {
     setPageState("capturing");
   };
 
+  // Stop camera tracks when page unmounts or stream changes
+  useEffect(() => {
+    return () => { stream?.getTracks().forEach((t) => t.stop()); };
+  }, [stream]);
+
   const handleNewItem = useCallback((label: string) => {
     setDetectedItems((prev) => {
       if (prev.some((i) => i.label === label)) return prev;

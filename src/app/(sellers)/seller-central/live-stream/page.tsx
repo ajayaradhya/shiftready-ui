@@ -34,6 +34,10 @@ export default function LiveStreamPage() {
     setState("live");
   };
 
+  useEffect(() => {
+    return () => { stream?.getTracks().forEach((t) => t.stop()); };
+  }, [stream]);
+
   return (
     <div style={{ fontFamily: "var(--sr-font-sans)" }}>
       {/* Sub-header bar */}
