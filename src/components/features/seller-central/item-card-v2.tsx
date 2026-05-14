@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { Play, MoreHorizontal, Sparkles } from "lucide-react";
 import type { InventoryItem } from "@/lib/types";
+import { ItemPhotoStrip } from "./item-photo-strip";
 
 interface ItemCardV2Props {
+  eventId: string;
+  bundleId: string;
   item: InventoryItem;
   onSeek?: (ts: number) => void;
 }
 
-export function ItemCardV2({ item, onSeek }: ItemCardV2Props) {
+export function ItemCardV2({ eventId, bundleId, item, onSeek }: ItemCardV2Props) {
   const [reasoningOpen, setReasoningOpen] = useState(false);
 
   const conf = item.confidence ?? 0;
@@ -40,6 +43,14 @@ export function ItemCardV2({ item, onSeek }: ItemCardV2Props) {
         (e.currentTarget as HTMLElement).style.boxShadow = "";
       }}
     >
+      {/* Photo strip */}
+      <ItemPhotoStrip
+        eventId={eventId}
+        bundleId={bundleId}
+        itemId={item.id}
+        images={item.images ?? []}
+      />
+
       {/* Top row: flags + menu */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>

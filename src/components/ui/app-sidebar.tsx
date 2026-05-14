@@ -1,19 +1,20 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, BarChart2, CreditCard, LifeBuoy, X } from "lucide-react";
+import { LayoutDashboard, Package, Store, CreditCard, LifeBuoy, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Sales",    href: "/seller-central", disabled: false },
-  // divider at index 1
-  { icon: BarChart2,       label: "Chart",    href: "#",               disabled: true },
-  { icon: CreditCard,      label: "Finances", href: "#",               disabled: true },
-  { icon: LifeBuoy,        label: "Help",     href: "#",               disabled: true },
+  { icon: LayoutDashboard, label: "Sales",     href: "/seller-central", disabled: false },
+  { icon: Package,         label: "Inventory", href: "#",               disabled: true },
+  { icon: Store,           label: "Market",    href: "/marketplace",    disabled: false },
+  // divider before index 3
+  { icon: CreditCard,      label: "Finances",  href: "#",               disabled: true },
+  { icon: LifeBuoy,        label: "Help",      href: "#",               disabled: true },
 ];
 
-const DIVIDER_BEFORE = 1;
+const DIVIDER_BEFORE = 3;
 
 function isItemActive(href: string, pathname: string): boolean {
   if (href === "#") return false;
@@ -67,7 +68,7 @@ function NavItem({
         borderRadius: "var(--sr-radius-lg)",
         textDecoration: "none",
         transition: "all 140ms",
-        background: active ? "var(--clay-50)" : "transparent",
+        background: "transparent",
         color: disabled ? "var(--ink-200)" : active ? "var(--clay-600)" : "var(--ink-400)",
         pointerEvents: disabled ? "none" : undefined,
         opacity: disabled ? 0.4 : 1,
@@ -87,11 +88,11 @@ function NavItem({
         }
       }}
     >
-      <Icon size={22} strokeWidth={active ? 2 : 1.5} />
+      <Icon size={18} strokeWidth={active ? 2 : 1.5} />
       <span
         style={{
           fontFamily: "var(--sr-font-sans)",
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: active ? 600 : 500,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
@@ -137,7 +138,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           left: 0,
           top: 0,
           bottom: 0,
-          width: 80,
+          width: 72,
           flexDirection: "column",
           alignItems: "center",
           paddingTop: 80,

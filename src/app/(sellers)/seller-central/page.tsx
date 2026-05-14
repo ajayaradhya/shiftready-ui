@@ -129,9 +129,17 @@ export default function SellerCentralPage() {
           <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 8px" }}>
             No sales <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>yet</em>
           </h2>
-          <p style={{ color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: "0 0 28px" }}>
+          <p style={{ color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: "0 0 12px" }}>
             Film a walkthrough of your home and let AI extract and price every item in minutes.
           </p>
+          <a
+            href="https://www.youtube.com/shorts"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 13, color: "var(--clay-600)", textDecoration: "underline", textUnderlineOffset: 3, marginBottom: 24, display: "block" }}
+          >
+            Watch how it works — takes 2 min
+          </a>
           <Link
             href="/seller-central/create"
             style={{

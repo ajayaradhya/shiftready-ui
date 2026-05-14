@@ -84,6 +84,15 @@ export type SaleStatus =
   | "failed"
   | "archived";
 
+export interface InventoryImage {
+  id: string;
+  gcs_path: string;
+  url?: string;
+  is_cover: boolean;
+  source: "user_upload" | "frame_extract";
+  uploaded_at: string;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -103,6 +112,9 @@ export interface InventoryItem {
   // Purchase Metadata
   predicted_year_of_purchase?: number;
   actual_year_of_purchase?: number | null;
+
+  // Media
+  images?: InventoryImage[];
 }
 
 export interface RoomBundle {
