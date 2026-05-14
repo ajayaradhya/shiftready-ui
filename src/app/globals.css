@@ -20,8 +20,8 @@
   --ink-400: #756B5A; --ink-500: #4F4838; --ink-600: #3A3528; --ink-700: #2A2620;
   --ink-800: #1F1B17; --ink-900: #14110D;
 
-  --moss-50: #EFF2E8; --moss-100: #DAE2C7; --moss-500: #6B8A4E; --moss-600: #557239; --moss-700: #3F5728;
-  --honey-50: #FAF0DC; --honey-100: #F2DCAA; --honey-500: #C99935; --honey-600: #A77E25; --honey-700: #855F18;
+  --moss-50: #EFF2E8; --moss-100: #DAE2C7; --moss-400: #85A85C; --moss-500: #6B8A4E; --moss-600: #557239; --moss-700: #3F5728;
+  --honey-50: #FAF0DC; --honey-100: #F2DCAA; --honey-400: #D4A833; --honey-500: #C99935; --honey-600: #A77E25; --honey-700: #855F18;
   --rust-50: #FAEDE8; --rust-100: #F2D0C5; --rust-500: #B14F3B;
 
   /* Semantic aliases (light-mode flows: landing, create) */
@@ -95,6 +95,12 @@
   :focus:not(:focus-visible) {
     outline: none;
   }
+}
+
+/* Inventory items fade-in animation */
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Header AI pulse animation */

@@ -1,19 +1,40 @@
 "use client";
 
-import { Package, PlusCircle, MessageCircle, X } from "lucide-react";
+import React from "react";
+import { LayoutDashboard, BarChart2, CreditCard, LifeBuoy, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { icon: Package, label: "My Listings", href: "/dashboard", disabled: false },
-  { icon: PlusCircle, label: "New Sale", href: "/create", disabled: false },
-  { icon: MessageCircle, label: "Messages", href: "#", disabled: true },
+  { icon: LayoutDashboard, label: "Sales",    href: "/seller-central", disabled: false },
+  // divider at index 1
+  { icon: BarChart2,       label: "Chart",    href: "#",               disabled: true },
+  { icon: CreditCard,      label: "Finances", href: "#",               disabled: true },
+  { icon: LifeBuoy,        label: "Help",     href: "#",               disabled: true },
 ];
+
+const DIVIDER_BEFORE = 1;
 
 function isItemActive(href: string, pathname: string): boolean {
   if (href === "#") return false;
-  if (href === "/create") return pathname === "/create" || pathname.startsWith("/inventory");
+  if (href === "/seller-central") return pathname.startsWith("/seller-central");
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+function NavDivider({ style }: { style?: React.CSSProperties }) {
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: 36,
+        height: 1,
+        background: "var(--sr-border-subtle)",
+        margin: "8px 0",
+        alignSelf: "center",
+        ...style,
+      }}
+    />
+  );
 }
 
 function NavItem({
@@ -107,7 +128,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
   return (
     <>
-      {/* Desktop rail — always visible on md+ */}
+      {/* Desktop rail */}
       <nav
         aria-label="Main navigation"
         className="hidden md:flex"
@@ -129,19 +150,21 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           zIndex: 40,
         }}
       >
-        {navItems.map((item) => (
-          <NavItem
-            key={item.label}
-            icon={item.icon}
-            label={item.label}
-            href={item.href}
-            active={isItemActive(item.href, pathname)}
-            disabled={item.disabled}
-          />
+        {navItems.map((item, idx) => (
+          <React.Fragment key={item.label}>
+            {idx === DIVIDER_BEFORE && <NavDivider />}
+            <NavItem
+              icon={item.icon}
+              label={item.label}
+              href={item.href}
+              active={isItemActive(item.href, pathname)}
+              disabled={item.disabled}
+            />
+          </React.Fragment>
         ))}
       </nav>
 
-      {/* Mobile drawer — controlled by parent via open/onClose */}
+      {/* Mobile drawer */}
       {open && (
         <div className="md:hidden">
           <div
@@ -209,50 +232,54 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {navItems.map((item) => {
+              {navItems.map((item, idx) => {
                 const active = isItemActive(item.href, pathname);
                 return (
-                  <Link
-                    key={item.label}
-                    href={item.disabled ? "#" : item.href}
-                    onClick={() => !item.disabled && onClose()}
-                    aria-current={active ? "page" : undefined}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 12px",
-                      borderRadius: "var(--sr-radius-md)",
-                      textDecoration: "none",
-                      fontSize: 14,
-                      fontWeight: active ? 600 : 500,
-                      color: item.disabled
-                        ? "var(--ink-200)"
-                        : active
-                        ? "var(--clay-600)"
-                        : "var(--ink-500)",
-                      background: active ? "var(--clay-50)" : "transparent",
-                      opacity: item.disabled ? 0.4 : 1,
-                      pointerEvents: item.disabled ? "none" : undefined,
-                    }}
-                  >
-                    <item.icon size={18} strokeWidth={active ? 2 : 1.5} aria-hidden />
-                    <span>{item.label}</span>
-                    {item.disabled && (
-                      <span
-                        style={{
-                          marginLeft: "auto",
-                          fontSize: 10,
-                          fontFamily: "var(--sr-font-mono)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.12em",
-                          color: "var(--ink-300)",
-                        }}
-                      >
-                        Soon
-                      </span>
+                  <React.Fragment key={item.label}>
+                    {idx === DIVIDER_BEFORE && (
+                      <NavDivider style={{ width: "100%", margin: "6px 0" }} />
                     )}
-                  </Link>
+                    <Link
+                      href={item.disabled ? "#" : item.href}
+                      onClick={() => !item.disabled && onClose()}
+                      aria-current={active ? "page" : undefined}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: "var(--sr-radius-md)",
+                        textDecoration: "none",
+                        fontSize: 14,
+                        fontWeight: active ? 600 : 500,
+                        color: item.disabled
+                          ? "var(--ink-200)"
+                          : active
+                          ? "var(--clay-600)"
+                          : "var(--ink-500)",
+                        background: active ? "var(--clay-50)" : "transparent",
+                        opacity: item.disabled ? 0.4 : 1,
+                        pointerEvents: item.disabled ? "none" : undefined,
+                      }}
+                    >
+                      <item.icon size={18} strokeWidth={active ? 2 : 1.5} aria-hidden />
+                      <span>{item.label}</span>
+                      {item.disabled && (
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            fontSize: 10,
+                            fontFamily: "var(--sr-font-mono)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.12em",
+                            color: "var(--ink-300)",
+                          }}
+                        >
+                          Soon
+                        </span>
+                      )}
+                    </Link>
+                  </React.Fragment>
                 );
               })}
             </div>

@@ -2,19 +2,19 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import { useSaleContext } from "@/lib/sale-context";
 
 interface AppHeaderProps {
-  isProcessing?: boolean;
-  children?: React.ReactNode;
   onMenuClick?: () => void;
 }
 
-export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProps) {
+export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const { user, signOut } = useAuth();
+  const { sale, isProcessing } = useSaleContext();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,7 +75,7 @@ export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProp
         </div>
       )}
 
-      {/* Mobile hamburger — only when sidebar is present */}
+      {/* Mobile hamburger */}
       {onMenuClick && (
         <button
           onClick={onMenuClick}
@@ -99,7 +99,7 @@ export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProp
         </button>
       )}
 
-      {/* Logo — always at the same visual position */}
+      {/* Logo */}
       <Link
         href="/"
         style={{
@@ -125,12 +125,96 @@ export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProp
         </span>
       </Link>
 
-      {/* Page-level actions slot (e.g. InventoryActions) */}
-      {children ? (
-        <div style={{ flex: 1 }}>{children}</div>
-      ) : (
-        <div style={{ flex: 1 }} />
+      {/* Sale context chip */}
+      {sale && (
+        <>
+          <div
+            style={{
+              width: 1,
+              height: 22,
+              background: "var(--sr-border-subtle)",
+              margin: "0 12px",
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+            <span
+              style={{
+                fontFamily: "var(--sr-font-mono)",
+                fontSize: 9.5,
+                textTransform: "uppercase",
+                letterSpacing: ".14em",
+                color: "var(--sr-text-muted)",
+                lineHeight: 1,
+              }}
+            >
+              {sale.label}
+            </span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "var(--sr-text-primary)",
+                marginTop: 2,
+              }}
+            >
+              {sale.name}
+            </span>
+          </div>
+        </>
       )}
+
+      {/* Global search — hidden < md */}
+      <div
+        className="hidden md:flex"
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          padding: "0 24px",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: 340,
+          }}
+        >
+          <Search
+            size={14}
+            strokeWidth={1.5}
+            style={{
+              position: "absolute",
+              left: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--ink-300)",
+              pointerEvents: "none",
+            }}
+          />
+          <input
+            type="search"
+            placeholder="Search items, sales…"
+            onChange={() => {}}
+            style={{
+              width: "100%",
+              height: 36,
+              paddingLeft: 34,
+              paddingRight: 12,
+              borderRadius: "var(--sr-radius-lg)",
+              border: "1px solid var(--sr-border-subtle)",
+              background: "var(--cream-50)",
+              fontSize: 13,
+              color: "var(--sr-text-primary)",
+              fontFamily: "var(--sr-font-sans)",
+              outline: "none",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Spacer for mobile (no search) */}
+      <div className="flex md:hidden" style={{ flex: 1 }} />
 
       {/* Right controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -259,7 +343,7 @@ export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProp
                 </div>
 
                 <Link
-                  href="/dashboard"
+                  href="/seller-central"
                   onClick={() => setMenuOpen(false)}
                   style={{
                     display: "flex",
@@ -276,7 +360,7 @@ export function AppHeader({ isProcessing, children, onMenuClick }: AppHeaderProp
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  My Listings
+                  Seller Central
                 </Link>
 
                 <button
