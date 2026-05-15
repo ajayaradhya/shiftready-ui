@@ -4,6 +4,7 @@ export interface CapturedItem {
   label: string;
   firstSeenAt: number;
   frameSrc: string;
+  source?: "auto" | "user_tap";
 }
 
 export interface PendingDetection {
@@ -14,6 +15,7 @@ export interface PendingDetection {
 export interface CaptureToast {
   id: string;
   label: string;
+  displayLabel?: string;
 }
 
 export function pickRecordingMimeType(): string {

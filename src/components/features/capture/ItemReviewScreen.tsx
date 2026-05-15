@@ -166,14 +166,15 @@ export function ItemReviewScreen({
                       fontFamily: "var(--sr-font-sans)",
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "var(--ink-800)",
+                      color: item.label.startsWith("unknown-") ? "var(--sr-text-muted)" : "var(--ink-800)",
                       textTransform: "capitalize",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
+                      fontStyle: item.label.startsWith("unknown-") ? "italic" : "normal",
                     }}
                   >
-                    {item.label}
+                    {item.label.startsWith("unknown-") ? "Unknown item" : item.label}
                   </div>
                 </div>
 

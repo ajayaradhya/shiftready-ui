@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type MouseEvent } from "react";
 import { useMediapipeDetector, type DetectionEntry } from "@/hooks/use-mediapipe-detector";
 import { Zap, AlertTriangle } from "lucide-react";
 
@@ -10,6 +10,7 @@ interface Props {
   pendingLabel?: string | null;
   skipLabels?: string[];
   onItemDetected?: (label: string, frameSrc: string) => void;
+  onUserTap?: (frameSrc: string) => void;
 }
 
 // Detection count before triggering confirm prompt
@@ -86,7 +87,7 @@ function captureFrame(video: HTMLVideoElement): string {
   return offscreen.toDataURL("image/jpeg", 0.85);
 }
 
-export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onItemDetected }: Props) {
+export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onItemDetected, onUserTap }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -102,6 +103,17 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
   const { status, loadError, loadMs, detect } = useMediapipeDetector();
   const [detections, setDetections] = useState<DetectionEntry[]>([]);
   const [fps, setFps] = useState(0);
+  const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null);
+  const onUserTapRef = useRef(onUserTap);
+  useEffect(() => { onUserTapRef.current = onUserTap; }, [onUserTap]);
+
+  const handleStageClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
+    if (status !== "ready" || !videoRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setTimeout(() => setRipple(null), 600);
+    onUserTapRef.current?.(captureFrame(videoRef.current));
+  }, [status]);
 
   // Attach stream to video
   useEffect(() => {
@@ -174,12 +186,14 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
 
   return (
     <div
+      onClick={handleStageClick}
       style={{
         position: "relative",
         width: "100%",
         height: "calc(100vh - 64px)",
         background: "#000",
         overflow: "hidden",
+        cursor: status === "ready" ? "crosshair" : "default",
       }}
     >
       <video
@@ -326,6 +340,24 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
         </div>
       )}
 
+      {/* Tap ripple */}
+      {ripple && (
+        <div
+          style={{
+            position: "absolute",
+            left: ripple.x,
+            top: ripple.y,
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            border: "2px solid rgba(255,255,255,0.85)",
+            transform: "translate(-50%, -50%)",
+            animation: "tapRipple 600ms ease-out forwards",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
       {/* Live detection badges */}
       <div
         style={{
@@ -385,6 +417,13 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes tapRipple {
+          from { opacity: 0.9; transform: translate(-50%, -50%) scale(0.2); }
+          to   { opacity: 0;   transform: translate(-50%, -50%) scale(2.2); }
+        }
+      `}</style>
     </div>
   );
 }

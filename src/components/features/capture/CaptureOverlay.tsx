@@ -97,7 +97,7 @@ export function CaptureOverlay({ detectedItems, toasts }: Props) {
                 textTransform: "capitalize",
               }}
             >
-              Got {toast.label} ✓
+              {toast.displayLabel ? `${toast.displayLabel} ✓` : `Got ${toast.label} ✓`}
             </span>
           </div>
         ))}

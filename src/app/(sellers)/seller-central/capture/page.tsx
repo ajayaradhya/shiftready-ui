@@ -69,6 +69,9 @@ export default function CapturePage() {
   const confirmedItemsRef = useRef<CapturedItem[]>([]);
   useEffect(() => { confirmedItemsRef.current = confirmedItems; }, [confirmedItems]);
 
+  const pendingDetectionRef = useRef<PendingDetection | null>(null);
+  useEffect(() => { pendingDetectionRef.current = pendingDetection; }, [pendingDetection]);
+
   // CaptureStage fires this when an item crosses the detection threshold
   const handleItemDetected = useCallback((label: string, frameSrc: string) => {
     if (confirmedItemsRef.current.some((i) => i.label === label)) return;
@@ -83,6 +86,18 @@ export default function CapturePage() {
     setPendingDetection(null);
     const toastId = `${item.label}-${Date.now()}`;
     setToasts((prev) => [...prev, { id: toastId, label: item.label }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== toastId)), 2500);
+  }, []);
+
+  const handleUserTap = useCallback((frameSrc: string) => {
+    if (pendingDetectionRef.current) return;
+    const label = `unknown-${Date.now()}`;
+    setConfirmedItems((prev) => [
+      ...prev,
+      { label, firstSeenAt: Date.now(), frameSrc, source: "user_tap" },
+    ]);
+    const toastId = `tap-${Date.now()}`;
+    setToasts((prev) => [...prev, { id: toastId, label, displayLabel: "Item added" }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== toastId)), 2500);
   }, []);
 
@@ -158,6 +173,7 @@ export default function CapturePage() {
             pendingLabel={pendingDetection?.label ?? null}
             skipLabels={[...skippedLabels, ...confirmedItems.map((i) => i.label)]}
             onItemDetected={handleItemDetected}
+            onUserTap={handleUserTap}
           />
 
           <CaptureOverlay detectedItems={confirmedItems} toasts={toasts} />
