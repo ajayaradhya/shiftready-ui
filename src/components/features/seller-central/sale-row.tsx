@@ -137,7 +137,7 @@ export function SaleRow({ sale }: SaleRowProps) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
         {isLive && (
           <Link
-            href={`/marketplace/${sale.id}`}
+            href={`/sale/${sale.id}`}
             onClick={(e) => e.stopPropagation()}
             style={{
               display: "inline-flex",

@@ -18,6 +18,7 @@ export interface MarketplaceItem {
   price: number | null;
   bundleName: string | null;
   eventId: string;
+  image_url?: string | null;
   metadata: {
     year: number | null;
     originalPrice: number | null;
@@ -37,6 +38,7 @@ export interface PublicBundleItem {
   brand: string | null;
   condition: string | null;
   price: number;
+  image_url?: string | null;
 }
 
 export interface PublicBundle {

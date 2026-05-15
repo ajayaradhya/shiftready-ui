@@ -90,11 +90,11 @@ export function SaleCard({ sale }: { sale: SaleListing }) {
       <div className="flex items-center gap-2 shrink-0">
         {isLive && (
           <Link
-            href={`/marketplace/${sale.id}`}
+            href={`/sale/${sale.id}`}
             className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black text-tertiary hover:text-tertiary/80 transition-colors px-3 py-1.5 rounded-lg border border-tertiary/20 hover:border-tertiary/40"
           >
             <ShoppingBag size={12} />
-            Marketplace
+            View Sale
           </Link>
         )}
         <button

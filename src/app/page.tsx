@@ -102,10 +102,14 @@ function ItemCard({ item, index, isFav, onToggleFav }: {
 }) {
   const v = variantForIndex(index);
   return (
-    <Link href={`/marketplace/${item.eventId}`} style={{ textDecoration: "none" }}>
+    <Link href={`/sale/${item.eventId}`} style={{ textDecoration: "none" }}>
       <article className={s.item}>
         <div className={s.itemMedia}>
-          <PhDiv variant={v} />
+          {item.image_url ? (
+            <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="220px" />
+          ) : (
+            <PhDiv variant={v} />
+          )}
           <span className={s.itemPrice}>{fmt(item.price)}</span>
           <button
             className={`${s.itemFav} ${isFav ? s.itemFavActive : ""}`}
@@ -147,7 +151,7 @@ function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
     ? `${sale.suburb} moving sale`
     : "Moving sale";
   return (
-    <Link href={`/marketplace/${sale.eventId}`} style={{ textDecoration: "none" }}>
+    <Link href={`/sale/${sale.eventId}`} style={{ textDecoration: "none" }}>
       <article className={s.sale}>
         <div className={s.saleMedia}>
           <PhDiv variant={v} />
@@ -240,13 +244,13 @@ export default function LandingPage() {
                 <p className={s.sellerHeroSub}>Film a walkthrough — AI extracts and prices everything in minutes. List a whole sale in the time it takes to make a coffee.</p>
               </div>
               <div className={s.sellerHeroActions}>
-                <Link href="/create" className={`${s.btn} ${s.btnPrimary}`}>
+                <Link href="/seller-central/capture" className={`${s.btn} ${s.btnPrimary}`}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 4h7l2 2h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" /><circle cx="8" cy="9" r="2" />
+                    <circle cx="8" cy="8" r="3" /><path d="M2 6V5a1 1 0 0 1 1-1h1l1-1h6l1 1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-5" />
                   </svg>
-                  Upload a video
+                  Start Live Capture
                 </Link>
-                <Link className={`${s.btn} ${s.btnLink}`} href="/dashboard">View My Sales →</Link>
+                <Link className={`${s.btn} ${s.btnLink}`} href="/seller-central">View My Sales →</Link>
               </div>
             </div>
           </section>
@@ -317,7 +321,7 @@ export default function LandingPage() {
                 {itemsLoading ? "Loading…" : `${itemCount} item${itemCount !== 1 ? "s" : ""} available`}
               </div>
             </div>
-            <Link className={s.sectionView} href="/marketplace">View all →</Link>
+            <span className={s.sectionView} />
           </div>
 
           {itemsError && (
@@ -353,7 +357,7 @@ export default function LandingPage() {
                 {salesLoading ? "Loading…" : `${sales.length} active sale${sales.length !== 1 ? "s" : ""}`}
               </div>
             </div>
-            <Link className={s.sectionView} href="/marketplace">See all →</Link>
+            <span className={s.sectionView} />
           </div>
 
           <div className={s.salesScroll}>

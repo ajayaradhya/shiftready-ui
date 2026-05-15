@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Tag, Percent } from "lucide-react";
 import type { PublicBundle, PublicBundleItem } from "@/lib/types";
 
@@ -11,8 +12,15 @@ function formatAUD(amount: number) {
 
 function BundleItemRow({ item }: { item: PublicBundleItem }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-outline-variant/10 last:border-0">
-      <div className="min-w-0">
+    <div className="flex items-center gap-3 py-3 border-b border-outline-variant/10 last:border-0">
+      {item.image_url ? (
+        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
+          <Image src={item.image_url} alt={item.name ?? "Item"} fill style={{ objectFit: "cover" }} sizes="40px" />
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-surface-container-high shrink-0" />
+      )}
+      <div className="min-w-0 flex-1">
         <p className="text-sm text-on-surface font-medium truncate">
           {item.name ?? "Item"}
         </p>
