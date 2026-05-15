@@ -44,7 +44,7 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
         const { status } = await getStatus(eventId);
         if (status === "ready_for_review" || status === "pricing_in_progress" || status === "live") {
           clearInterval(poll);
-          router.push(`/inventory/${eventId}`);
+          router.push(`/seller-central/inventory/${eventId}`);
         } else if (status === "failed") {
           clearInterval(poll);
         }
@@ -73,13 +73,13 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
   const minRemaining = Math.max(1, 5 - Math.floor(itemCount / 6));
 
   const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
-  const stayAndWatch = useCallback(() => router.push(`/inventory/${eventId}`), [router, eventId]);
+  const stayAndWatch = useCallback(() => router.push(`/seller-central/inventory/${eventId}`), [router, eventId]);
 
   return (
     <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={1} stepLabel="AI scanning" />
 
-      <div style={{ width: 880, margin: "0 auto", padding: "56px 0 64px", display: "flex", flexDirection: "column", gap: 32 }}>
+      <div style={{ maxWidth: 880, width: "100%", margin: "0 auto", padding: "56px 20px 64px", display: "flex", flexDirection: "column", gap: 32 }}>
 
         {/* Heading */}
         <div style={{ textAlign: "center" }}>
@@ -99,7 +99,7 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
         <HowTo />
 
         {/* Upload confirm banner */}
-        <div style={{
+        {uploadedFile && <div style={{
           display: "flex", alignItems: "center", gap: 14,
           padding: "14px 20px",
           background: "var(--moss-50)", border: "1px solid var(--moss-100)",
@@ -133,7 +133,7 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
           >
             Replace
           </button>
-        </div>
+        </div>}
 
         {/* Main panel */}
         <div style={{

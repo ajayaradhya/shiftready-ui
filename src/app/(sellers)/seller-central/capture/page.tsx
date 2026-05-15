@@ -39,10 +39,11 @@ export default function CapturePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [processingEventId, setProcessingEventId] = useState<string | null>(null);
 
+  const [toasts, setToasts] = useState<import("@/lib/capture/capture-types").CaptureToast[]>([]);
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    setSale({ label: "New Capture", name: "Phase 1" });
+    setSale({ label: "New Capture", name: "Live Capture" });
     return () => setSale(null);
   }, [setSale]);
 
@@ -80,6 +81,9 @@ export default function CapturePage() {
       return [...prev, { label: item.label, firstSeenAt: Date.now(), frameSrc: item.frameSrc }];
     });
     setPendingDetection(null);
+    const toastId = `${item.label}-${Date.now()}`;
+    setToasts((prev) => [...prev, { id: toastId, label: item.label }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== toastId)), 2500);
   }, []);
 
   const handleSkip = useCallback(() => {
@@ -156,7 +160,7 @@ export default function CapturePage() {
             onItemDetected={handleItemDetected}
           />
 
-          <CaptureOverlay detectedItems={confirmedItems} toasts={[]} />
+          <CaptureOverlay detectedItems={confirmedItems} toasts={toasts} />
 
           <CaptureControls
             recordingSeconds={recordingSeconds}

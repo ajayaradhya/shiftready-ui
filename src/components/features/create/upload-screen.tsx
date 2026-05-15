@@ -249,7 +249,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
         {!isUploading && (
           <div style={{ textAlign: "center" }}>
             <Link
-              href="/seller-central/live-stream"
+              href="/seller-central/capture"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
