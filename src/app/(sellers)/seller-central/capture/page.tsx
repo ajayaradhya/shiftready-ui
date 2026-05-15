@@ -12,7 +12,7 @@ import { ItemReviewScreen } from "@/components/features/capture/ItemReviewScreen
 import { ProcessingScreen } from "@/components/features/create/processing-screen";
 import { useSaleContext } from "@/lib/sale-context";
 import { dataUrlToFile } from "@/lib/capture/capture-types";
-import { initCaptureSale, captureFrame, finalizeCapture } from "@/lib/api";
+import { initCaptureSale, captureFrame, finalizeCapture, finalizeCaptureV2 } from "@/lib/api";
 import type { CapturePageState, CapturedItem, PendingDetection } from "@/lib/capture/capture-types";
 
 const CaptureStage = dynamic(
@@ -180,20 +180,26 @@ export default function CapturePage() {
     try {
       let eid = eventIdRef.current;
 
-      // Ensure we have an event_id
       if (!eid) {
         const { event_id } = await initCaptureSale();
         eid = event_id;
         setEventId(event_id);
       }
 
-      // Items with GCS URIs (captureFrame succeeded) → use finalizeCapture (no re-upload)
-      const gcsUris = confirmedItems
-        .filter((i) => i.gcs_uri)
-        .map((i) => i.gcs_uri as string);
+      // Items with GCS URIs → use finalize-v2 (pre-analyzed, no re-extraction)
+      const analyzedItems = confirmedItems.filter((i) => i.gcs_uri && i.name);
 
-      if (gcsUris.length > 0) {
-        await finalizeCapture(eid, gcsUris);
+      if (analyzedItems.length > 0) {
+        await finalizeCaptureV2(
+          eid,
+          analyzedItems.map((i) => ({
+            temp_id: i.id,
+            name: i.name!,
+            brand: i.brand,
+            predicted_original_price: i.predicted_original_price,
+            gcs_uri: i.gcs_uri!,
+          }))
+        );
         setProcessingEventId(eid);
       } else {
         // All captureFrame calls failed — fall back to re-uploading frames
@@ -226,7 +232,14 @@ export default function CapturePage() {
   };
 
   if (processingEventId) {
-    return <ProcessingScreen eventId={processingEventId} uploadedFile={null} />;
+    return (
+      <ProcessingScreen
+        eventId={processingEventId}
+        uploadedFile={null}
+        mode="live"
+        capturedItems={confirmedItems}
+      />
+    );
   }
 
   return (

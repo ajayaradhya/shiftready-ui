@@ -142,6 +142,28 @@ export async function finalizeCapture(
   );
 }
 
+export interface CapturedItemForFinalize {
+  temp_id: string;
+  name: string;
+  brand?: string;
+  predicted_original_price?: number;
+  gcs_uri: string;
+}
+
+export async function finalizeCaptureV2(
+  eventId: string,
+  items: CapturedItemForFinalize[]
+): Promise<{ event_id: string; status: string; item_count: number }> {
+  return apiRequest<{ event_id: string; status: string; item_count: number }>(
+    `${API_BASE}/sales/${eventId}/capture/finalize-v2`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    }
+  );
+}
+
 export async function startProcessing(eventId: string): Promise<{ message: string }> {
   return apiRequest<{ message: string }>(`${API_BASE}/sales/${eventId}/process`, {
     method: "POST",

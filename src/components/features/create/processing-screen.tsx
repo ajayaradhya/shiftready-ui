@@ -6,6 +6,7 @@ import { HowTo } from "./how-to";
 import { StepHeader } from "./step-header";
 import { getStatus } from "@/lib/api";
 import type { UploadedFile } from "@/hooks/use-upload";
+import type { CapturedItem } from "@/lib/capture/capture-types";
 
 const DEMO_ITEMS = [
   "Linen sofa", "Oak dining table", "Bosch washer", "Fiddle leaf fig",
@@ -28,16 +29,183 @@ function formatBytes(bytes: number): string {
 interface Props {
   eventId: string;
   uploadedFile: UploadedFile | null;
+  mode?: "batch" | "live";
+  capturedItems?: CapturedItem[];
 }
 
-export function ProcessingScreen({ eventId, uploadedFile }: Props) {
-  const router = useRouter();
-  const [itemCount, setItemCount] = useState(4);
-  const [visibleItems, setVisibleItems] = useState(DEMO_ITEMS.slice(0, 4));
-  const [subIdx, setSubIdx] = useState(0);
-  const [popCount, setPopCount] = useState(false);
+function LiveProcessingScreen({ eventId, capturedItems, onDashboard, onWatch }: {
+  eventId: string;
+  capturedItems: CapturedItem[];
+  onDashboard: () => void;
+  onWatch: () => void;
+}) {
+  const analyzedItems = capturedItems.filter((i) => i.name);
 
-  /* Poll for completion */
+  return (
+    <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
+      <StepHeader stepActive={1} stepLabel="Organising capture" />
+
+      <div style={{ maxWidth: 680, width: "100%", margin: "0 auto", padding: "48px 20px 64px", display: "flex", flexDirection: "column", gap: 28 }}>
+
+        {/* Heading */}
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{
+            fontFamily: "var(--sr-font-serif)", fontSize: 36, fontWeight: 500,
+            letterSpacing: "-0.025em", lineHeight: 1.1, color: "var(--ink-800)",
+            margin: "0 0 10px",
+          }}>
+            Processing{" "}
+            <em style={{ fontStyle: "italic", color: "var(--clay-600)", fontWeight: 500 }}>
+              {capturedItems.length} item{capturedItems.length !== 1 ? "s" : ""}
+            </em>
+          </h1>
+          <p style={{ margin: 0, color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55 }}>
+            Grouping into room bundles and pricing against Sydney market data.
+          </p>
+        </div>
+
+        {/* Item list */}
+        <div style={{
+          background: "var(--sr-bg-card)",
+          border: "1px solid var(--sr-border-subtle)",
+          borderRadius: "var(--sr-radius-xl)",
+          overflow: "hidden",
+          boxShadow: "0 1px 2px rgba(74,37,25,0.05)",
+        }}>
+          {analyzedItems.map((item, i) => (
+            <div
+              key={item.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 14,
+                padding: "14px 20px",
+                borderBottom: i < analyzedItems.length - 1 ? "1px solid var(--sr-border-subtle)" : "none",
+              }}
+            >
+              {/* Thumbnail */}
+              <div style={{
+                width: 48, height: 48, borderRadius: "var(--sr-radius-md)",
+                overflow: "hidden", flexShrink: 0,
+                background: "var(--cream-100)",
+                border: "1px solid var(--sr-border-subtle)",
+              }}>
+                {item.frameSrc && (
+                  <img
+                    src={item.frameSrc}
+                    alt={item.name ?? item.label}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                )}
+              </div>
+
+              {/* Name + brand */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontWeight: 500, fontSize: 14, color: "var(--ink-800)",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>
+                  {item.name ?? item.label}
+                </div>
+                {item.brand && item.brand !== "Unknown" && (
+                  <div style={{ fontSize: 12.5, color: "var(--sr-text-muted)", marginTop: 1 }}>
+                    {item.brand}
+                  </div>
+                )}
+              </div>
+
+              {/* Price / status */}
+              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                {item.predicted_original_price ? (
+                  <div style={{ fontSize: 13, color: "var(--sr-text-secondary)" }}>
+                    ~${item.predicted_original_price.toLocaleString()} orig.
+                  </div>
+                ) : null}
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  fontSize: 11.5, color: "var(--clay-600)",
+                  fontFamily: "var(--sr-font-mono)", letterSpacing: "0.06em",
+                  textTransform: "uppercase", marginTop: 2,
+                }}>
+                  <span style={{
+                    width: 5, height: 5, borderRadius: "50%",
+                    background: "var(--clay-500)", display: "inline-block",
+                    animation: "badge-pulse 1.6s infinite",
+                  }} />
+                  Pricing…
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Unanalyzed items (captureFrame failed) */}
+          {capturedItems.filter((i) => !i.name).map((item, i) => (
+            <div
+              key={item.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 14,
+                padding: "14px 20px",
+                borderBottom: "1px solid var(--sr-border-subtle)",
+                opacity: 0.5,
+              }}
+            >
+              <div style={{
+                width: 48, height: 48, borderRadius: "var(--sr-radius-md)",
+                background: "var(--cream-100)", flexShrink: 0,
+                border: "1px solid var(--sr-border-subtle)",
+              }} />
+              <div style={{ flex: 1, fontSize: 14, color: "var(--sr-text-muted)" }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--sr-text-muted)" }}>Skipped</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTAs */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <button
+            onClick={onDashboard}
+            style={{
+              borderRadius: "var(--sr-radius-lg)", padding: "18px 20px",
+              display: "flex", flexDirection: "column", gap: 8,
+              background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)",
+              cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 500, color: "var(--ink-800)" }}>
+              Go to dashboard
+            </div>
+            <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>
+              We&apos;ll notify you when pricing is ready.
+            </div>
+          </button>
+
+          <button
+            onClick={onWatch}
+            style={{
+              borderRadius: "var(--sr-radius-lg)", padding: "18px 20px",
+              display: "flex", flexDirection: "column", gap: 8,
+              background: "var(--clay-50)", border: "1.5px solid var(--clay-500)",
+              boxShadow: "0 2px 0 var(--clay-100)",
+              cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 500, color: "var(--ink-800)" }}>
+              Stay &amp; watch
+            </div>
+            <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>
+              Auto-redirects to your inventory when done.
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", capturedItems }: Props) {
+  const router = useRouter();
+
+  /* Shared poll for completion — used by both modes */
   useEffect(() => {
     const poll = setInterval(async () => {
       try {
@@ -55,8 +223,17 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
     return () => clearInterval(poll);
   }, [eventId, router]);
 
-  /* Animated item discovery loop */
+  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+  const stayAndWatch = useCallback(() => router.push(`/seller-central/inventory/${eventId}`), [router, eventId]);
+
+  /* Batch-mode animation state — hooks must be unconditional */
+  const [itemCount, setItemCount] = useState(4);
+  const [visibleItems, setVisibleItems] = useState(DEMO_ITEMS.slice(0, 4));
+  const [subIdx, setSubIdx] = useState(0);
+  const [popCount, setPopCount] = useState(false);
+
   useEffect(() => {
+    if (mode === "live") return;
     const t = setInterval(() => {
       setItemCount(c => c + 1);
       setPopCount(true);
@@ -68,12 +245,21 @@ export function ProcessingScreen({ eventId, uploadedFile }: Props) {
       });
     }, 2400);
     return () => clearInterval(t);
-  }, []);
+  }, [mode]);
+
+  /* Live mode — show real captured items */
+  if (mode === "live" && capturedItems && capturedItems.length > 0) {
+    return (
+      <LiveProcessingScreen
+        eventId={eventId}
+        capturedItems={capturedItems}
+        onDashboard={goToDashboard}
+        onWatch={stayAndWatch}
+      />
+    );
+  }
 
   const minRemaining = Math.max(1, 5 - Math.floor(itemCount / 6));
-
-  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
-  const stayAndWatch = useCallback(() => router.push(`/seller-central/inventory/${eventId}`), [router, eventId]);
 
   return (
     <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
