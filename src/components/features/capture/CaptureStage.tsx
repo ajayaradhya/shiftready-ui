@@ -8,6 +8,7 @@ interface Props {
   stream: MediaStream;
   shouldStop?: boolean;
   pendingLabel?: string | null;
+  skipLabels?: string[];
   onItemDetected?: (label: string, frameSrc: string) => void;
 }
 
@@ -85,17 +86,18 @@ function captureFrame(video: HTMLVideoElement): string {
   return offscreen.toDataURL("image/jpeg", 0.85);
 }
 
-export function CaptureStage({ stream, shouldStop, pendingLabel, onItemDetected }: Props) {
+export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onItemDetected }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const seenCountRef = useRef<Map<string, number>>(new Map());
   const pendingLabelRef = useRef<string | null>(null);
+  const skipLabelsRef = useRef<Set<string>>(new Set());
   const onItemDetectedRef = useRef(onItemDetected);
 
   useEffect(() => { onItemDetectedRef.current = onItemDetected; }, [onItemDetected]);
-  // Sync parent's pending state into the ref used by the RAF loop
   useEffect(() => { pendingLabelRef.current = pendingLabel ?? null; }, [pendingLabel]);
+  useEffect(() => { skipLabelsRef.current = new Set(skipLabels ?? []); }, [skipLabels]);
 
   const { status, loadError, loadMs, detect } = useMediapipeDetector();
   const [detections, setDetections] = useState<DetectionEntry[]>([]);
@@ -135,22 +137,25 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, onItemDetected 
       setFps(result.fps);
       drawBboxes(canvas, video, result.detections);
 
-      for (const det of result.detections) {
-        if (det.score < 0.6) continue;
-        const label = det.label.toLowerCase();
+      // Freeze all counting while a confirm card is visible
+      if (pendingLabelRef.current === null) {
+        for (const det of result.detections) {
+          if (det.score < 0.6) continue;
+          const label = det.label.toLowerCase();
 
-        // Skip if already pending a confirm for this label
-        if (pendingLabelRef.current === label) continue;
+          // Never re-surface rejected or already-confirmed labels
+          if (skipLabelsRef.current.has(label)) continue;
 
-        const count = (seenCountRef.current.get(label) ?? 0) + 1;
-        seenCountRef.current.set(label, count);
+          const count = (seenCountRef.current.get(label) ?? 0) + 1;
+          seenCountRef.current.set(label, count);
 
-        if (count >= CONFIRM_THRESHOLD) {
-          // Reset count so after dismiss it can re-trigger
-          seenCountRef.current.set(label, 0);
-          pendingLabelRef.current = label;
-          const frameSrc = captureFrame(video);
-          onItemDetectedRef.current?.(label, frameSrc);
+          if (count >= CONFIRM_THRESHOLD) {
+            seenCountRef.current.delete(label);
+            pendingLabelRef.current = label;
+            const frameSrc = captureFrame(video);
+            onItemDetectedRef.current?.(label, frameSrc);
+            break; // one prompt at a time
+          }
         }
       }
     }

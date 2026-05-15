@@ -30,6 +30,7 @@ export default function CapturePage() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [shouldStop, setShouldStop] = useState(false);
   const [confirmedItems, setConfirmedItems] = useState<CapturedItem[]>([]);
+  const [skippedLabels, setSkippedLabels] = useState<string[]>([]);
   const [pendingDetection, setPendingDetection] = useState<PendingDetection | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -80,8 +81,11 @@ export default function CapturePage() {
   }, []);
 
   const handleSkip = useCallback(() => {
+    if (pendingDetection) {
+      setSkippedLabels((prev) => [...prev, pendingDetection.label]);
+    }
     setPendingDetection(null);
-  }, []);
+  }, [pendingDetection]);
 
   const handleFinish = () => {
     setShouldStop(true);
@@ -141,6 +145,7 @@ export default function CapturePage() {
             stream={stream}
             shouldStop={shouldStop}
             pendingLabel={pendingDetection?.label ?? null}
+            skipLabels={[...skippedLabels, ...confirmedItems.map((i) => i.label)]}
             onItemDetected={handleItemDetected}
           />
 
