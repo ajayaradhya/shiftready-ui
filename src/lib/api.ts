@@ -112,6 +112,36 @@ export async function processFrames(
   );
 }
 
+export interface CaptureFrameResult {
+  name: string;
+  brand: string;
+  predicted_original_price: number;
+  gcs_uri: string;
+}
+
+export async function captureFrame(eventId: string, file: File): Promise<CaptureFrameResult> {
+  const form = new FormData();
+  form.append("frame", file);
+  return apiRequest<CaptureFrameResult>(
+    `${API_BASE}/sales/${eventId}/capture/frame`,
+    { method: "POST", body: form }
+  );
+}
+
+export async function finalizeCapture(
+  eventId: string,
+  gcsUris: string[]
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/capture/finalize`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gcs_uris: gcsUris }),
+    }
+  );
+}
+
 export async function startProcessing(eventId: string): Promise<{ message: string }> {
   return apiRequest<{ message: string }>(`${API_BASE}/sales/${eventId}/process`, {
     method: "POST",

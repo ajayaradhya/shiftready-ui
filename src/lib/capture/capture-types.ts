@@ -1,10 +1,18 @@
 export type CapturePageState = "gate" | "capturing" | "reviewing";
 
 export interface CapturedItem {
+  id: string;
   label: string;
   firstSeenAt: number;
   frameSrc: string;
   source?: "auto" | "user_tap";
+  // Gemini quick-identify results (populated after captureFrame API call)
+  name?: string;
+  brand?: string;
+  predicted_original_price?: number;
+  gcs_uri?: string;
+  isLoading?: boolean;
+  error?: string;
 }
 
 export interface PendingDetection {
