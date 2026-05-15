@@ -416,8 +416,8 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
           )}
         </div>
 
-        {/* Footer safe area */}
-        <div style={{ height: 24, flexShrink: 0 }} />
+        {/* iOS safe area */}
+        <div style={{ height: "calc(16px + env(safe-area-inset-bottom, 0px))", flexShrink: 0 }} />
       </div>
 
       <style>{`

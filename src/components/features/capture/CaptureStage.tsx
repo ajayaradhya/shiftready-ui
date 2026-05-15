@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, type MouseEvent } from "react";
 import { useMediapipeDetector, type DetectionEntry } from "@/hooks/use-mediapipe-detector";
-import { Zap, AlertTriangle } from "lucide-react";
+import { AlertTriangle, ScanLine } from "lucide-react";
 
 interface Props {
   stream: MediaStream;
@@ -13,7 +13,6 @@ interface Props {
   onUserTap?: (frameSrc: string) => void;
 }
 
-// Detection count before triggering confirm prompt
 const CONFIRM_THRESHOLD = 5;
 
 const LABEL_COLORS: Record<string, string> = {
@@ -62,19 +61,18 @@ function drawBboxes(
     const w = det.bbox.w * scale;
     const h = det.bbox.h * scale;
     const color = getColor(det.label);
-    const label = `${det.label} ${Math.round(det.score * 100)}%`;
 
     ctx.strokeStyle = color;
     ctx.strokeRect(x, y, w, h);
 
-    const textW = ctx.measureText(label).width + 10;
+    const textW = ctx.measureText(det.label).width + 10;
     const textH = 20;
     ctx.fillStyle = color;
     ctx.globalAlpha = 0.85;
     ctx.fillRect(x, y - textH, textW, textH);
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#fff";
-    ctx.fillText(label, x + 5, y - 5);
+    ctx.fillText(det.label, x + 5, y - 5);
   }
 }
 
@@ -100,9 +98,8 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
   useEffect(() => { pendingLabelRef.current = pendingLabel ?? null; }, [pendingLabel]);
   useEffect(() => { skipLabelsRef.current = new Set(skipLabels ?? []); }, [skipLabels]);
 
-  const { status, loadError, loadMs, detect } = useMediapipeDetector();
+  const { status, loadError, detect } = useMediapipeDetector();
   const [detections, setDetections] = useState<DetectionEntry[]>([]);
-  const [fps, setFps] = useState(0);
   const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null);
   const onUserTapRef = useRef(onUserTap);
   useEffect(() => { onUserTapRef.current = onUserTap; }, [onUserTap]);
@@ -115,7 +112,6 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
     onUserTapRef.current?.(captureFrame(videoRef.current));
   }, [status]);
 
-  // Attach stream to video
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -124,14 +120,10 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
     return () => { video.srcObject = null; };
   }, [stream]);
 
-  // Reset seen counts when shouldStop
   useEffect(() => {
-    if (shouldStop) {
-      cancelAnimationFrame(rafRef.current);
-    }
+    if (shouldStop) cancelAnimationFrame(rafRef.current);
   }, [shouldStop]);
 
-  // RAF detection loop
   const runLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -146,16 +138,12 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
     const result = detect(video);
     if (result) {
       setDetections(result.detections);
-      setFps(result.fps);
       drawBboxes(canvas, video, result.detections);
 
-      // Freeze all counting while a confirm card is visible
       if (pendingLabelRef.current === null) {
         for (const det of result.detections) {
           if (det.score < 0.6) continue;
           const label = det.label.toLowerCase();
-
-          // Never re-surface rejected or already-confirmed labels
           if (skipLabelsRef.current.has(label)) continue;
 
           const count = (seenCountRef.current.get(label) ?? 0) + 1;
@@ -166,7 +154,7 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
             pendingLabelRef.current = label;
             const frameSrc = captureFrame(video);
             onItemDetectedRef.current?.(label, frameSrc);
-            break; // one prompt at a time
+            break;
           }
         }
       }
@@ -181,16 +169,13 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
     return () => cancelAnimationFrame(rafRef.current);
   }, [status, runLoop]);
 
-  const fpsColor =
-    fps >= 15 ? "var(--moss-600)" : fps >= 8 ? "var(--honey-600)" : "var(--rust-500)";
-
   return (
     <div
       onClick={handleStageClick}
       style={{
         position: "relative",
         width: "100%",
-        height: "calc(100vh - 64px)",
+        height: "calc(100dvh - 64px)",
         background: "#000",
         overflow: "hidden",
         cursor: status === "ready" ? "crosshair" : "default",
@@ -206,63 +191,100 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
 
       <canvas
         ref={canvasRef}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-        }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       />
 
-      {/* FPS pill */}
-      <div
-        style={{
-          position: "absolute",
-          top: 12,
-          right: 12,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 6,
-        }}
-      >
+      {/* Idle hint — shown when ready and no detections pending */}
+      {status === "ready" && detections.length === 0 && !pendingLabel && (
         <div
           style={{
+            position: "absolute",
+            inset: 0,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 6,
-            padding: "5px 12px",
-            borderRadius: 100,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(8px)",
-            color: fpsColor,
-            fontFamily: "var(--sr-font-mono)",
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: "0.04em",
+            justifyContent: "center",
+            gap: 12,
+            pointerEvents: "none",
           }}
         >
-          <Zap size={12} strokeWidth={2} />
-          {status === "loading" ? "…" : `${fps} fps`}
-        </div>
-        {loadMs !== null && (
-          <div
+          {/* Corner frame guides */}
+          {[
+            { top: "28%", left: "15%", borderTop: "2px solid rgba(255,255,255,0.4)", borderLeft: "2px solid rgba(255,255,255,0.4)" },
+            { top: "28%", right: "15%", borderTop: "2px solid rgba(255,255,255,0.4)", borderRight: "2px solid rgba(255,255,255,0.4)" },
+            { bottom: "28%", left: "15%", borderBottom: "2px solid rgba(255,255,255,0.4)", borderLeft: "2px solid rgba(255,255,255,0.4)" },
+            { bottom: "28%", right: "15%", borderBottom: "2px solid rgba(255,255,255,0.4)", borderRight: "2px solid rgba(255,255,255,0.4)" },
+          ].map((style, i) => (
+            <div key={i} style={{ position: "absolute", width: 28, height: 28, ...style }} />
+          ))}
+
+          <ScanLine size={28} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.35)" }} />
+          <span
             style={{
-              padding: "4px 10px",
-              borderRadius: 100,
-              background: "rgba(0,0,0,0.45)",
-              backdropFilter: "blur(8px)",
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 11,
-              letterSpacing: "0.04em",
+              fontFamily: "var(--sr-font-sans)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.45)",
+              letterSpacing: "0.01em",
             }}
           >
-            WASM {(loadMs / 1000).toFixed(1)}s init
-          </div>
-        )}
-      </div>
+            Point at an item · tap to capture
+          </span>
+        </div>
+      )}
+
+      {/* Active detection badges — small pills near bottom, above controls */}
+      {status === "ready" && detections.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 110,
+            left: 16,
+            right: 16,
+            pointerEvents: "none",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+          }}
+        >
+          {detections.slice(0, 4).map((det, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 100,
+                background: "rgba(0,0,0,0.60)",
+                backdropFilter: "blur(8px)",
+                border: `1px solid ${getColor(det.label)}50`,
+              }}
+            >
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  background: getColor(det.label),
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "var(--sr-font-sans)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#fff",
+                  textTransform: "capitalize",
+                }}
+              >
+                {det.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Loading overlay */}
       {status === "loading" && (
@@ -275,7 +297,7 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
             alignItems: "center",
             justifyContent: "center",
             gap: 16,
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.65)",
             backdropFilter: "blur(4px)",
           }}
         >
@@ -289,29 +311,15 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
               borderRadius: "50%",
             }}
           />
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                fontFamily: "var(--sr-font-serif)",
-                fontSize: 18,
-                fontWeight: 500,
-                color: "#fff",
-                marginBottom: 4,
-              }}
-            >
-              Loading AI model…
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--sr-font-mono)",
-                fontSize: 11,
-                color: "rgba(255,255,255,0.5)",
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-              }}
-            >
-              EfficientDet Lite0 · WASM
-            </div>
+          <div
+            style={{
+              fontFamily: "var(--sr-font-serif)",
+              fontSize: 18,
+              fontWeight: 500,
+              color: "#fff",
+            }}
+          >
+            Starting camera…
           </div>
         </div>
       )}
@@ -333,9 +341,9 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
           }}
         >
           <AlertTriangle size={32} strokeWidth={1.5} style={{ color: "var(--rust-400)" }} />
-          <div style={{ color: "#fff", fontSize: 15, fontWeight: 500 }}>Model failed to load</div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, maxWidth: 260 }}>
-            {loadError}
+          <div style={{ color: "#fff", fontSize: 15, fontWeight: 500 }}>Detection unavailable</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, maxWidth: 260, lineHeight: 1.5 }}>
+            {loadError ?? "Tap anywhere to manually capture items."}
           </div>
         </div>
       )}
@@ -357,66 +365,6 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
           }}
         />
       )}
-
-      {/* Live detection badges */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 100,
-          left: 0,
-          right: 0,
-          padding: "0 16px",
-          pointerEvents: "none",
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {detections.slice(0, 5).map((det, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 10px",
-                borderRadius: 100,
-                background: "rgba(0,0,0,0.55)",
-                backdropFilter: "blur(8px)",
-                border: `1px solid ${getColor(det.label)}40`,
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: getColor(det.label),
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "var(--sr-font-sans)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "#fff",
-                  textTransform: "capitalize",
-                }}
-              >
-                {det.label}
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--sr-font-mono)",
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.5)",
-                }}
-              >
-                {Math.round(det.score * 100)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <style>{`
         @keyframes tapRipple {

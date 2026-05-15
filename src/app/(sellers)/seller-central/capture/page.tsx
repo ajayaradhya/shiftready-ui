@@ -35,14 +35,12 @@ export default function CapturePage() {
   const [confirmedItems, setConfirmedItems] = useState<CapturedItem[]>([]);
   const [skippedLabels, setSkippedLabels] = useState<string[]>([]);
   const [pendingDetection, setPendingDetection] = useState<PendingDetection | null>(null);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [processingEventId, setProcessingEventId] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(appendTo ?? null);
   const [toasts, setToasts] = useState<import("@/lib/capture/capture-types").CaptureToast[]>([]);
 
-  const startTimeRef = useRef<number>(0);
   const eventIdRef = useRef<string | null>(appendTo ?? null);
   const confirmedItemsRef = useRef<CapturedItem[]>([]);
   const pendingDetectionRef = useRef<PendingDetection | null>(null);
@@ -55,16 +53,6 @@ export default function CapturePage() {
     setSale({ label: "New Capture", name: "Live Capture" });
     return () => setSale(null);
   }, [setSale]);
-
-  // Recording timer
-  useEffect(() => {
-    if (pageState !== "capturing") return;
-    startTimeRef.current = Date.now();
-    const id = setInterval(() => {
-      setRecordingSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [pageState]);
 
   useEffect(() => {
     return () => { stream?.getTracks().forEach((t) => t.stop()); };
@@ -264,10 +252,7 @@ export default function CapturePage() {
             onRetry={handleRetry}
           />
 
-          <CaptureControls
-            recordingSeconds={recordingSeconds}
-            onFinish={handleFinish}
-          />
+          <CaptureControls onFinish={handleFinish} />
 
           {pendingDetection && (
             <ItemConfirmCard

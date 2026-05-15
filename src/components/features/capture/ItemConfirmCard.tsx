@@ -14,18 +14,20 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
     <div
       style={{
         position: "absolute",
-        bottom: 96,
-        left: 16,
-        right: 16,
+        bottom: "calc(88px + env(safe-area-inset-bottom, 0px))",
+        left: 12,
+        right: 12,
         zIndex: 15,
-        background: "var(--sr-bg-card)",
-        borderRadius: 16,
-        padding: "14px 16px",
+        background: "rgba(14,12,10,0.92)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderRadius: 18,
+        padding: "14px 14px",
         display: "flex",
         alignItems: "center",
         gap: 12,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-        border: "1px solid var(--sr-border-subtle)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.40)",
+        border: "1px solid rgba(255,255,255,0.10)",
       }}
     >
       {/* Thumbnail */}
@@ -35,12 +37,12 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
           src={pending.frameSrc}
           alt={pending.label}
           style={{
-            width: 52,
-            height: 52,
-            borderRadius: 10,
+            width: 56,
+            height: 56,
+            borderRadius: 12,
             objectFit: "cover",
             flexShrink: 0,
-            border: "1px solid var(--sr-border-subtle)",
+            border: "1px solid rgba(255,255,255,0.12)",
           }}
         />
       )}
@@ -53,8 +55,8 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
             fontSize: 10,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            color: "var(--sr-text-muted)",
-            marginBottom: 2,
+            color: "rgba(255,255,255,0.40)",
+            marginBottom: 3,
           }}
         >
           Detected
@@ -64,7 +66,7 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
             fontFamily: "var(--sr-font-serif)",
             fontSize: 17,
             fontWeight: 500,
-            color: "var(--ink-800)",
+            color: "rgba(255,255,255,0.90)",
             textTransform: "capitalize",
             letterSpacing: "-0.01em",
             overflow: "hidden",
@@ -74,21 +76,31 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
         >
           {pending.label}
         </div>
+        <div
+          style={{
+            fontFamily: "var(--sr-font-sans)",
+            fontSize: 12,
+            color: "rgba(255,255,255,0.35)",
+            marginTop: 2,
+          }}
+        >
+          Add to bucket?
+        </div>
       </div>
 
       {/* Skip */}
       <button
         onClick={onSkip}
         style={{
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           borderRadius: "50%",
-          border: "1px solid var(--sr-border-subtle)",
-          background: "transparent",
+          border: "1px solid rgba(255,255,255,0.14)",
+          background: "rgba(255,255,255,0.06)",
           display: "grid",
           placeItems: "center",
           cursor: "pointer",
-          color: "var(--sr-text-muted)",
+          color: "rgba(255,255,255,0.55)",
           flexShrink: 0,
         }}
         aria-label="Skip"
@@ -100,8 +112,8 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
       <button
         onClick={() => onAdd(pending)}
         style={{
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           borderRadius: "50%",
           border: "none",
           background: "var(--clay-600)",
@@ -110,10 +122,11 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
           cursor: "pointer",
           color: "#fff",
           flexShrink: 0,
+          boxShadow: "0 4px 16px rgba(181,96,74,0.35)",
         }}
         aria-label="Add item"
       >
-        <Plus size={18} strokeWidth={2.5} />
+        <Plus size={20} strokeWidth={2.5} />
       </button>
     </div>
   );

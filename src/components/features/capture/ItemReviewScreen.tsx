@@ -118,8 +118,8 @@ export function ItemReviewScreen({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: 12,
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: 10,
             }}
           >
             {items.map((item) => {
@@ -277,7 +277,8 @@ export function ItemReviewScreen({
       {/* Footer */}
       <div
         style={{
-          padding: "16px 16px 32px",
+          padding: "16px 16px",
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
           background: "var(--sr-bg-card)",
           borderTop: "1px solid var(--sr-border-subtle)",
           display: "flex",
