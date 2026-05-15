@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useMediapipeDetector, type DetectionEntry } from "@/hooks/use-mediapipe-detector";
-import { pickRecordingMimeType } from "@/lib/capture/capture-types";
 import { Zap, AlertTriangle } from "lucide-react";
 
 interface Props {
   stream: MediaStream;
   shouldStop?: boolean;
-  onNewItem?: (label: string) => void;
-  onRecordingComplete?: (blob: Blob, mimeType: string) => void;
+  pendingLabel?: string | null;
+  onItemDetected?: (label: string, frameSrc: string) => void;
 }
 
-// Minimum detection count before an item is "confirmed"
+// Detection count before triggering confirm prompt
 const CONFIRM_THRESHOLD = 5;
 
 const LABEL_COLORS: Record<string, string> = {
@@ -77,19 +76,26 @@ function drawBboxes(
   }
 }
 
-export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplete }: Props) {
+function captureFrame(video: HTMLVideoElement): string {
+  const offscreen = document.createElement("canvas");
+  offscreen.width = video.videoWidth || 640;
+  offscreen.height = video.videoHeight || 480;
+  const ctx = offscreen.getContext("2d");
+  if (ctx) ctx.drawImage(video, 0, 0);
+  return offscreen.toDataURL("image/jpeg", 0.85);
+}
+
+export function CaptureStage({ stream, shouldStop, pendingLabel, onItemDetected }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const seenCountRef = useRef<Map<string, number>>(new Map());
-  const confirmedRef = useRef<Set<string>>(new Set());
-  const onNewItemRef = useRef(onNewItem);
-  const onRecordingCompleteRef = useRef(onRecordingComplete);
+  const pendingLabelRef = useRef<string | null>(null);
+  const onItemDetectedRef = useRef(onItemDetected);
 
-  useEffect(() => { onNewItemRef.current = onNewItem; }, [onNewItem]);
-  useEffect(() => { onRecordingCompleteRef.current = onRecordingComplete; }, [onRecordingComplete]);
+  useEffect(() => { onItemDetectedRef.current = onItemDetected; }, [onItemDetected]);
+  // Sync parent's pending state into the ref used by the RAF loop
+  useEffect(() => { pendingLabelRef.current = pendingLabel ?? null; }, [pendingLabel]);
 
   const { status, loadError, loadMs, detect } = useMediapipeDetector();
   const [detections, setDetections] = useState<DetectionEntry[]>([]);
@@ -104,56 +110,11 @@ export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplet
     return () => { video.srcObject = null; };
   }, [stream]);
 
-
-  // Start MediaRecorder
+  // Reset seen counts when shouldStop
   useEffect(() => {
-    const mimeType = pickRecordingMimeType();
-
-    function attachHandlers(mr: MediaRecorder) {
-      mr.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      mr.onstop = () => {
-        const actualMime = mr.mimeType || mimeType || "video/webm";
-        const blob = new Blob(chunksRef.current, { type: actualMime.split(";")[0] });
-        onRecordingCompleteRef.current?.(blob, actualMime);
-      };
+    if (shouldStop) {
+      cancelAnimationFrame(rafRef.current);
     }
-
-    // Try specific mimeType first, then bare default — both construction AND start() can throw
-    let mr: MediaRecorder | null = null;
-    if (mimeType) {
-      try {
-        const candidate = new MediaRecorder(stream, { mimeType });
-        attachHandlers(candidate);
-        candidate.start(1000);
-        mr = candidate;
-      } catch { /* fall through to default */ }
-    }
-    if (!mr) {
-      try {
-        const candidate = new MediaRecorder(stream);
-        attachHandlers(candidate);
-        candidate.start(1000);
-        mr = candidate;
-      } catch (e) {
-        console.warn("MediaRecorder unavailable:", e);
-      }
-    }
-    if (!mr) return;
-    const activeMr = mr;
-    mediaRecorderRef.current = activeMr;
-
-    return () => {
-      if (activeMr.state !== "inactive") activeMr.stop();
-    };
-  }, [stream]);
-
-  // Stop recording when requested
-  useEffect(() => {
-    if (!shouldStop) return;
-    const mr = mediaRecorderRef.current;
-    if (mr && mr.state !== "inactive") mr.stop();
   }, [shouldStop]);
 
   // RAF detection loop
@@ -174,15 +135,22 @@ export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplet
       setFps(result.fps);
       drawBboxes(canvas, video, result.detections);
 
-      // Track new items
       for (const det of result.detections) {
         if (det.score < 0.6) continue;
         const label = det.label.toLowerCase();
+
+        // Skip if already pending a confirm for this label
+        if (pendingLabelRef.current === label) continue;
+
         const count = (seenCountRef.current.get(label) ?? 0) + 1;
         seenCountRef.current.set(label, count);
-        if (count >= CONFIRM_THRESHOLD && !confirmedRef.current.has(label)) {
-          confirmedRef.current.add(label);
-          onNewItemRef.current?.(label);
+
+        if (count >= CONFIRM_THRESHOLD) {
+          // Reset count so after dismiss it can re-trigger
+          seenCountRef.current.set(label, 0);
+          pendingLabelRef.current = label;
+          const frameSrc = captureFrame(video);
+          onItemDetectedRef.current?.(label, frameSrc);
         }
       }
     }
@@ -228,7 +196,7 @@ export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplet
         }}
       />
 
-      {/* FPS pill (top-right) */}
+      {/* FPS pill */}
       <div
         style={{
           position: "absolute",
@@ -353,7 +321,7 @@ export function CaptureStage({ stream, shouldStop, onNewItem, onRecordingComplet
         </div>
       )}
 
-      {/* Bottom detection badges */}
+      {/* Live detection badges */}
       <div
         style={{
           position: "absolute",

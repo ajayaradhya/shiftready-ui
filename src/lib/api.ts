@@ -67,6 +67,26 @@ export async function initSale(
   );
 }
 
+export async function initCaptureSale(): Promise<{ event_id: string }> {
+  return apiRequest<{ event_id: string }>(`${API_BASE}/sales/init-capture`, {
+    method: "POST",
+  });
+}
+
+export async function processFrames(
+  eventId: string,
+  files: File[]
+): Promise<{ event_id: string; status: string }> {
+  const form = new FormData();
+  for (const file of files) {
+    form.append("frames", file);
+  }
+  return apiRequest<{ event_id: string; status: string }>(
+    `${API_BASE}/sales/${eventId}/process-frames`,
+    { method: "POST", body: form }
+  );
+}
+
 export async function startProcessing(eventId: string): Promise<{ message: string }> {
   return apiRequest<{ message: string }>(`${API_BASE}/sales/${eventId}/process`, {
     method: "POST",

@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { CapturePermissionsGate } from "@/components/features/capture/CapturePermissionsGate";
 import { CaptureOverlay } from "@/components/features/capture/CaptureOverlay";
 import { CaptureControls } from "@/components/features/capture/CaptureControls";
-import { FinalizeCaptureDialog } from "@/components/features/capture/FinalizeCaptureDialog";
+import { ItemConfirmCard } from "@/components/features/capture/ItemConfirmCard";
+import { ItemReviewScreen } from "@/components/features/capture/ItemReviewScreen";
 import { ProcessingScreen } from "@/components/features/create/processing-screen";
-import { useUpload } from "@/hooks/use-upload";
 import { useSaleContext } from "@/lib/sale-context";
-import { blobToFile } from "@/lib/capture/capture-types";
-import type { CapturePageState, CapturedItem, CaptureToast } from "@/lib/capture/capture-types";
+import { dataUrlToFile } from "@/lib/capture/capture-types";
+import { initCaptureSale, processFrames } from "@/lib/api";
+import type { CapturePageState, CapturedItem, PendingDetection } from "@/lib/capture/capture-types";
 
 const CaptureStage = dynamic(
   () =>
@@ -21,23 +22,19 @@ const CaptureStage = dynamic(
   { ssr: false }
 );
 
-const TOAST_DURATION_MS = 3000;
-const MAX_TOASTS = 3;
-
 export default function CapturePage() {
   const router = useRouter();
   const { setSale } = useSaleContext();
-  const { status: uploadStatus, uploadProgress, fileError, eventId, uploadedFile, uploadFile } =
-    useUpload();
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [shouldStop, setShouldStop] = useState(false);
-  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
-  const [capturedMimeType, setCapturedMimeType] = useState("");
-  const [detectedItems, setDetectedItems] = useState<CapturedItem[]>([]);
-  const [toasts, setToasts] = useState<CaptureToast[]>([]);
+  const [confirmedItems, setConfirmedItems] = useState<CapturedItem[]>([]);
+  const [pendingDetection, setPendingDetection] = useState<PendingDetection | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [processingEventId, setProcessingEventId] = useState<string | null>(null);
 
   const startTimeRef = useRef<number>(0);
 
@@ -61,83 +58,118 @@ export default function CapturePage() {
     setPageState("capturing");
   };
 
-  // Stop camera tracks when page unmounts or stream changes
   useEffect(() => {
     return () => { stream?.getTracks().forEach((t) => t.stop()); };
   }, [stream]);
 
-  const handleNewItem = useCallback((label: string) => {
-    setDetectedItems((prev) => {
-      if (prev.some((i) => i.label === label)) return prev;
-      return [...prev, { label, firstSeenAt: Date.now() }];
-    });
+  const confirmedItemsRef = useRef<CapturedItem[]>([]);
+  useEffect(() => { confirmedItemsRef.current = confirmedItems; }, [confirmedItems]);
 
-    const id = `${label}-${Date.now()}`;
-    setToasts((prev) => [...prev.slice(-(MAX_TOASTS - 1)), { id, label }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, TOAST_DURATION_MS);
+  // CaptureStage fires this when an item crosses the detection threshold
+  const handleItemDetected = useCallback((label: string, frameSrc: string) => {
+    if (confirmedItemsRef.current.some((i) => i.label === label)) return;
+    setPendingDetection({ label, frameSrc });
   }, []);
 
-  const handleRecordingComplete = useCallback((blob: Blob, mimeType: string) => {
-    setCapturedBlob(blob);
-    setCapturedMimeType(mimeType);
-    setPageState("finalizing");
+  const handleAdd = useCallback((item: PendingDetection) => {
+    setConfirmedItems((prev) => {
+      if (prev.some((i) => i.label === item.label)) return prev;
+      return [...prev, { label: item.label, firstSeenAt: Date.now(), frameSrc: item.frameSrc }];
+    });
+    setPendingDetection(null);
+  }, []);
+
+  const handleSkip = useCallback(() => {
+    setPendingDetection(null);
   }, []);
 
   const handleFinish = () => {
     setShouldStop(true);
+    setPendingDetection(null);
+    setPageState("reviewing");
+    stream?.getTracks().forEach((t) => t.stop());
   };
 
-  const handleUpload = async () => {
-    if (!capturedBlob) return;
-    const file = blobToFile(capturedBlob, capturedMimeType);
-    await uploadFile(file);
+  const handleRemoveItem = (label: string) => {
+    setConfirmedItems((prev) => prev.filter((i) => i.label !== label));
   };
 
-  const handleCancelFinalize = () => {
-    router.push("/seller-central/create");
+  const handleProcess = async () => {
+    if (confirmedItems.length === 0) return;
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const { event_id } = await initCaptureSale();
+
+      const files = await Promise.all(
+        confirmedItems.map((item, i) =>
+          dataUrlToFile(item.frameSrc, `frame_${i}_${item.label}.jpg`)
+        )
+      );
+
+      await processFrames(event_id, files);
+      setProcessingEventId(event_id);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
+      setIsUploading(false);
+    }
   };
 
-  // Once upload transitions to processing, ProcessingScreen takes over
-  if (uploadStatus === "processing" && eventId) {
-    return <ProcessingScreen eventId={eventId} uploadedFile={uploadedFile} />;
+  const handleBackToCapture = () => {
+    setPageState("capturing");
+    setShouldStop(false);
+    // Re-request camera since we stopped tracks
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      .then((s) => setStream(s))
+      .catch(() => setPageState("gate"));
+  };
+
+  // Hand off to processing screen once we have an event_id
+  if (processingEventId) {
+    return <ProcessingScreen eventId={processingEventId} uploadedFile={null} />;
   }
 
   return (
     <div style={{ fontFamily: "var(--sr-font-sans)", position: "relative" }}>
       {pageState === "gate" && <CapturePermissionsGate onGranted={handleGranted} />}
 
-      {(pageState === "capturing" || pageState === "finalizing") && stream && (
+      {pageState === "capturing" && stream && (
         <div style={{ position: "relative" }}>
           <CaptureStage
             stream={stream}
             shouldStop={shouldStop}
-            onNewItem={handleNewItem}
-            onRecordingComplete={handleRecordingComplete}
+            pendingLabel={pendingDetection?.label ?? null}
+            onItemDetected={handleItemDetected}
           />
 
-          <CaptureOverlay detectedItems={detectedItems} toasts={toasts} />
+          <CaptureOverlay detectedItems={confirmedItems} toasts={[]} />
 
-          {pageState === "capturing" && (
-            <CaptureControls
-              recordingSeconds={recordingSeconds}
-              onFinish={handleFinish}
-            />
-          )}
+          <CaptureControls
+            recordingSeconds={recordingSeconds}
+            onFinish={handleFinish}
+          />
 
-          {pageState === "finalizing" && (
-            <FinalizeCaptureDialog
-              itemCount={detectedItems.length}
-              durationSeconds={recordingSeconds}
-              uploadStatus={uploadStatus}
-              uploadProgress={uploadProgress}
-              fileError={fileError}
-              onUpload={handleUpload}
-              onCancel={handleCancelFinalize}
+          {pendingDetection && (
+            <ItemConfirmCard
+              pending={pendingDetection}
+              onAdd={handleAdd}
+              onSkip={handleSkip}
             />
           )}
         </div>
+      )}
+
+      {pageState === "reviewing" && (
+        <ItemReviewScreen
+          items={confirmedItems}
+          isUploading={isUploading}
+          uploadError={uploadError}
+          onRemove={handleRemoveItem}
+          onProcess={handleProcess}
+          onBack={handleBackToCapture}
+        />
       )}
     </div>
   );
