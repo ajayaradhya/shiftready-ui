@@ -67,6 +67,31 @@ export async function initSale(
   );
 }
 
+export async function appendInitSale(
+  eventId: string,
+  filename: string
+): Promise<{ upload_url: string; gcs_uri: string }> {
+  return apiRequest<{ upload_url: string; gcs_uri: string }>(
+    `${API_BASE}/sales/${eventId}/append-init`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename }),
+    }
+  );
+}
+
+export async function startAppendProcessing(
+  eventId: string,
+  gcsUri: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/append-process`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gcs_uri: gcsUri }),
+  });
+}
+
 export async function initCaptureSale(): Promise<{ event_id: string }> {
   return apiRequest<{ event_id: string }>(`${API_BASE}/sales/init-capture`, {
     method: "POST",

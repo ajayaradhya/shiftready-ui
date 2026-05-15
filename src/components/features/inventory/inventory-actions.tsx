@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, ShieldCheck, Plus, X, Check, Send, Power, Loader2 } from "lucide-react";
+import { Globe, ShieldCheck, Plus, X, Check, Send, Power, Loader2, Video, PenLine, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +30,7 @@ interface InventoryActionsProps {
   onAddBundleClose: () => void;
   onBundleNameChange: (name: string) => void;
   onBundleSubmit: () => void;
+  onAddBundleViaVideo: () => void;
   onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
 }
@@ -48,6 +55,7 @@ export function InventoryActions({
   onAddBundleClose,
   onBundleNameChange,
   onBundleSubmit,
+  onAddBundleViaVideo,
   onPublish,
   onUnpublish,
 }: InventoryActionsProps) {
@@ -253,10 +261,25 @@ export function InventoryActions({
                 </button>
               </div>
             ) : (
-              <Button variant="secondary" size="md" onClick={onAddBundleOpen}>
-                <Plus size={14} aria-hidden />
-                Add Bundle
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="md">
+                    <Plus size={14} aria-hidden />
+                    Add Bundle
+                    <ChevronDown size={12} className="ml-1 opacity-60" aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={onAddBundleOpen}>
+                    <PenLine size={14} className="mr-2 opacity-70" />
+                    Manually
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onAddBundleViaVideo}>
+                    <Video size={14} className="mr-2 opacity-70" />
+                    Via Video
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             <Button

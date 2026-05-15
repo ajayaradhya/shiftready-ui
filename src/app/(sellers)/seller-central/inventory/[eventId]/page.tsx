@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useInventory } from "@/hooks/use-inventory";
 import { useSaleContext } from "@/lib/sale-context";
 import { BundleCard } from "@/components/features/seller-central/bundle-card";
@@ -30,6 +30,7 @@ const STATUS_BADGE: Record<string, { bg: string; color: string; border: string; 
 export default function SellerCentralInventoryPage() {
   const { eventId } = useParams() as { eventId: string };
   const searchParams = useSearchParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { setSale, setProcessing } = useSaleContext();
 
@@ -234,6 +235,9 @@ export default function SellerCentralInventoryPage() {
               onAddBundleClose={() => { setIsAddingBundle(false); setNewBundleName(""); }}
               onBundleNameChange={setNewBundleName}
               onBundleSubmit={() => addBundleMutation.mutate(newBundleName)}
+              onAddBundleViaVideo={() =>
+                router.push(`/seller-central/capture?appendTo=${eventId}`)
+              }
               onPublish={(payload) => publishMutation.mutate(payload)}
               onUnpublish={() => unpublishMutation.mutate()}
             />

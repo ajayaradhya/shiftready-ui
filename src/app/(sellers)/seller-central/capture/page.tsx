@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CapturePermissionsGate } from "@/components/features/capture/CapturePermissionsGate";
 import { CaptureOverlay } from "@/components/features/capture/CaptureOverlay";
 import { CaptureControls } from "@/components/features/capture/CaptureControls";
@@ -24,6 +24,8 @@ const CaptureStage = dynamic(
 
 export default function CapturePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const appendTo = searchParams.get("appendTo"); // existing eventId when appending
   const { setSale } = useSaleContext();
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
@@ -104,16 +106,21 @@ export default function CapturePage() {
     setUploadError(null);
 
     try {
-      const { event_id } = await initCaptureSale();
-
       const files = await Promise.all(
         confirmedItems.map((item, i) =>
           dataUrlToFile(item.frameSrc, `frame_${i}_${item.label}.jpg`)
         )
       );
 
-      await processFrames(event_id, files);
-      setProcessingEventId(event_id);
+      if (appendTo) {
+        // Append frames to existing sale — no new event created
+        await processFrames(appendTo, files);
+        router.push(`/seller-central/inventory/${appendTo}`);
+      } else {
+        const { event_id } = await initCaptureSale();
+        await processFrames(event_id, files);
+        setProcessingEventId(event_id);
+      }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
       setIsUploading(false);
