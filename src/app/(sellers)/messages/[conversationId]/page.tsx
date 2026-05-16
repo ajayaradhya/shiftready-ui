@@ -1,0 +1,92 @@
+"use client";
+
+import { use } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { useConversations } from "@/hooks/use-conversations";
+import { useMessagesWs } from "@/hooks/use-messages-ws";
+import { ConversationList } from "@/components/features/messages/ConversationList";
+import { ConversationView } from "@/components/features/messages/ConversationView";
+
+export default function ThreadPage({ params }: { params: Promise<{ conversationId: string }> }) {
+  const { conversationId } = use(params);
+  const { user } = useAuth();
+  const router = useRouter();
+  const { data: convs, isLoading, refetch } = useConversations();
+
+  // Auth token for WS
+  const [idToken, setIdToken] = useState<string | null>(null);
+  useEffect(() => {
+    user?.getIdToken().then(setIdToken).catch(() => {});
+  }, [user]);
+
+  useMessagesWs(idToken, conversationId);
+
+  const conversation = convs?.find((c) => c.id === conversationId);
+
+  if (isLoading) {
+    return (
+      <div style={{ height: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>Loading…</span>
+      </div>
+    );
+  }
+
+  if (!conversation) {
+    return (
+      <div style={{ height: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>Conversation not found.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
+      {/* Sidebar */}
+      <div
+        className="hidden md:block"
+        style={{
+          width: 320,
+          borderRight: "1px solid var(--sr-border-subtle)",
+          flexShrink: 0,
+          overflowY: "auto",
+          background: "var(--sr-bg-app)",
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 16px 12px",
+            borderBottom: "1px solid var(--sr-border-subtle)",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              fontFamily: "var(--sr-font-serif)",
+              color: "var(--sr-text-primary)",
+            }}
+          >
+            Messages
+          </h1>
+        </div>
+        <ConversationList activeId={conversationId} />
+      </div>
+
+      {/* Thread */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {user && (
+          <ConversationView
+            convId={conversationId}
+            currentUserId={user.uid}
+            conversation={conversation}
+            onRefresh={() => refetch()}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Needed for useState/useEffect in this file
+import { useState, useEffect } from "react";

@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { useSaleContext } from "@/lib/sale-context";
+import { useUsername } from "@/hooks/use-username";
 
 interface AppHeaderProps {
   onMenuClick?: () => void;
@@ -15,6 +16,7 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const { user, signOut } = useAuth();
   const { sale, isProcessing } = useSaleContext();
+  const { profile } = useUsername();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -29,8 +31,9 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const displayName =
-    user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "Account";
+  const displayName = profile?.username
+    ? `@${profile.username}`
+    : user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "Account";
 
   const handleSignOut = async () => {
     await signOut();
@@ -361,6 +364,27 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
                   Seller Central
+                </Link>
+
+                <Link
+                  href="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 12px",
+                    borderRadius: "var(--sr-radius-sm)",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    color: "var(--ink-600)",
+                    fontFamily: "var(--sr-font-sans)",
+                    transition: "background 120ms",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  Settings
                 </Link>
 
                 <button

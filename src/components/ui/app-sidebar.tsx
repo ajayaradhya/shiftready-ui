@@ -1,20 +1,23 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, Package, Store, CreditCard, LifeBuoy, X } from "lucide-react";
+import { LayoutDashboard, Package, Store, CreditCard, LifeBuoy, MessageSquare, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUnreadCount } from "@/hooks/use-conversations";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Sales",     href: "/seller-central", disabled: false },
   { icon: Package,         label: "Inventory", href: "#",               disabled: true },
   { icon: Store,           label: "Market",    href: "/",               disabled: false },
-  // divider before index 3
+  { icon: MessageSquare,   label: "Messages",  href: "/messages",       disabled: false },
+  // divider before index 4
   { icon: CreditCard,      label: "Finances",  href: "#",               disabled: true },
+  { icon: Settings,        label: "Settings",  href: "/settings",       disabled: false },
   { icon: LifeBuoy,        label: "Help",      href: "#",               disabled: true },
 ];
 
-const DIVIDER_BEFORE = 3;
+const DIVIDER_BEFORE = 4;
 
 function isItemActive(href: string, pathname: string): boolean {
   if (href === "#") return false;
@@ -39,12 +42,39 @@ function NavDivider({ style }: { style?: React.CSSProperties }) {
   );
 }
 
+function UnreadBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      style={{
+        position: "absolute",
+        top: 4,
+        right: 4,
+        minWidth: 14,
+        height: 14,
+        background: "var(--clay-500)",
+        color: "#fff",
+        borderRadius: 7,
+        fontSize: 8,
+        fontWeight: 700,
+        display: "grid",
+        placeItems: "center",
+        padding: "0 3px",
+        lineHeight: 1,
+      }}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 function NavItem({
   icon: Icon,
   label,
   href,
   active,
   disabled,
+  unreadCount,
   onClick,
 }: {
   icon: React.ComponentType<{ size: number; strokeWidth: number }>;
@@ -52,6 +82,7 @@ function NavItem({
   href: string;
   active: boolean;
   disabled?: boolean;
+  unreadCount?: number;
   onClick?: () => void;
 }) {
   return (
@@ -61,6 +92,7 @@ function NavItem({
       aria-label={label}
       aria-current={active ? "page" : undefined}
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -90,6 +122,7 @@ function NavItem({
       }}
     >
       <Icon size={18} strokeWidth={active ? 2 : 1.5} />
+      {unreadCount !== undefined && <UnreadBadge count={unreadCount} />}
       <span
         style={{
           fontFamily: "var(--sr-font-sans)",
@@ -127,6 +160,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
+  const { data: unreadData } = useUnreadCount();
+  const unreadCount = unreadData?.unreadCount ?? 0;
 
   return (
     <>
@@ -161,6 +196,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               href={item.href}
               active={isItemActive(item.href, pathname)}
               disabled={item.disabled}
+              unreadCount={item.href === "/messages" ? unreadCount : undefined}
             />
           </React.Fragment>
         ))}
@@ -246,6 +282,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                       onClick={() => !item.disabled && onClose()}
                       aria-current={active ? "page" : undefined}
                       style={{
+                        position: "relative",
                         display: "flex",
                         alignItems: "center",
                         gap: 12,
@@ -266,6 +303,21 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                     >
                       <item.icon size={18} strokeWidth={active ? 2 : 1.5} aria-hidden />
                       <span>{item.label}</span>
+                      {item.href === "/messages" && unreadCount > 0 && (
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            background: "var(--clay-500)",
+                            color: "#fff",
+                            borderRadius: 10,
+                            padding: "1px 6px",
+                            fontSize: 10,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                       {item.disabled && (
                         <span
                           style={{

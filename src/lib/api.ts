@@ -5,6 +5,12 @@ import type {
   MarketplaceSearchResult,
   PublicSaleDetail,
   ActiveSaleSummary,
+  UserProfile,
+  UsernameAvailable,
+  ConversationSummary,
+  ConversationStartResponse,
+  MessagesListResponse,
+  MessageContext,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -372,4 +378,92 @@ export async function deleteItem(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`,
     { method: "DELETE" }
   );
+}
+
+// --- User / Username ---
+
+export async function getMe(): Promise<UserProfile> {
+  return apiRequest<UserProfile>(`${API_BASE}/users/me`);
+}
+
+export async function checkUsernameAvailable(username: string): Promise<UsernameAvailable> {
+  return apiRequest<UsernameAvailable>(
+    `${API_BASE}/users/username-available?u=${encodeURIComponent(username)}`
+  );
+}
+
+export async function updateUsername(username: string): Promise<UserProfile> {
+  return apiRequest<UserProfile>(`${API_BASE}/users/me/username`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username }),
+  });
+}
+
+// --- Messaging ---
+
+export async function startConversation(
+  otherUserId: string,
+  initialMessage?: string,
+  context?: MessageContext
+): Promise<ConversationStartResponse> {
+  return apiRequest<ConversationStartResponse>(`${API_BASE}/messages/conversations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ otherUserId, initialMessage, context }),
+  });
+}
+
+export async function listConversations(): Promise<ConversationSummary[]> {
+  return apiRequest<ConversationSummary[]>(`${API_BASE}/messages/conversations`);
+}
+
+export async function getUnreadCount(): Promise<{ unreadCount: number }> {
+  return apiRequest<{ unreadCount: number }>(`${API_BASE}/messages/conversations/unread`);
+}
+
+export async function getMessages(
+  convId: string,
+  before?: string,
+  limit = 50
+): Promise<MessagesListResponse> {
+  const params = new URLSearchParams();
+  if (before) params.set("before", before);
+  params.set("limit", String(limit));
+  return apiRequest<MessagesListResponse>(
+    `${API_BASE}/messages/conversations/${convId}/messages?${params}`
+  );
+}
+
+export async function sendMessage(
+  convId: string,
+  text: string,
+  context?: MessageContext
+): Promise<import("./types").Message> {
+  return apiRequest<import("./types").Message>(
+    `${API_BASE}/messages/conversations/${convId}/messages`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, context }),
+    }
+  );
+}
+
+export async function markConversationRead(convId: string): Promise<void> {
+  await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/read`, {
+    method: "POST",
+  });
+}
+
+export async function blockConversation(convId: string): Promise<void> {
+  await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/block`, {
+    method: "POST",
+  });
+}
+
+export async function unblockConversation(convId: string): Promise<void> {
+  await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/unblock`, {
+    method: "POST",
+  });
 }

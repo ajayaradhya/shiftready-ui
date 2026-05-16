@@ -52,6 +52,8 @@ export interface PublicBundle {
 
 export interface PublicSaleDetail {
   eventId: string;
+  sellerId: string | null;
+  sellerUsername: string | null;
   suburb: string | null;
   state: string | null;
   moveOutDate: string | null;
@@ -138,4 +140,61 @@ export interface SaleSummary {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+}
+
+// --- User / Username types ---
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  usernameSetByUser: boolean;
+  usernameChangedAt: string | null;
+}
+
+export interface UsernameAvailable {
+  available: boolean;
+  username: string;
+}
+
+export interface PublicUser {
+  username: string;
+  joinedAt: string | null;
+}
+
+// --- Messaging types ---
+
+export interface MessageContext {
+  saleEventId: string;
+  bundleId?: string | null;
+  itemId?: string | null;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  createdAt: string | null;
+  type: "text" | "system";
+  context?: MessageContext | null;
+}
+
+export interface ConversationSummary {
+  id: string;
+  otherUserId: string | null;
+  otherUsername: string | null;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+  status: "active" | "blocked";
+  updatedAt: string | null;
+}
+
+export interface ConversationStartResponse {
+  conversationId: string;
+  created: boolean;
+}
+
+export interface MessagesListResponse {
+  messages: Message[];
+  conversationId: string;
 }

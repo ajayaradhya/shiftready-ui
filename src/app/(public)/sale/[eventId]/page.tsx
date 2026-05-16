@@ -1,12 +1,14 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Calendar, ChevronLeft, Package, Percent } from "lucide-react";
-import { getPublicSale } from "@/lib/api";
+import { MapPin, Calendar, ChevronLeft, Package, Percent, MessageSquare } from "lucide-react";
+import { getPublicSale, startConversation } from "@/lib/api";
 import { BundleCard } from "@/components/features/marketplace/bundle-card";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SaleDetailPage({
   params,
@@ -14,6 +16,9 @@ export default function SaleDetailPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = use(params);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [messaging, setMessaging] = useState(false);
 
   const { data: sale, isLoading, error } = useQuery({
     queryKey: ["public-sale", eventId],
@@ -21,6 +26,22 @@ export default function SaleDetailPage({
     staleTime: 60_000,
     retry: false,
   });
+
+  const handleMessageSeller = async () => {
+    if (!user) { router.push("/login"); return; }
+    if (!sale?.sellerId) return;
+    setMessaging(true);
+    try {
+      const res = await startConversation(
+        sale.sellerId,
+        undefined,
+        { saleEventId: eventId }
+      );
+      router.push(`/messages/${res.conversationId}`);
+    } finally {
+      setMessaging(false);
+    }
+  };
 
   return (
     <div className="px-8 py-10 max-w-3xl mx-auto">
@@ -116,10 +137,30 @@ export default function SaleDetailPage({
             </div>
           )}
 
-          {sale.bundles.length > 0 && (
-            <p className="text-center text-xs text-outline/60 mt-8">
-              Interested? Contact the seller through ShiftReady to arrange a pickup.
-            </p>
+          {sale.bundles.length > 0 && sale.sellerId && sale.sellerId !== user?.uid && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={handleMessageSeller}
+                disabled={messaging}
+                className="inline-flex items-center gap-2"
+                style={{
+                  padding: "11px 24px",
+                  borderRadius: "var(--sr-radius-lg, 12px)",
+                  background: "var(--clay-500)",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: messaging ? "default" : "pointer",
+                  opacity: messaging ? 0.7 : 1,
+                  fontFamily: "var(--sr-font-sans)",
+                  transition: "opacity 140ms",
+                }}
+              >
+                <MessageSquare size={16} strokeWidth={1.5} />
+                {messaging ? "Opening…" : `Message ${sale.sellerUsername ? `@${sale.sellerUsername}` : "seller"}`}
+              </button>
+            </div>
           )}
         </>
       )}
