@@ -1,79 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, type MouseEvent } from "react";
-import { useMediapipeDetector, type DetectionEntry } from "@/hooks/use-mediapipe-detector";
+import { useMediapipeDetector } from "@/hooks/use-mediapipe-detector";
 import { AlertTriangle, ScanLine } from "lucide-react";
 
 interface Props {
   stream: MediaStream;
-  shouldStop?: boolean;
-  pendingLabel?: string | null;
-  skipLabels?: string[];
-  onItemDetected?: (label: string, frameSrc: string) => void;
-  onUserTap?: (frameSrc: string) => void;
-}
-
-const CONFIRM_THRESHOLD = 5;
-
-const LABEL_COLORS: Record<string, string> = {
-  default: "var(--clay-500)",
-  sofa: "var(--moss-600)",
-  chair: "var(--moss-600)",
-  couch: "var(--moss-600)",
-  tv: "var(--honey-600)",
-  television: "var(--honey-600)",
-  bed: "var(--clay-600)",
-  table: "var(--clay-500)",
-  laptop: "var(--honey-600)",
-  book: "var(--ink-400)",
-};
-
-function getColor(label: string): string {
-  return LABEL_COLORS[label.toLowerCase()] ?? LABEL_COLORS.default;
-}
-
-function drawBboxes(
-  canvas: HTMLCanvasElement,
-  video: HTMLVideoElement,
-  detections: DetectionEntry[]
-) {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const dW = canvas.width;
-  const dH = canvas.height;
-  const vW = video.videoWidth;
-  const vH = video.videoHeight;
-
-  ctx.clearRect(0, 0, dW, dH);
-  if (!vW || !vH || detections.length === 0) return;
-
-  const scale = Math.max(dW / vW, dH / vH);
-  const offsetX = (dW - vW * scale) / 2;
-  const offsetY = (dH - vH * scale) / 2;
-
-  ctx.lineWidth = 2;
-  ctx.font = "bold 12px system-ui, sans-serif";
-
-  for (const det of detections) {
-    const x = offsetX + det.bbox.x * scale;
-    const y = offsetY + det.bbox.y * scale;
-    const w = det.bbox.w * scale;
-    const h = det.bbox.h * scale;
-    const color = getColor(det.label);
-
-    ctx.strokeStyle = color;
-    ctx.strokeRect(x, y, w, h);
-
-    const textW = ctx.measureText(det.label).width + 10;
-    const textH = 20;
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(x, y - textH, textW, textH);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "#fff";
-    ctx.fillText(det.label, x + 5, y - 5);
-  }
+  onUserTap?: (frameSrc: string, label?: string) => void;
 }
 
 function captureFrame(video: HTMLVideoElement): string {
@@ -85,32 +18,13 @@ function captureFrame(video: HTMLVideoElement): string {
   return offscreen.toDataURL("image/jpeg", 0.85);
 }
 
-export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onItemDetected, onUserTap }: Props) {
+export function CaptureStage({ stream, onUserTap }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-  const seenCountRef = useRef<Map<string, number>>(new Map());
-  const pendingLabelRef = useRef<string | null>(null);
-  const skipLabelsRef = useRef<Set<string>>(new Set());
-  const onItemDetectedRef = useRef(onItemDetected);
-
-  useEffect(() => { onItemDetectedRef.current = onItemDetected; }, [onItemDetected]);
-  useEffect(() => { pendingLabelRef.current = pendingLabel ?? null; }, [pendingLabel]);
-  useEffect(() => { skipLabelsRef.current = new Set(skipLabels ?? []); }, [skipLabels]);
-
-  const { status, loadError, detect } = useMediapipeDetector();
-  const [detections, setDetections] = useState<DetectionEntry[]>([]);
   const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null);
   const onUserTapRef = useRef(onUserTap);
   useEffect(() => { onUserTapRef.current = onUserTap; }, [onUserTap]);
 
-  const handleStageClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
-    if (status !== "ready" || !videoRef.current) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    setTimeout(() => setRipple(null), 600);
-    onUserTapRef.current?.(captureFrame(videoRef.current));
-  }, [status]);
+  const { status, loadError, detect } = useMediapipeDetector();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -120,54 +34,63 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
     return () => { video.srcObject = null; };
   }, [stream]);
 
-  useEffect(() => {
-    if (shouldStop) cancelAnimationFrame(rafRef.current);
-  }, [shouldStop]);
-
-  const runLoop = useCallback(() => {
+  const handleStageClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
+    if (!video) return;
 
-    const { clientWidth, clientHeight } = video;
-    if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
-      canvas.width = clientWidth;
-      canvas.height = clientHeight;
-    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
 
-    const result = detect(video);
-    if (result) {
-      setDetections(result.detections);
-      drawBboxes(canvas, video, result.detections);
+    setRipple({ x: clickX, y: clickY });
+    setTimeout(() => setRipple(null), 600);
 
-      if (pendingLabelRef.current === null) {
-        for (const det of result.detections) {
-          if (det.score < 0.6) continue;
-          const label = det.label.toLowerCase();
-          if (skipLabelsRef.current.has(label)) continue;
+    const frameSrc = captureFrame(video);
+    let label: string | undefined;
 
-          const count = (seenCountRef.current.get(label) ?? 0) + 1;
-          seenCountRef.current.set(label, count);
+    if (status === "ready") {
+      const result = detect(video);
+      if (result && result.detections.length > 0) {
+        const dW = rect.width;
+        const dH = rect.height;
+        const vW = video.videoWidth;
+        const vH = video.videoHeight;
 
-          if (count >= CONFIRM_THRESHOLD) {
-            seenCountRef.current.delete(label);
-            pendingLabelRef.current = label;
-            const frameSrc = captureFrame(video);
-            onItemDetectedRef.current?.(label, frameSrc);
-            break;
+        if (vW && vH) {
+          const scale = Math.max(dW / vW, dH / vH);
+          const offsetX = (dW - vW * scale) / 2;
+          const offsetY = (dH - vH * scale) / 2;
+
+          // Prefer bbox that contains the click point
+          const hit = result.detections.find((det) => {
+            const x = offsetX + det.bbox.x * scale;
+            const y = offsetY + det.bbox.y * scale;
+            const w = det.bbox.w * scale;
+            const h = det.bbox.h * scale;
+            return clickX >= x && clickX <= x + w && clickY >= y && clickY <= y + h;
+          });
+
+          if (hit) {
+            label = hit.label;
+          } else {
+            // Fall back to nearest by center distance
+            const nearest = result.detections.reduce((best, det) => {
+              const cx = offsetX + (det.bbox.x + det.bbox.w / 2) * scale;
+              const cy = offsetY + (det.bbox.y + det.bbox.h / 2) * scale;
+              const dist = Math.hypot(cx - clickX, cy - clickY);
+              const bcx = offsetX + (best.bbox.x + best.bbox.w / 2) * scale;
+              const bcy = offsetY + (best.bbox.y + best.bbox.h / 2) * scale;
+              const bdist = Math.hypot(bcx - clickX, bcy - clickY);
+              return dist < bdist ? det : best;
+            });
+            label = nearest.label;
           }
         }
       }
     }
 
-    rafRef.current = requestAnimationFrame(runLoop);
-  }, [detect]);
-
-  useEffect(() => {
-    if (status !== "ready") return;
-    rafRef.current = requestAnimationFrame(runLoop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [status, runLoop]);
+    onUserTapRef.current?.(frameSrc, label);
+  }, [status, detect]);
 
   return (
     <div
@@ -178,7 +101,7 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
         height: "calc(100dvh - 64px)",
         background: "#000",
         overflow: "hidden",
-        cursor: status === "ready" ? "crosshair" : "default",
+        cursor: "crosshair",
       }}
     >
       <video
@@ -189,13 +112,8 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
 
-      <canvas
-        ref={canvasRef}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-      />
-
-      {/* Idle hint — shown when ready and no detections pending */}
-      {status === "ready" && detections.length === 0 && !pendingLabel && (
+      {/* Idle hint */}
+      {status === "ready" && (
         <div
           style={{
             position: "absolute",
@@ -208,7 +126,6 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
             pointerEvents: "none",
           }}
         >
-          {/* Corner frame guides */}
           {[
             { top: "28%", left: "15%", borderTop: "2px solid rgba(255,255,255,0.4)", borderLeft: "2px solid rgba(255,255,255,0.4)" },
             { top: "28%", right: "15%", borderTop: "2px solid rgba(255,255,255,0.4)", borderRight: "2px solid rgba(255,255,255,0.4)" },
@@ -228,61 +145,8 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
               letterSpacing: "0.01em",
             }}
           >
-            Point at an item · tap to capture
+            Tap an item to capture it
           </span>
-        </div>
-      )}
-
-      {/* Active detection badges — small pills near bottom, above controls */}
-      {status === "ready" && detections.length > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 110,
-            left: 16,
-            right: 16,
-            pointerEvents: "none",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-          }}
-        >
-          {detections.slice(0, 4).map((det, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 10px",
-                borderRadius: 100,
-                background: "rgba(0,0,0,0.60)",
-                backdropFilter: "blur(8px)",
-                border: `1px solid ${getColor(det.label)}50`,
-              }}
-            >
-              <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: getColor(det.label),
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "var(--sr-font-sans)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "#fff",
-                  textTransform: "capitalize",
-                }}
-              >
-                {det.label}
-              </span>
-            </div>
-          ))}
         </div>
       )}
 
@@ -324,7 +188,7 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
         </div>
       )}
 
-      {/* Error overlay */}
+      {/* Error overlay — still tappable, just no label detection */}
       {status === "error" && (
         <div
           style={{
@@ -335,15 +199,15 @@ export function CaptureStage({ stream, shouldStop, pendingLabel, skipLabels, onI
             alignItems: "center",
             justifyContent: "center",
             gap: 12,
-            background: "rgba(0,0,0,0.7)",
+            background: "rgba(0,0,0,0.4)",
             padding: 24,
             textAlign: "center",
+            pointerEvents: "none",
           }}
         >
-          <AlertTriangle size={32} strokeWidth={1.5} style={{ color: "var(--rust-400)" }} />
-          <div style={{ color: "#fff", fontSize: 15, fontWeight: 500 }}>Detection unavailable</div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, maxWidth: 260, lineHeight: 1.5 }}>
-            {loadError ?? "Tap anywhere to manually capture items."}
+          <AlertTriangle size={28} strokeWidth={1.5} style={{ color: "var(--rust-400)" }} />
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, maxWidth: 260, lineHeight: 1.5 }}>
+            {loadError ?? "Tap anywhere to capture items."}
           </div>
         </div>
       )}

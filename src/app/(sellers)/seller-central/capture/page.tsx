@@ -31,9 +31,7 @@ export default function CapturePage() {
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [shouldStop, setShouldStop] = useState(false);
   const [confirmedItems, setConfirmedItems] = useState<CapturedItem[]>([]);
-  const [skippedLabels, setSkippedLabels] = useState<string[]>([]);
   const [pendingDetection, setPendingDetection] = useState<PendingDetection | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -114,11 +112,6 @@ export default function CapturePage() {
     }
   }, []);
 
-  const handleItemDetected = useCallback((label: string, frameSrc: string) => {
-    if (confirmedItemsRef.current.some((i) => i.label === label)) return;
-    setPendingDetection({ label, frameSrc });
-  }, []);
-
   const handleAdd = useCallback((item: PendingDetection) => {
     const itemId = crypto.randomUUID();
     setConfirmedItems((prev) => {
@@ -133,27 +126,16 @@ export default function CapturePage() {
     runCaptureFrame(itemId, item.frameSrc, item.label);
   }, [addToast, runCaptureFrame]);
 
-  const handleUserTap = useCallback((frameSrc: string) => {
+  const handleUserTap = useCallback((frameSrc: string, label?: string) => {
     if (pendingDetectionRef.current) return;
-    const itemId = crypto.randomUUID();
-    const label = `unknown-${Date.now()}`;
-    setConfirmedItems((prev) => [
-      ...prev,
-      { id: itemId, label, firstSeenAt: Date.now(), frameSrc, source: "user_tap", isLoading: true },
-    ]);
-    addToast(label, "Item added");
-    runCaptureFrame(itemId, frameSrc, label);
-  }, [addToast, runCaptureFrame]);
+    setPendingDetection({ label: label ?? "item", frameSrc });
+  }, []);
 
   const handleSkip = useCallback(() => {
-    if (pendingDetection) {
-      setSkippedLabels((prev) => [...prev, pendingDetection.label]);
-    }
     setPendingDetection(null);
-  }, [pendingDetection]);
+  }, []);
 
   const handleFinish = () => {
-    setShouldStop(true);
     setPendingDetection(null);
     setPageState("reviewing");
     stream?.getTracks().forEach((t) => t.stop());
@@ -224,7 +206,6 @@ export default function CapturePage() {
 
   const handleBackToCapture = () => {
     setPageState("capturing");
-    setShouldStop(false);
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" }, audio: false })
       .then((s) => setStream(s))
@@ -250,10 +231,6 @@ export default function CapturePage() {
         <div style={{ position: "relative" }}>
           <CaptureStage
             stream={stream}
-            shouldStop={shouldStop}
-            pendingLabel={pendingDetection?.label ?? null}
-            skipLabels={[...skippedLabels, ...confirmedItems.map((i) => i.label)]}
-            onItemDetected={handleItemDetected}
             onUserTap={handleUserTap}
           />
 
