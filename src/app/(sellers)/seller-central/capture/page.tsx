@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CapturePermissionsGate } from "@/components/features/capture/CapturePermissionsGate";
@@ -23,7 +23,7 @@ const CaptureStage = dynamic(
   { ssr: false }
 );
 
-export default function CapturePage() {
+function CapturePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const appendTo = searchParams.get("appendTo");
@@ -262,5 +262,14 @@ export default function CapturePage() {
         />
       )}
     </div>
+  );
+}
+
+// 2. Wrap the internal component in Suspense within your default export
+export default function CapturePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem" }}>Loading capture system...</div>}>
+      <CapturePageContent />
+    </Suspense>
   );
 }
