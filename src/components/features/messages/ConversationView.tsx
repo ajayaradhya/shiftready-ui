@@ -48,31 +48,71 @@ export function ConversationView({
       {/* Header */}
       <div
         style={{
-          padding: "14px 20px",
+          padding: "12px 20px",
           borderBottom: "1px solid var(--sr-border-subtle)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           background: "var(--sr-bg-card)",
           flexShrink: 0,
+          gap: 12,
         }}
       >
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Gradient avatar */}
           <div
             style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: "var(--sr-text-primary)",
-              fontFamily: "var(--sr-font-sans)",
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, var(--clay-300), var(--clay-500))",
+              color: "#fff",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 14,
+              fontWeight: 700,
+              fontFamily: "var(--sr-font-serif)",
+              flexShrink: 0,
             }}
           >
-            @{conversation.otherUsername ?? "Unknown"}
+            {(conversation.otherUsername ?? "?").slice(0, 1).toUpperCase()}
           </div>
-          {isBlocked && (
-            <div style={{ fontSize: 11, color: "var(--rust-500)", marginTop: 2 }}>
-              Conversation blocked
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--sr-text-primary)",
+                  fontFamily: "var(--sr-font-sans)",
+                }}
+              >
+                @{conversation.otherUsername ?? "Unknown"}
+              </span>
+              {/* Verified badge */}
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  fontFamily: "var(--sr-font-mono)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--moss-700, #2d6a4f)",
+                  background: "var(--moss-50, #e8f5ee)",
+                  border: "1px solid var(--moss-200, #b7dfc8)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                }}
+              >
+                Verified
+              </span>
             </div>
-          )}
+            {isBlocked && (
+              <div style={{ fontSize: 11, color: "var(--rust-500)", marginTop: 1 }}>
+                Conversation blocked
+              </div>
+            )}
+          </div>
         </div>
         <BlockButton
           convId={convId}

@@ -25,10 +25,10 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       {message.context && <SaleContextChip context={message.context} />}
       <div
         style={{
-          maxWidth: "72%",
+          maxWidth: "65%",
           padding: "9px 14px",
           borderRadius: isOwn ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-          background: isOwn ? "var(--clay-500)" : "var(--sr-bg-card)",
+          background: isOwn ? "var(--clay-500)" : "var(--cream-100)",
           color: isOwn ? "#fff" : "var(--sr-text-primary)",
           border: isOwn ? "none" : "1px solid var(--sr-border-subtle)",
           fontSize: 14,

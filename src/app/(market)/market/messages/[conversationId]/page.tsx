@@ -1,8 +1,13 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useConversations } from "@/hooks/use-conversations";
+import { useMessagesWs } from "@/hooks/use-messages-ws";
+import { ConversationList } from "@/components/features/messages/ConversationList";
+import { ConversationView } from "@/components/features/messages/ConversationView";
+import { MessageSquare, LogIn } from "lucide-react";
 import Link from "next/link";
-import { ChevronLeft, MessageSquare } from "lucide-react";
 
 export default function MarketConversationPage({
   params,
@@ -10,40 +15,39 @@ export default function MarketConversationPage({
   params: Promise<{ conversationId: string }>;
 }) {
   const { conversationId } = use(params);
+  const { user, loading, idToken } = useAuth();
+  const { data: convs, isLoading: convsLoading, refetch } = useConversations();
 
-  return (
-    <div style={{ padding: "40px 32px", maxWidth: 800, margin: "0 auto" }}>
-      <Link
-        href="/market/messages"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 10,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          fontWeight: 700,
-          color: "var(--ink-400)",
-          textDecoration: "none",
-          marginBottom: 32,
-        }}
-      >
-        <ChevronLeft size={14} />
-        Messages
-      </Link>
+  useMessagesWs(idToken, conversationId);
 
+  if (loading) {
+    return (
       <div
         style={{
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
+          Loading…
+        </span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          height: "calc(100vh - 64px)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "80px 32px",
-          borderRadius: "var(--sr-radius-xl)",
-          background: "var(--sr-bg-card)",
-          border: "1px solid var(--sr-border-subtle)",
-          textAlign: "center",
-          gap: 16,
+          gap: 20,
+          padding: "0 24px",
         }}
       >
         <div
@@ -58,19 +62,7 @@ export default function MarketConversationPage({
         >
           <MessageSquare size={24} color="var(--clay-500)" strokeWidth={1.5} />
         </div>
-        <div>
-          <p
-            style={{
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--ink-400)",
-              marginBottom: 8,
-            }}
-          >
-            Coming soon · Phase C
-          </p>
+        <div style={{ textAlign: "center" }}>
           <p
             style={{
               fontFamily: "var(--sr-font-serif)",
@@ -80,22 +72,106 @@ export default function MarketConversationPage({
               marginBottom: 8,
             }}
           >
-            Conversation
-          </p>
-          <p style={{ fontSize: 13, color: "var(--ink-400)", maxWidth: 320 }}>
-            Redesigned buyer-side chat coming in Phase C.
-          </p>
-          <p
-            style={{
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 10,
-              color: "var(--ink-300)",
-              marginTop: 16,
-            }}
-          >
-            {conversationId}
+            Sign in to view messages
           </p>
         </div>
+        <Link
+          href="/login"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "10px 20px",
+            borderRadius: "var(--sr-radius-lg)",
+            background: "var(--clay-500)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: "var(--sr-font-sans)",
+            textDecoration: "none",
+          }}
+        >
+          <LogIn size={15} strokeWidth={1.5} />
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
+  const conversation = convs?.find((c) => c.id === conversationId);
+
+  return (
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
+      {/* Conv list panel — hidden on mobile */}
+      <div
+        className="hidden md:block"
+        style={{
+          width: 320,
+          flexShrink: 0,
+          borderRight: "1px solid var(--sr-border-subtle)",
+          overflowY: "auto",
+          background: "var(--sr-bg-app)",
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 16px 12px",
+            borderBottom: "1px solid var(--sr-border-subtle)",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "var(--sr-font-serif)",
+              fontSize: 17,
+              fontWeight: 700,
+              color: "var(--sr-text-primary)",
+            }}
+          >
+            Messages
+          </h1>
+        </div>
+        <ConversationList activeId={conversationId} basePath="/market/messages" />
+      </div>
+
+      {/* Chat pane */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {convsLoading ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
+              Loading…
+            </span>
+          </div>
+        ) : !conversation ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <MessageSquare size={36} color="var(--ink-200)" strokeWidth={1} />
+            <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
+              Conversation not found
+            </span>
+          </div>
+        ) : (
+          <ConversationView
+            convId={conversationId}
+            currentUserId={user.uid}
+            conversation={conversation}
+            onRefresh={() => refetch()}
+          />
+        )}
       </div>
     </div>
   );

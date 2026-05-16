@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversations } from "@/hooks/use-conversations";
@@ -10,15 +10,9 @@ import { ConversationView } from "@/components/features/messages/ConversationVie
 
 export default function ThreadPage({ params }: { params: Promise<{ conversationId: string }> }) {
   const { conversationId } = use(params);
-  const { user } = useAuth();
+  const { user, idToken } = useAuth();
   const router = useRouter();
   const { data: convs, isLoading, refetch } = useConversations();
-
-  // Auth token for WS
-  const [idToken, setIdToken] = useState<string | null>(null);
-  useEffect(() => {
-    user?.getIdToken().then(setIdToken).catch(() => {});
-  }, [user]);
 
   useMessagesWs(idToken, conversationId);
 
@@ -70,7 +64,7 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
             Messages
           </h1>
         </div>
-        <ConversationList activeId={conversationId} />
+        <ConversationList activeId={conversationId} basePath="/messages" />
       </div>
 
       {/* Thread */}
@@ -87,6 +81,3 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
     </div>
   );
 }
-
-// Needed for useState/useEffect in this file
-import { useState, useEffect } from "react";

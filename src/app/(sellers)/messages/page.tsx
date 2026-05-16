@@ -33,7 +33,7 @@ export default function InboxPage() {
             Messages
           </h1>
         </div>
-        <ConversationList />
+        <ConversationList basePath="/messages" />
       </div>
 
       {/* Empty state when no conversation selected */}

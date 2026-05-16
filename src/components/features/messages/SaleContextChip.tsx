@@ -5,7 +5,7 @@ import type { MessageContext } from "@/lib/types";
 export function SaleContextChip({ context }: { context: MessageContext }) {
   return (
     <Link
-      href={`/sale/${context.saleEventId}`}
+      href={`/market/sale/${context.saleEventId}`}
       style={{
         display: "inline-flex",
         alignItems: "center",

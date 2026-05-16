@@ -1,37 +1,41 @@
 "use client";
 
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, LogIn } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { ConversationList } from "@/components/features/messages/ConversationList";
 
 export default function MarketMessagesPage() {
-  return (
-    <div style={{ padding: "40px 32px", maxWidth: 800, margin: "0 auto" }}>
-      <h1
-        style={{
-          fontFamily: "var(--sr-font-serif)",
-          fontSize: 26,
-          fontWeight: 500,
-          color: "var(--sr-text-primary)",
-          marginBottom: 4,
-        }}
-      >
-        Messages
-      </h1>
-      <p style={{ fontSize: 13, color: "var(--ink-400)", marginBottom: 40 }}>
-        Your conversations with sellers.
-      </p>
+  const { user, loading } = useAuth();
 
+  if (loading) {
+    return (
       <div
         style={{
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
+          Loading…
+        </span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          height: "calc(100vh - 64px)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "80px 32px",
-          borderRadius: "var(--sr-radius-xl)",
-          background: "var(--sr-bg-card)",
-          border: "1px solid var(--sr-border-subtle)",
-          textAlign: "center",
-          gap: 16,
+          gap: 20,
+          padding: "0 24px",
         }}
       >
         <div
@@ -46,19 +50,7 @@ export default function MarketMessagesPage() {
         >
           <MessageSquare size={24} color="var(--clay-500)" strokeWidth={1.5} />
         </div>
-        <div>
-          <p
-            style={{
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--ink-400)",
-              marginBottom: 8,
-            }}
-          >
-            Coming soon · Phase C
-          </p>
+        <div style={{ textAlign: "center" }}>
           <p
             style={{
               fontFamily: "var(--sr-font-serif)",
@@ -68,12 +60,88 @@ export default function MarketMessagesPage() {
               marginBottom: 8,
             }}
           >
-            Buyer inbox
+            Sign in to view messages
           </p>
-          <p style={{ fontSize: 13, color: "var(--ink-400)", maxWidth: 320 }}>
+          <p style={{ fontSize: 13, color: "var(--ink-400)", maxWidth: 300 }}>
             Message sellers, ask questions, and arrange pickups — all in one place.
           </p>
         </div>
+        <Link
+          href="/login"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "10px 20px",
+            borderRadius: "var(--sr-radius-lg)",
+            background: "var(--clay-500)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: "var(--sr-font-sans)",
+            textDecoration: "none",
+          }}
+        >
+          <LogIn size={15} strokeWidth={1.5} />
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
+      {/* Conv list panel */}
+      <div
+        style={{
+          width: 320,
+          flexShrink: 0,
+          borderRight: "1px solid var(--sr-border-subtle)",
+          overflowY: "auto",
+          background: "var(--sr-bg-app)",
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 16px 12px",
+            borderBottom: "1px solid var(--sr-border-subtle)",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "var(--sr-font-serif)",
+              fontSize: 17,
+              fontWeight: 700,
+              color: "var(--sr-text-primary)",
+            }}
+          >
+            Messages
+          </h1>
+        </div>
+        <ConversationList basePath="/market/messages" />
+      </div>
+
+      {/* Empty right pane */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+        }}
+      >
+        <MessageSquare size={36} color="var(--ink-200)" strokeWidth={1} />
+        <span
+          style={{
+            fontSize: 13,
+            color: "var(--sr-text-muted)",
+            fontFamily: "var(--sr-font-sans)",
+          }}
+        >
+          Select a conversation
+        </span>
       </div>
     </div>
   );

@@ -17,17 +17,35 @@ function formatRelative(ts: string | null) {
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-function ConvRow({ conv, active }: { conv: ConversationSummary; active: boolean }) {
+function avatarInitial(username: string | null | undefined) {
+  return (username ?? "?").slice(0, 1).toUpperCase();
+}
+
+function ConvRow({
+  conv,
+  active,
+  basePath,
+}: {
+  conv: ConversationSummary;
+  active: boolean;
+  basePath: string;
+}) {
+  const hasUnread = conv.unreadCount > 0;
+
   return (
     <Link
-      href={`/messages/${conv.id}`}
+      href={`${basePath}/${conv.id}`}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 12,
         padding: "12px 16px",
         textDecoration: "none",
-        background: active ? "var(--clay-50)" : "transparent",
+        background: active
+          ? "var(--clay-50)"
+          : hasUnread
+          ? "var(--clay-50)"
+          : "transparent",
         borderLeft: active ? "3px solid var(--clay-500)" : "3px solid transparent",
         transition: "background 120ms",
       }}
@@ -35,16 +53,19 @@ function ConvRow({ conv, active }: { conv: ConversationSummary; active: boolean 
         if (!active) (e.currentTarget as HTMLElement).style.background = "var(--cream-100)";
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
+        if (!active)
+          (e.currentTarget as HTMLElement).style.background =
+            hasUnread ? "var(--clay-50)" : "transparent";
       }}
     >
+      {/* Gradient avatar */}
       <div
         style={{
           width: 40,
           height: 40,
           borderRadius: "50%",
-          background: "var(--clay-100)",
-          color: "var(--clay-700)",
+          background: "linear-gradient(135deg, var(--clay-300), var(--clay-500))",
+          color: "#fff",
           display: "grid",
           placeItems: "center",
           fontSize: 15,
@@ -53,15 +74,15 @@ function ConvRow({ conv, active }: { conv: ConversationSummary; active: boolean 
           flexShrink: 0,
         }}
       >
-        {(conv.otherUsername ?? "?").slice(0, 1).toUpperCase()}
+        {avatarInitial(conv.otherUsername)}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
           <span
             style={{
               fontSize: 13,
-              fontWeight: conv.unreadCount > 0 ? 700 : 500,
+              fontWeight: hasUnread ? 700 : 500,
               color: "var(--sr-text-primary)",
               fontFamily: "var(--sr-font-sans)",
               overflow: "hidden",
@@ -72,54 +93,58 @@ function ConvRow({ conv, active }: { conv: ConversationSummary; active: boolean 
           >
             @{conv.otherUsername ?? conv.otherUserId ?? "Unknown"}
           </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: "var(--sr-text-muted)",
-              fontFamily: "var(--sr-font-mono)",
-              flexShrink: 0,
-            }}
-          >
-            {formatRelative(conv.lastMessageAt)}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+            <span
+              style={{
+                fontSize: 10,
+                color: "var(--sr-text-muted)",
+                fontFamily: "var(--sr-font-mono)",
+              }}
+            >
+              {formatRelative(conv.lastMessageAt)}
+            </span>
+            {/* Red unread dot */}
+            {hasUnread && (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "var(--rust-500, #e05252)",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+        <div style={{ marginTop: 2 }}>
           <span
             style={{
               fontSize: 12,
-              color: conv.unreadCount > 0 ? "var(--sr-text-primary)" : "var(--sr-text-muted)",
-              fontWeight: conv.unreadCount > 0 ? 500 : 400,
+              color: hasUnread ? "var(--sr-text-primary)" : "var(--sr-text-muted)",
+              fontWeight: hasUnread ? 500 : 400,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              flex: 1,
+              display: "block",
               fontFamily: "var(--sr-font-sans)",
             }}
           >
             {conv.lastMessage ?? "No messages yet"}
           </span>
-          {conv.unreadCount > 0 && (
-            <span
-              style={{
-                background: "var(--clay-500)",
-                color: "#fff",
-                borderRadius: 10,
-                padding: "1px 6px",
-                fontSize: 10,
-                fontWeight: 700,
-                flexShrink: 0,
-              }}
-            >
-              {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
-            </span>
-          )}
         </div>
       </div>
     </Link>
   );
 }
 
-export function ConversationList({ activeId }: { activeId?: string }) {
+export function ConversationList({
+  activeId,
+  basePath = "/messages",
+}: {
+  activeId?: string;
+  basePath?: string;
+}) {
   const { data: convs, isLoading, error } = useConversations();
 
   if (isLoading) {
@@ -157,7 +182,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
   return (
     <div>
       {convs.map((c) => (
-        <ConvRow key={c.id} conv={c} active={c.id === activeId} />
+        <ConvRow key={c.id} conv={c} active={c.id === activeId} basePath={basePath} />
       ))}
     </div>
   );
