@@ -33,11 +33,11 @@ interface Props {
   capturedItems?: CapturedItem[];
 }
 
-function LiveProcessingScreen({ eventId, capturedItems, onDashboard, onWatch }: {
+function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard }: {
   eventId: string;
   capturedItems: CapturedItem[];
+  onInventory: () => void;
   onDashboard: () => void;
-  onWatch: () => void;
 }) {
   const analyzedItems = capturedItems.filter((i) => i.name);
 
@@ -160,42 +160,34 @@ function LiveProcessingScreen({ eventId, capturedItems, onDashboard, onWatch }: 
           ))}
         </div>
 
-        {/* CTAs */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {/* CTA */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <button
-            onClick={onDashboard}
+            onClick={onInventory}
             style={{
-              borderRadius: "var(--sr-radius-lg)", padding: "18px 20px",
-              display: "flex", flexDirection: "column", gap: 8,
-              background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)",
-              cursor: "pointer", textAlign: "left",
+              borderRadius: "var(--sr-radius-lg)", padding: "16px 24px",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              background: "var(--clay-600)", border: "none",
+              cursor: "pointer", color: "#fff",
+              fontSize: 16, fontWeight: 700, fontFamily: "var(--sr-font-sans)",
+              letterSpacing: "-0.01em",
             }}
           >
-            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 500, color: "var(--ink-800)" }}>
-              Go to dashboard
-            </div>
-            <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>
-              We&apos;ll notify you when pricing is ready.
-            </div>
+            View my inventory
           </button>
-
-          <button
-            onClick={onWatch}
-            style={{
-              borderRadius: "var(--sr-radius-lg)", padding: "18px 20px",
-              display: "flex", flexDirection: "column", gap: 8,
-              background: "var(--clay-50)", border: "1.5px solid var(--clay-500)",
-              boxShadow: "0 2px 0 var(--clay-100)",
-              cursor: "pointer", textAlign: "left",
-            }}
-          >
-            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 500, color: "var(--ink-800)" }}>
-              Stay &amp; watch
-            </div>
-            <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>
-              Auto-redirects to your inventory when done.
-            </div>
-          </button>
+          <div style={{ textAlign: "center", fontSize: 13, color: "var(--sr-text-muted)" }}>
+            Pricing completes in the background — or{" "}
+            <button
+              onClick={onDashboard}
+              style={{
+                background: "none", border: "none", padding: 0,
+                fontSize: 13, color: "var(--sr-text-secondary)",
+                cursor: "pointer", textDecoration: "underline",
+              }}
+            >
+              go to dashboard
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -253,8 +245,8 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
       <LiveProcessingScreen
         eventId={eventId}
         capturedItems={capturedItems}
+        onInventory={stayAndWatch}
         onDashboard={goToDashboard}
-        onWatch={stayAndWatch}
       />
     );
   }

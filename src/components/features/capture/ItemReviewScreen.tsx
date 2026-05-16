@@ -80,7 +80,9 @@ export function ItemReviewScreen({
             >
               {items.length === 0
                 ? "No items added yet"
-                : `${items.length} item${items.length !== 1 ? "s" : ""} to list`}
+                : loadingCount > 0 && readyCount === 0
+                ? "Identifying items…"
+                : `${readyCount} item${readyCount !== 1 ? "s" : ""} ready${loadingCount > 0 ? ` · ${loadingCount} still identifying…` : ""}`}
             </div>
           </div>
         </div>
