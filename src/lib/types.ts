@@ -62,6 +62,21 @@ export interface PublicSaleDetail {
   is_authenticated: boolean;
 }
 
+export interface PublicItemDetail {
+  name: string | null;
+  brand: string | null;
+  condition: string | null;
+  price: number | null;
+  original_price: number | null;
+  year: number | null;
+  image_url: string | null;
+  bundle_id: string;
+  bundle_name: string | null;
+  suburb: string | null;
+  seller_id: string | null;
+  pricing_reasoning?: string | null;
+}
+
 export interface SaleListing {
   id: string;
   status: SaleStatus;

@@ -4,6 +4,7 @@ import type {
   SaleListing,
   MarketplaceSearchResult,
   PublicSaleDetail,
+  PublicItemDetail,
   ActiveSaleSummary,
   UserProfile,
   UsernameAvailable,
@@ -297,6 +298,10 @@ export async function searchMarketplace(
 
 export async function getPublicSale(eventId: string): Promise<PublicSaleDetail> {
   return apiRequest<PublicSaleDetail>(`${API_BASE}/marketplace/sales/${eventId}`);
+}
+
+export async function getPublicItem(eventId: string, bundleId: string, itemId: string): Promise<PublicItemDetail> {
+  return apiRequest<PublicItemDetail>(`${API_BASE}/marketplace/items/${eventId}/${bundleId}/${itemId}`);
 }
 
 export async function getActiveSales(): Promise<ActiveSaleSummary[]> {
