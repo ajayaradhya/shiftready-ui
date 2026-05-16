@@ -204,8 +204,17 @@ function ItemRow({
 export function CaptureBucket({ items, onRemove, onRetry }: Props) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(items.length);
   const loadingCount = items.filter((i) => i.isLoading).length;
   const errorCount = items.filter((i) => i.error && !i.isLoading).length;
+
+  // Auto-open on first item added
+  useEffect(() => {
+    if (prevCountRef.current === 0 && items.length === 1) {
+      setOpen(true);
+    }
+    prevCountRef.current = items.length;
+  }, [items.length]);
 
   // Close panel on outside click
   useEffect(() => {

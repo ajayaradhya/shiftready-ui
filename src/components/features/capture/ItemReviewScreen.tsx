@@ -20,6 +20,10 @@ export function ItemReviewScreen({
   onProcess,
   onBack,
 }: Props) {
+  const loadingCount = items.filter((i) => i.isLoading).length;
+  const errorCount = items.filter((i) => i.error && !i.isLoading).length;
+  const readyCount = items.filter((i) => i.gcs_uri && i.name && !i.isLoading).length;
+
   return (
     <div
       style={{
@@ -302,9 +306,49 @@ export function ItemReviewScreen({
           </div>
         )}
 
+        {loadingCount > 0 && !isUploading && (
+          <div
+            style={{
+              padding: "10px 14px",
+              background: "rgba(181,96,74,0.10)",
+              border: "1px solid rgba(181,96,74,0.25)",
+              borderRadius: "var(--sr-radius-md)",
+              fontSize: 13,
+              color: "var(--clay-600)",
+              lineHeight: 1.45,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Loader2 size={14} strokeWidth={2} className="animate-spin" style={{ flexShrink: 0 }} />
+            {loadingCount} item{loadingCount !== 1 ? "s" : ""} still being identified…
+          </div>
+        )}
+
+        {errorCount > 0 && !isUploading && (
+          <div
+            style={{
+              padding: "10px 14px",
+              background: "var(--rust-50)",
+              border: "1px solid var(--rust-100)",
+              borderRadius: "var(--sr-radius-md)",
+              fontSize: 13,
+              color: "var(--rust-600)",
+              lineHeight: 1.45,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <AlertCircle size={14} strokeWidth={2} style={{ flexShrink: 0 }} />
+            {errorCount} item{errorCount !== 1 ? "s" : ""} couldn&apos;t be identified and will be skipped. Retry or remove {errorCount !== 1 ? "them" : "it"}.
+          </div>
+        )}
+
         <button
           onClick={onProcess}
-          disabled={items.length === 0 || isUploading}
+          disabled={readyCount === 0 || isUploading}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -315,12 +359,12 @@ export function ItemReviewScreen({
             padding: "14px 24px",
             borderRadius: "var(--sr-radius-lg)",
             border: "none",
-            background: items.length === 0 || isUploading ? "var(--clay-200)" : "var(--clay-600)",
-            color: items.length === 0 || isUploading ? "var(--clay-400)" : "#fff",
+            background: readyCount === 0 || isUploading ? "var(--clay-200)" : "var(--clay-600)",
+            color: readyCount === 0 || isUploading ? "var(--clay-400)" : "#fff",
             fontSize: 16,
             fontWeight: 700,
             fontFamily: "var(--sr-font-sans)",
-            cursor: items.length === 0 || isUploading ? "not-allowed" : "pointer",
+            cursor: readyCount === 0 || isUploading ? "not-allowed" : "pointer",
             letterSpacing: "-0.01em",
             transition: "background 120ms",
           }}
@@ -333,7 +377,7 @@ export function ItemReviewScreen({
           ) : (
             <>
               <PackageCheck size={18} strokeWidth={2} />
-              Process {items.length} item{items.length !== 1 ? "s" : ""}
+              Process {readyCount} item{readyCount !== 1 ? "s" : ""}
             </>
           )}
         </button>

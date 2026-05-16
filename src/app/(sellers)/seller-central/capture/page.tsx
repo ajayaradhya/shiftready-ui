@@ -114,15 +114,12 @@ export default function CapturePage() {
 
   const handleAdd = useCallback((item: PendingDetection) => {
     const itemId = crypto.randomUUID();
-    setConfirmedItems((prev) => {
-      if (prev.some((i) => i.label === item.label)) return prev;
-      return [
-        ...prev,
-        { id: itemId, label: item.label, firstSeenAt: Date.now(), frameSrc: item.frameSrc, isLoading: true },
-      ];
-    });
+    setConfirmedItems((prev) => [
+      ...prev,
+      { id: itemId, label: item.label, firstSeenAt: Date.now(), frameSrc: item.frameSrc, isLoading: true },
+    ]);
     setPendingDetection(null);
-    addToast(item.label);
+    addToast(item.label, "Item captured");
     runCaptureFrame(itemId, item.frameSrc, item.label);
   }, [addToast, runCaptureFrame]);
 

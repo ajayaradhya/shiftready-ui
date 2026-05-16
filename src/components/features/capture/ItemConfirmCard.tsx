@@ -47,44 +47,28 @@ export function ItemConfirmCard({ pending, onAdd, onSkip }: Props) {
         />
       )}
 
-      {/* Label */}
+      {/* Prompt */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: "var(--sr-font-mono)",
-            fontSize: 10,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "rgba(255,255,255,0.40)",
-            marginBottom: 3,
-          }}
-        >
-          Detected
-        </div>
         <div
           style={{
             fontFamily: "var(--sr-font-serif)",
             fontSize: 17,
             fontWeight: 500,
             color: "rgba(255,255,255,0.90)",
-            textTransform: "capitalize",
             letterSpacing: "-0.01em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
           }}
         >
-          {pending.label}
+          Add this item?
         </div>
         <div
           style={{
             fontFamily: "var(--sr-font-sans)",
             fontSize: 12,
             color: "rgba(255,255,255,0.35)",
-            marginTop: 2,
+            marginTop: 3,
           }}
         >
-          Add to bucket?
+          Gemini will identify it
         </div>
       </div>
 
