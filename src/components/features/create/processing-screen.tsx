@@ -210,7 +210,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
     const poll = setInterval(async () => {
       try {
         const { status } = await getStatus(eventId);
-        if (status === "ready_for_review" || status === "pricing_in_progress" || status === "live") {
+        if (status === "ready_for_review" || status === "live") {
           clearInterval(poll);
           router.push(`/seller-central/inventory/${eventId}`);
         } else if (status === "failed") {

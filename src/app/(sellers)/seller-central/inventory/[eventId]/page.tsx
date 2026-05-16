@@ -8,7 +8,6 @@ import { BundleCard } from "@/components/features/seller-central/bundle-card";
 import { ItemCardV2 } from "@/components/features/seller-central/item-card-v2";
 import { VideoPanel } from "@/components/features/seller-central/video-panel";
 import { InventoryActions } from "@/components/features/inventory/inventory-actions";
-import { LoadingOverlay } from "@/components/features/inventory/loading-overlay";
 import { MousePointerClick, Plus, Trash2, Sparkles } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
@@ -95,7 +94,7 @@ export default function SellerCentralInventoryPage() {
   });
 
   const isGlobalLoading =
-    isProcessing || isPricing || reestimateMutation.isPending || activeMutations > 0;
+    isProcessing || reestimateMutation.isPending || activeMutations > 0;
 
   // Sale title from URL search param (set by sale-row when navigating)
   const titleFromUrl = searchParams.get("title");
@@ -121,11 +120,17 @@ export default function SellerCentralInventoryPage() {
 
   if (isLoading && !summary) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "calc(100vh - 64px)", gap: 16 }}>
-        <div style={{ width: 40, height: 40, border: "2px solid var(--clay-100)", borderTopColor: "var(--clay-500)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-        <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: "var(--sr-text-muted)" }}>
-          Loading inventory…
-        </span>
+      <div style={{ display: "flex", height: "calc(100vh - 64px)" }}>
+        <div className="hidden md:block" style={{ width: 320, flexShrink: 0, borderRight: "1px solid var(--sr-border)", background: "var(--sr-bg-surface)" }} />
+        <div style={{ flex: 1, padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ height: 28, width: 220, borderRadius: 6, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
+          <div style={{ height: 16, width: 140, borderRadius: 4, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ height: 80, borderRadius: 10, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -141,21 +146,13 @@ export default function SellerCentralInventoryPage() {
   return (
     <div
       style={{ display: "flex", height: "calc(100vh - 64px)" }}
-      aria-busy={isGlobalLoading}
+      aria-busy={isGlobalLoading || isPricing}
     >
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {isProcessing && "Processing your inventory video…"}
         {isPricing && "AI is pricing your items…"}
         {reestimateMutation.isPending && "Re-analysing prices…"}
       </div>
-
-      {isGlobalLoading && (
-        <LoadingOverlay
-          isPricing={isPricing}
-          isReestimating={reestimateMutation.isPending}
-          status={status}
-        />
-      )}
 
       {/* Left: video panel — hidden on mobile */}
       <div className="hidden md:block">
@@ -172,6 +169,18 @@ export default function SellerCentralInventoryPage() {
         style={{ flex: 1, overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
         className="custom-scrollbar px-4 py-7 pb-14 md:px-8"
       >
+        {/* Inline status banners — non-blocking */}
+        {(isPricing || reestimateMutation.isPending || isProcessing) && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20, borderRadius: "var(--sr-radius-sm)", background: "var(--clay-50)", border: "1px solid var(--clay-100)", color: "var(--clay-700)", fontSize: 13, fontWeight: 500 }}>
+            <Sparkles size={15} style={{ flexShrink: 0, animation: "pulse 2s ease-in-out infinite" }} />
+            <span>
+              {isProcessing && "AI is extracting items from your inventory — bundles will appear shortly."}
+              {isPricing && !isProcessing && "Gemini is pricing your items against Sydney market data — prices will appear shortly."}
+              {reestimateMutation.isPending && "Re-analysing prices…"}
+            </span>
+          </div>
+        )}
+
         {/* Top bar */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3" style={{ marginBottom: 28 }}>
           <div>
