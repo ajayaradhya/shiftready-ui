@@ -12,6 +12,7 @@ import type {
   ConversationStartResponse,
   MessagesListResponse,
   MessageContext,
+  SavedListResponse,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -471,4 +472,46 @@ export async function unblockConversation(convId: string): Promise<void> {
   await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/unblock`, {
     method: "POST",
   });
+}
+
+// --- Saved / Watchlist ---
+
+export async function saveSale(eventId: string): Promise<{ saved: boolean }> {
+  return apiRequest<{ saved: boolean }>(
+    `${API_BASE}/marketplace/sales/${eventId}/save`,
+    { method: "POST" }
+  );
+}
+
+export async function unsaveSale(eventId: string): Promise<{ saved: boolean }> {
+  return apiRequest<{ saved: boolean }>(
+    `${API_BASE}/marketplace/sales/${eventId}/save`,
+    { method: "DELETE" }
+  );
+}
+
+export async function saveItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<{ saved: boolean }> {
+  return apiRequest<{ saved: boolean }>(
+    `${API_BASE}/marketplace/items/${eventId}/${bundleId}/${itemId}/save`,
+    { method: "POST" }
+  );
+}
+
+export async function unsaveItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<{ saved: boolean }> {
+  return apiRequest<{ saved: boolean }>(
+    `${API_BASE}/marketplace/items/${eventId}/${bundleId}/${itemId}/save`,
+    { method: "DELETE" }
+  );
+}
+
+export async function getSaved(): Promise<SavedListResponse> {
+  return apiRequest<SavedListResponse>(`${API_BASE}/users/me/saved`);
 }

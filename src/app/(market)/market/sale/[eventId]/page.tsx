@@ -1,10 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   MapPin,
@@ -14,8 +14,9 @@ import {
   Percent,
   ChevronDown,
   ChevronUp,
+  Heart,
 } from "lucide-react";
-import { getPublicSale, startConversation } from "@/lib/api";
+import { getPublicSale, startConversation, saveSale, unsaveSale } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import type { PublicBundle } from "@/lib/types";
 
@@ -398,7 +399,10 @@ export default function SaleDetailPage({
   const { eventId } = use(params);
   const { user } = useAuth();
   const router = useRouter();
+  const qc = useQueryClient();
   const [messaging, setMessaging] = useState(false);
+  const [saved, setSaved] = useState<boolean | null>(null);
+  const [savePending, setSavePending] = useState(false);
 
   const {
     data: sale,
@@ -410,6 +414,32 @@ export default function SaleDetailPage({
     staleTime: 60_000,
     retry: false,
   });
+
+  useEffect(() => {
+    if (sale && sale.is_saved != null) setSaved(sale.is_saved);
+  }, [sale?.is_saved]);
+
+  const handleToggleSave = async () => {
+    if (!user) {
+      router.push(`/login?next=/market/sale/${eventId}`);
+      return;
+    }
+    const newSaved = !saved;
+    setSaved(newSaved);
+    setSavePending(true);
+    try {
+      if (newSaved) {
+        await saveSale(eventId);
+      } else {
+        await unsaveSale(eventId);
+      }
+      qc.invalidateQueries({ queryKey: ["saved"] });
+    } catch {
+      setSaved(!newSaved);
+    } finally {
+      setSavePending(false);
+    }
+  };
 
   const handleContact = async () => {
     if (!user) {
@@ -576,6 +606,38 @@ export default function SaleDetailPage({
                   {daysAgo(sale.publishedAt)}
                 </span>
               )}
+              <button
+                onClick={handleToggleSave}
+                disabled={savePending}
+                aria-label={saved ? "Unsave sale" : "Save sale"}
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 12px",
+                  borderRadius: "var(--sr-radius-full)",
+                  border: `1px solid ${saved ? "var(--clay-200)" : "var(--sr-border-subtle)"}`,
+                  background: saved ? "var(--clay-50)" : "var(--sr-bg-card)",
+                  cursor: savePending ? "default" : "pointer",
+                  opacity: savePending ? 0.6 : 1,
+                  transition: "all 140ms",
+                  fontFamily: "var(--sr-font-mono)",
+                  fontSize: 9,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  fontWeight: 700,
+                  color: saved ? "var(--clay-600)" : "var(--ink-400)",
+                }}
+              >
+                <Heart
+                  size={11}
+                  fill={saved ? "var(--clay-500)" : "none"}
+                  color={saved ? "var(--clay-500)" : "var(--ink-400)"}
+                  strokeWidth={1.5}
+                />
+                {saved ? "Saved" : "Save"}
+              </button>
             </div>
             <h1
               style={{

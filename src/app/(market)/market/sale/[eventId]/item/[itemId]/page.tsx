@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, use, useState } from "react";
+import { Suspense, use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   Package,
@@ -14,7 +14,7 @@ import {
   MapPin,
   Lock,
 } from "lucide-react";
-import { getPublicItem, startConversation } from "@/lib/api";
+import { getPublicItem, startConversation, saveItem, unsaveItem } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 function fmt(n: number) {
@@ -36,8 +36,10 @@ function ItemDetailContent({
   const bundleId = searchParams.get("bundle") ?? "";
   const { user } = useAuth();
   const router = useRouter();
+  const qc = useQueryClient();
   const [messaging, setMessaging] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savePending, setSavePending] = useState(false);
 
   const {
     data: item,
@@ -50,6 +52,32 @@ function ItemDetailContent({
     staleTime: 60_000,
     retry: false,
   });
+
+  useEffect(() => {
+    if (item && item.is_saved != null) setSaved(item.is_saved);
+  }, [item?.is_saved]);
+
+  const handleToggleSave = async () => {
+    if (!user) {
+      router.push(`/login?next=/market/sale/${eventId}/item/${itemId}?bundle=${bundleId}`);
+      return;
+    }
+    const newSaved = !saved;
+    setSaved(newSaved);
+    setSavePending(true);
+    try {
+      if (newSaved) {
+        await saveItem(eventId, bundleId, itemId);
+      } else {
+        await unsaveItem(eventId, bundleId, itemId);
+      }
+      qc.invalidateQueries({ queryKey: ["saved"] });
+    } catch {
+      setSaved(!newSaved);
+    } finally {
+      setSavePending(false);
+    }
+  };
 
   const handleInterest = async () => {
     if (!user) {
@@ -573,7 +601,8 @@ function ItemDetailContent({
                 {messaging ? "Opening…" : "Express Interest"}
               </button>
               <button
-                onClick={() => setSaved((v) => !v)}
+                onClick={handleToggleSave}
+                disabled={savePending}
                 aria-label={saved ? "Saved" : "Save item"}
                 style={{
                   width: 48,
@@ -585,7 +614,8 @@ function ItemDetailContent({
                   }`,
                   display: "grid",
                   placeItems: "center",
-                  cursor: "pointer",
+                  cursor: savePending ? "default" : "pointer",
+                  opacity: savePending ? 0.6 : 1,
                   transition: "all 140ms",
                   flexShrink: 0,
                 }}

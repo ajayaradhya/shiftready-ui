@@ -60,6 +60,7 @@ export interface PublicSaleDetail {
   publishedAt: string | null;
   bundles: PublicBundle[];
   is_authenticated: boolean;
+  is_saved: boolean | null;
 }
 
 export interface PublicItemDetail {
@@ -75,6 +76,7 @@ export interface PublicItemDetail {
   suburb: string | null;
   seller_id: string | null;
   pricing_reasoning?: string | null;
+  is_saved: boolean | null;
 }
 
 export interface SaleListing {
@@ -212,4 +214,33 @@ export interface ConversationStartResponse {
 export interface MessagesListResponse {
   messages: Message[];
   conversationId: string;
+}
+
+// --- Saved / Watchlist types ---
+
+export interface SavedSale {
+  eventId: string;
+  suburb: string | null;
+  state: string | null;
+  itemCount: number;
+  moveOutDate: string | null;
+  savedAt: string | null;
+}
+
+export interface SavedItem {
+  itemId: string;
+  bundleId: string | null;
+  eventId: string | null;
+  name: string | null;
+  brand: string | null;
+  condition: string | null;
+  price: number | null;
+  suburb: string | null;
+  image_url: string | null;
+  savedAt: string | null;
+}
+
+export interface SavedListResponse {
+  saved_sales: SavedSale[];
+  saved_items: SavedItem[];
 }
