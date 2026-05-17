@@ -137,23 +137,56 @@ function ItemCard({ item, index, isFav, onToggleFav }: {
   );
 }
 
+function SaleImageCollage({ images, variant }: { images: string[]; variant: Variant }) {
+  if (images.length === 0) return <PhDiv variant={variant} />;
+
+  if (images.length === 1) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    );
+  }
+
+  if (images.length === 2) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, width: "100%", height: "100%" }}>
+        {images.slice(0, 2).map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, width: "100%", height: "100%" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", gridRow: "1 / 3" }} />
+      <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 2, height: "100%" }}>
+        {images.slice(1, 3).map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
   const v = variantForIndex(index);
   const title = sale.suburb
     ? `${sale.suburb} moving sale`
     : "Moving sale";
+  const images = sale.preview_images ?? [];
   return (
     <Link href={`/market/sale/${sale.eventId}`} style={{ textDecoration: "none" }}>
       <article className={s.sale}>
         <div className={s.saleMedia}>
-          <PhDiv variant={v} />
+          <SaleImageCollage images={images} variant={v} />
           <span className={s.saleBadge}>
             <span className={`${s.badge} ${s.badgeLive}`}>Live</span>
           </span>
           <span className={s.saleCount}>{sale.itemCount} items</span>
-          <span className={s.salePlay}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.5v9l8-4.5z" /></svg>
-          </span>
         </div>
         <div className={s.saleBody}>
           <div className={s.saleTitle}>{title}</div>

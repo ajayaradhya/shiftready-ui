@@ -7,6 +7,7 @@ export interface ActiveSaleSummary {
   itemCount: number;
   minPrice: number | null;
   publishedAt: string | null;
+  preview_images: string[];
 }
 
 
@@ -90,6 +91,7 @@ export interface SaleListing {
   createdAt: string;
   itemCount: number;
   totalValue: number;
+  preview_images: string[];
 }
 
 // --- Core sale types ---

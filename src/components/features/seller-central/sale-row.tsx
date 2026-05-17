@@ -49,6 +49,7 @@ export function SaleRow({ sale }: SaleRowProps) {
   const dotColor = DOT_COLORS[sale.status] ?? "var(--ink-300)";
   const isLiveStatus = sale.status === "live" || sale.status === "partially_sold";
   const hasInventory = sale.status !== "pending_upload" && sale.status !== "processing";
+  const previews = (sale.preview_images ?? []).slice(0, 4);
 
   const inventoryUrl = `/seller-central/inventory/${sale.id}?title=${encodeURIComponent([sale.suburb, sale.state].filter(Boolean).join(", "))}`;
 
@@ -59,7 +60,7 @@ export function SaleRow({ sale }: SaleRowProps) {
         background: "var(--sr-bg-card)",
         border: "1px solid var(--sr-border-subtle)",
         borderRadius: "var(--sr-radius-lg)",
-        padding: "20px 24px",
+        padding: "16px 24px",
         display: "flex",
         alignItems: "center",
         gap: 20,
@@ -88,6 +89,49 @@ export function SaleRow({ sale }: SaleRowProps) {
           animation: isLiveStatus ? "badge-pulse 1.8s infinite" : undefined,
         }}
       />
+
+      {/* Image strip */}
+      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+        {previews.length > 0 ? (
+          previews.map((src, i) => (
+            <div
+              key={i}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: "var(--sr-radius-sm)",
+                overflow: "hidden",
+                background: "var(--cream-100)",
+                border: "1px solid var(--sr-border-subtle)",
+                flexShrink: 0,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          ))
+        ) : (
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "var(--sr-radius-sm)",
+              background: "var(--cream-100)",
+              border: "1px solid var(--sr-border-subtle)",
+              display: "grid",
+              placeItems: "center",
+              color: "var(--ink-300)",
+              flexShrink: 0,
+            }}
+          >
+            <Package size={20} strokeWidth={1.4} />
+          </div>
+        )}
+      </div>
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
