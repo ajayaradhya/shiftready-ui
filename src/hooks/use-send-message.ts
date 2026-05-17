@@ -16,6 +16,7 @@ export function useSendMessage(convId: string) {
         (old: { pages: { messages: Message[] }[]; pageParams: unknown[] } | undefined) => {
           if (!old) return old;
           const firstPage = old.pages[0];
+          if (firstPage.messages.some((m) => m.id === msg.id)) return old;
           return {
             ...old,
             pages: [

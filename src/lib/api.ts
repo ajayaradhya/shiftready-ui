@@ -30,7 +30,7 @@ type EmptyResponse = Record<string, never>;
 
 export type PatchItemPayload = Partial<InventoryItem>;
 
-async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
+async function apiRequest<T>(url: string, options?: RequestInit, _retried = false): Promise<T> {
   const existingHeaders = (options?.headers as Record<string, string>) ?? {};
   const headers: Record<string, string> = {
     ...existingHeaders,
@@ -41,6 +41,14 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (res.status === 204) {
     return {} as T;
+  }
+
+  if (res.status === 401 && !_retried) {
+    const { auth } = await import("./firebase");
+    if (auth?.currentUser) {
+      _idToken = await auth.currentUser.getIdToken(true);
+      return apiRequest<T>(url, options, true);
+    }
   }
 
   if (!res.ok) {
