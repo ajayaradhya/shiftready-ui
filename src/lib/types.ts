@@ -116,6 +116,8 @@ export interface InventoryImage {
   uploaded_at: string;
 }
 
+export type ItemCategory = "furniture" | "appliance" | "decor" | "electronics" | "other";
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -135,6 +137,15 @@ export interface InventoryItem {
   // Purchase Metadata
   predicted_year_of_purchase?: number;
   actual_year_of_purchase?: number | null;
+
+  // Extended fields (Phase 1)
+  description?: string | null;
+  category?: ItemCategory | null;
+  quantity?: number | null;
+  dimensions?: string | null;
+  material?: string | null;
+  is_fragile?: boolean;
+  disassembly_required?: boolean;
 
   // Media
   images?: InventoryImage[];

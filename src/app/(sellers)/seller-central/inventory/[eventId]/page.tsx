@@ -11,7 +11,7 @@ import { InventoryActions } from "@/components/features/inventory/inventory-acti
 import { MousePointerClick, Plus, Trash2, Sparkles } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
-  createBundle, deleteBundle, createItem,
+  createBundle, deleteBundle, createItem, renameBundle,
 } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ export default function SellerCentralInventoryPage() {
   const [isAddingBundle, setIsAddingBundle] = useState(false);
   const [newBundleName, setNewBundleName] = useState("");
   const [activeItemId, setActiveItemId] = useState<string | undefined>(undefined);
+  const [isRenamingBundle, setIsRenamingBundle] = useState(false);
+  const [bundleRenameValue, setBundleRenameValue] = useState("");
 
   const { summary, isProcessing, isPricing, isLoading, status, isLive, error } =
     useInventory(eventId);
@@ -67,6 +69,15 @@ export default function SellerCentralInventoryPage() {
   const addItemMutation = useMutation({
     mutationFn: ({ bId, name }: { bId: string; name: string }) => createItem(eventId, bId, name),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
+  });
+
+  const renameBundleMutation = useMutation({
+    mutationFn: ({ bundleId, name }: { bundleId: string; name: string }) =>
+      renameBundle(eventId, bundleId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      setIsRenamingBundle(false);
+    },
   });
 
   const publishMutation = useMutation({
@@ -283,9 +294,48 @@ export default function SellerCentralInventoryPage() {
             {/* Section header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "14px 18px", background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)" }}>
               <div>
-                <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)" }}>
-                  {selectedBundle.name}
-                </div>
+                {isRenamingBundle ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input
+                      value={bundleRenameValue}
+                      onChange={(e) => setBundleRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const trimmed = bundleRenameValue.trim();
+                          if (trimmed) renameBundleMutation.mutate({ bundleId: selectedBundle.id, name: trimmed });
+                        }
+                        if (e.key === "Escape") setIsRenamingBundle(false);
+                      }}
+                      autoFocus
+                      maxLength={80}
+                      style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", background: "transparent", border: "none", borderBottom: "2px solid var(--clay-400)", outline: "none", minWidth: 120 }}
+                    />
+                    <button
+                      onClick={() => {
+                        const trimmed = bundleRenameValue.trim();
+                        if (trimmed) renameBundleMutation.mutate({ bundleId: selectedBundle.id, name: trimmed });
+                        else setIsRenamingBundle(false);
+                      }}
+                      style={{ fontSize: 11, color: "var(--clay-600)", border: "none", background: "none", cursor: "pointer", padding: "2px 6px" }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setIsRenamingBundle(false)}
+                      style={{ fontSize: 11, color: "var(--sr-text-muted)", border: "none", background: "none", cursor: "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", cursor: isLive ? "default" : "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                    onClick={() => { if (!isLive) { setBundleRenameValue(selectedBundle.name); setIsRenamingBundle(true); } }}
+                    title={isLive ? undefined : "Click to rename"}
+                  >
+                    {selectedBundle.name}
+                  </div>
+                )}
                 <div style={{ fontSize: 13, color: "var(--sr-text-muted)", marginTop: 2 }}>
                   {selectedBundle.items.length} items · ${selectedBundle.suggestedPrice.toLocaleString()} listing value
                 </div>
@@ -344,6 +394,7 @@ export default function SellerCentralInventoryPage() {
                   eventId={eventId}
                   bundleId={selectedBundle.id}
                   item={item}
+                  allBundles={summary?.bundles ?? []}
                   onSeek={handleSeek}
                 />
               ))}

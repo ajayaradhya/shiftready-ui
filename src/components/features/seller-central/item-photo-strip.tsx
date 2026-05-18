@@ -9,6 +9,7 @@ import {
   confirmItemImages,
   deleteItemImage,
   setItemImageCover,
+  reorderItemImages,
 } from "@/lib/api";
 
 const MAX_TOTAL = 8;
@@ -28,6 +29,8 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [coveringId, setCoveringId] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragSrcId = useRef<string | null>(null);
 
   const sorted = [...images].sort((a, b) => (b.is_cover ? 1 : 0) - (a.is_cover ? 1 : 0));
   const cover = sorted[0] ?? null;
@@ -90,6 +93,24 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
   }
 
   const openLightbox = (idx: number) => setLightboxIdx(idx);
+
+  function handleDragStart(id: string) {
+    dragSrcId.current = id;
+  }
+
+  async function handleDrop(targetId: string) {
+    setDragOverId(null);
+    const srcId = dragSrcId.current;
+    if (!srcId || srcId === targetId) return;
+    const srcIdx = sorted.findIndex((img) => img.id === srcId);
+    const tgtIdx = sorted.findIndex((img) => img.id === targetId);
+    if (srcIdx === -1 || tgtIdx === -1) return;
+    const reordered = [...sorted];
+    const [moved] = reordered.splice(srcIdx, 1);
+    reordered.splice(tgtIdx, 0, moved);
+    await reorderItemImages(eventId, bundleId, itemId, reordered.map((img) => img.id));
+    await refresh();
+  }
 
   if (sorted.length === 0) {
     return (
@@ -182,9 +203,14 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
             showCoverBadge
             isDeleting={deletingId === cover.id}
             isCovering={coveringId === cover.id}
+            isDragOver={dragOverId === cover.id}
             onDelete={() => handleDelete(cover.id)}
             onSetCover={() => handleSetCover(cover.id)}
             onClick={() => openLightbox(0)}
+            onDragStart={() => handleDragStart(cover.id)}
+            onDragOver={() => setDragOverId(cover.id)}
+            onDragLeave={() => setDragOverId(null)}
+            onDrop={() => handleDrop(cover.id)}
           />
         )}
 
@@ -197,9 +223,14 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
             height={64}
             isDeleting={deletingId === img.id}
             isCovering={coveringId === img.id}
+            isDragOver={dragOverId === img.id}
             onDelete={() => handleDelete(img.id)}
             onSetCover={() => handleSetCover(img.id)}
             onClick={() => openLightbox(i + 1)}
+            onDragStart={() => handleDragStart(img.id)}
+            onDragOver={() => setDragOverId(img.id)}
+            onDragLeave={() => setDragOverId(null)}
+            onDrop={() => handleDrop(img.id)}
           />
         ))}
 
@@ -311,17 +342,23 @@ interface PhotoTileProps {
   showCoverBadge?: boolean;
   isDeleting?: boolean;
   isCovering?: boolean;
+  isDragOver?: boolean;
   onDelete: () => void;
   onSetCover: () => void;
   onClick: () => void;
+  onDragStart: () => void;
+  onDragOver: () => void;
+  onDragLeave: () => void;
+  onDrop: () => void;
 }
 
-function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCovering, onDelete, onSetCover, onClick }: PhotoTileProps) {
+function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCovering, isDragOver, onDelete, onSetCover, onClick, onDragStart, onDragOver, onDragLeave, onDrop }: PhotoTileProps) {
   const [hovered, setHovered] = useState(false);
   const busy = isDeleting || isCovering;
 
   return (
     <div
+      draggable={!busy}
       style={{
         position: "relative",
         width,
@@ -329,10 +366,18 @@ function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCoverin
         borderRadius: "var(--sr-radius-md)",
         overflow: "hidden",
         flexShrink: 0,
-        cursor: "pointer",
+        cursor: busy ? "default" : "grab",
+        outline: isDragOver ? "2px solid var(--clay-400)" : "none",
+        outlineOffset: 2,
+        transition: "outline 80ms",
+        opacity: isDragOver ? 0.7 : 1,
       }}
       onMouseEnter={() => !busy && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); onDragLeave(); }}
+      onDragStart={onDragStart}
+      onDragOver={(e) => { e.preventDefault(); onDragOver(); }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => { e.preventDefault(); onDrop(); }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

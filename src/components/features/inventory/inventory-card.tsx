@@ -15,6 +15,7 @@ import { CardDeleteOverlay } from "./card-delete-overlay";
 interface InventoryCardProps {
   item: InventoryItem;
   bundleId: string;
+  allBundles?: import("@/lib/types").RoomBundle[];
   onSeek: (timestamp: number) => void;
 }
 

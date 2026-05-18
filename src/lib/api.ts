@@ -246,6 +246,21 @@ export async function deleteBundle(
   );
 }
 
+export async function renameBundle(
+  eventId: string,
+  bundleId: string,
+  name: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }
+  );
+}
+
 // --- Item Management (CRUD) ---
 
 export async function createItem(
@@ -391,6 +406,38 @@ export async function deleteItem(
   return apiRequest<EmptyResponse>(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}`,
     { method: "DELETE" }
+  );
+}
+
+export async function moveItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  toBundleId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/move`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_bundle_id: toBundleId }),
+    }
+  );
+}
+
+export async function reorderItemImages(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  imageIds: string[]
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/images/order`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_ids: imageIds }),
+    }
   );
 }
 
