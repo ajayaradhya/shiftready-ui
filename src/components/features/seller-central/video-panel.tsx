@@ -9,9 +9,12 @@ interface VideoPanelProps {
   items: InventoryItem[];
   activeItemId?: string;
   onSeek: (ts: number) => void;
+  eventId?: string;
+  isEditable?: boolean;
+  onReplaceVideo?: () => void;
 }
 
-export function VideoPanel({ videoUrl, items, activeItemId, onSeek }: VideoPanelProps) {
+export function VideoPanel({ videoUrl, items, activeItemId, onSeek, isEditable, onReplaceVideo }: VideoPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -102,6 +105,37 @@ export function VideoPanel({ videoUrl, items, activeItemId, onSeek }: VideoPanel
           {playing ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" />}
         </button>
       </div>
+
+      {/* Replace video button */}
+      {isEditable && (videoUrl || onReplaceVideo) && (
+        <div style={{ display: "flex", gap: 6 }}>
+          {onReplaceVideo && (
+            <button
+              onClick={onReplaceVideo}
+              style={{
+                flex: 1,
+                padding: "7px 10px",
+                borderRadius: "var(--sr-radius-sm)",
+                border: "1px solid var(--cream-300)",
+                background: "transparent",
+                fontSize: 11.5,
+                fontWeight: 500,
+                color: "var(--sr-text-secondary)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 5,
+                transition: "all 120ms",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              Replace video
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Seek list */}
       {items.length > 0 && (

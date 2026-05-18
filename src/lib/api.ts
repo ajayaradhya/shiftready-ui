@@ -223,6 +223,45 @@ export async function archiveSale(eventId: string): Promise<{ status: string }> 
   });
 }
 
+export async function deleteSale(eventId: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function republishSale(eventId: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/republish`, {
+    method: "POST",
+  });
+}
+
+export async function replaceVideoInit(
+  eventId: string,
+  filename: string
+): Promise<{ upload_url: string; gcs_uri: string; video_id: string }> {
+  return apiRequest<{ upload_url: string; gcs_uri: string; video_id: string }>(
+    `${API_BASE}/sales/${eventId}/video/replace-init`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename }),
+    }
+  );
+}
+
+export async function replaceVideoConfirm(
+  eventId: string,
+  gcsUri: string,
+  mode: "wipe" | "append",
+  videoId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/video/replace-confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gcs_uri: gcsUri, mode, video_id: videoId }),
+  });
+}
+
 // --- Sale Metadata Update ---
 
 export interface SaleUpdatePayload {

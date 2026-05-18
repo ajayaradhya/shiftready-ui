@@ -13,9 +13,12 @@ import { MousePointerClick, Plus, Trash2, Sparkles } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
   createBundle, deleteBundle, createItem, renameBundle,
+  archiveSale, deleteSale, republishSale,
 } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { SaleLifecycleMenu } from "@/components/features/inventory/SaleLifecycleMenu";
+import { ReplaceVideoModal } from "@/components/features/inventory/ReplaceVideoModal";
 
 const STATUS_BADGE: Record<string, { bg: string; color: string; border: string; label: string }> = {
   live:               { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Live" },
@@ -40,6 +43,7 @@ export default function SellerCentralInventoryPage() {
   const [activeItemId, setActiveItemId] = useState<string | undefined>(undefined);
   const [isRenamingBundle, setIsRenamingBundle] = useState(false);
   const [bundleRenameValue, setBundleRenameValue] = useState("");
+  const [isReplaceVideoOpen, setIsReplaceVideoOpen] = useState(false);
 
   const { summary, isProcessing, isPricing, isLoading, status, isLive, error } =
     useInventory(eventId);
@@ -103,6 +107,35 @@ export default function SellerCentralInventoryPage() {
     mutationFn: () => triggerReestimation(eventId),
     onSuccess: () =>
       queryClient.setQueryData(["status", eventId], { status: "pricing_in_progress" }),
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: () => archiveSale(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["status", eventId] });
+      toast.success("Sale archived.");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteSale(eventId),
+    onSuccess: () => {
+      toast.success("Sale deleted.");
+      router.push("/seller-central");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const republishMutation = useMutation({
+    mutationFn: () => republishSale(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["status", eventId] });
+      toast.success("Sale is now live!");
+    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const isGlobalLoading =
@@ -173,6 +206,9 @@ export default function SellerCentralInventoryPage() {
           items={allItems}
           activeItemId={activeItemId}
           onSeek={handleSeek}
+          eventId={eventId}
+          isEditable={["ready_for_review", "failed"].includes(status ?? "")}
+          onReplaceVideo={() => setIsReplaceVideoOpen(true)}
         />
       </div>
 
@@ -246,6 +282,16 @@ export default function SellerCentralInventoryPage() {
                 Re-analyse prices
               </button>
             )}
+            <SaleLifecycleMenu
+              status={status ?? ""}
+              isLive={isLive}
+              isArchiving={archiveMutation.isPending}
+              isDeleting={deleteMutation.isPending}
+              isRepublishing={republishMutation.isPending}
+              onArchive={() => archiveMutation.mutate()}
+              onDelete={() => deleteMutation.mutate()}
+              onRepublish={() => republishMutation.mutate()}
+            />
             <InventoryActions
               isLive={isLive}
               isAddingBundle={isAddingBundle}
@@ -446,6 +492,19 @@ export default function SellerCentralInventoryPage() {
           </div>
         )}
       </div>
+
+      {isReplaceVideoOpen && (
+        <ReplaceVideoModal
+          eventId={eventId}
+          open={isReplaceVideoOpen}
+          onClose={() => setIsReplaceVideoOpen(false)}
+          onSuccess={() => {
+            setIsReplaceVideoOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+            queryClient.invalidateQueries({ queryKey: ["status", eventId] });
+          }}
+        />
+      )}
     </div>
   );
 }
