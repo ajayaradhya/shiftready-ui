@@ -8,6 +8,7 @@ import { BundleCard } from "@/components/features/seller-central/bundle-card";
 import { ItemCardV2 } from "@/components/features/seller-central/item-card-v2";
 import { VideoPanel } from "@/components/features/seller-central/video-panel";
 import { InventoryActions } from "@/components/features/inventory/inventory-actions";
+import { SaleDetailsPanel } from "@/components/features/inventory/sale-details-panel";
 import { MousePointerClick, Plus, Trash2, Sparkles } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
@@ -263,6 +264,15 @@ export default function SellerCentralInventoryPage() {
             />
           </div>
         </div>
+
+        {/* Sale details panel */}
+        {summary && (
+          <SaleDetailsPanel
+            eventId={eventId}
+            summary={summary}
+            isEditable={["ready_for_review", "live", "partially_sold", "failed"].includes(status ?? "")}
+          />
+        )}
 
         {/* Bundle tray — responsive grid */}
         {summary?.bundles && summary.bundles.length > 0 && (

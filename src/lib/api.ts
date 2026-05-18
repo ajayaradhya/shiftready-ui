@@ -223,6 +223,71 @@ export async function archiveSale(eventId: string): Promise<{ status: string }> 
   });
 }
 
+// --- Sale Metadata Update ---
+
+export interface SaleUpdatePayload {
+  title?: string;
+  description?: string;
+  move_out_date?: string;
+  street_address?: string;
+  suburb?: string;
+  pincode?: string;
+  state?: string;
+}
+
+export async function updateSale(
+  eventId: string,
+  patch: SaleUpdatePayload
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+}
+
+// --- Sale Cover Image ---
+
+export async function getCoverUploadUrl(
+  eventId: string
+): Promise<{ image_id: string; upload_url: string; gcs_path: string }> {
+  return apiRequest<{ image_id: string; upload_url: string; gcs_path: string }>(
+    `${API_BASE}/sales/${eventId}/cover/upload-url`,
+    { method: "POST" }
+  );
+}
+
+export async function confirmCover(
+  eventId: string,
+  imageId: string,
+  gcsPath: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/cover/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image_id: imageId, gcs_path: gcsPath }),
+  });
+}
+
+export async function coverFromItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  imageId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/cover/from-item`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bundle_id: bundleId, item_id: itemId, image_id: imageId }),
+  });
+}
+
+export async function deleteCover(eventId: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/cover`, {
+    method: "DELETE",
+  });
+}
+
 // --- Bundle Management (CRUD) ---
 
 export async function createBundle(

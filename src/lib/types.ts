@@ -92,6 +92,9 @@ export interface SaleListing {
   itemCount: number;
   totalValue: number;
   preview_images: string[];
+  title?: string | null;
+  description?: string | null;
+  coverImage?: CoverImage | null;
 }
 
 // --- Core sale types ---
@@ -114,6 +117,13 @@ export interface InventoryImage {
   is_cover: boolean;
   source: "user_upload" | "frame_extract";
   uploaded_at: string;
+}
+
+export interface CoverImage {
+  id: string;
+  gcs_path: string;
+  url?: string;
+  source: "user_upload" | "frame_extract";
 }
 
 export type ItemCategory = "furniture" | "appliance" | "decor" | "electronics" | "other";
@@ -165,11 +175,19 @@ export interface SaleSummary {
   status: SaleStatus;
   videoUrl: string;
   bundles: RoomBundle[];
-  moveOutDate?: string;
+  moveOutDate?: string | null;
   sellerId: string;
   createdAt: string;
   updatedAt: string;
-  publishedAt?: string;
+  publishedAt?: string | null;
+  // Phase 2 metadata
+  title?: string | null;
+  description?: string | null;
+  streetAddress?: string | null;
+  suburb?: string | null;
+  pincode?: string | null;
+  state?: string | null;
+  coverImage?: CoverImage | null;
 }
 
 // --- User / Username types ---
