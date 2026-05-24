@@ -174,10 +174,12 @@ function SaleImageCollage({ images, variant }: { images: string[]; variant: Vari
 
 function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
   const v = variantForIndex(index);
-  const title = sale.suburb
+  const title = sale.title || (sale.suburb
     ? `${sale.suburb} moving sale`
-    : "Moving sale";
-  const images = sale.preview_images ?? [];
+    : "Moving sale");
+  const images = sale.cover_image_url
+    ? [sale.cover_image_url]
+    : (sale.preview_images ?? []);
   return (
     <Link href={`/market/sale/${sale.eventId}`} style={{ textDecoration: "none" }}>
       <article className={s.sale}>

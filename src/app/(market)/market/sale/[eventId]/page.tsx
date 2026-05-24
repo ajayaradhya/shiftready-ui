@@ -558,6 +558,28 @@ export default function SaleDetailPage({
         <>
           {/* Hero */}
           <div style={{ marginBottom: 24 }}>
+            {/* Cover image */}
+            {sale.cover_image_url && (
+              <div
+                style={{
+                  width: "100%",
+                  height: 220,
+                  borderRadius: "var(--sr-radius-xl)",
+                  overflow: "hidden",
+                  marginBottom: 20,
+                  background: "var(--cream-100)",
+                }}
+              >
+                <Image
+                  src={sale.cover_image_url}
+                  alt="Sale cover"
+                  width={900}
+                  height={220}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  unoptimized
+                />
+              </div>
+            )}
             <div
               style={{
                 display: "flex",
@@ -648,8 +670,22 @@ export default function SaleDetailPage({
                 margin: "0 0 10px",
               }}
             >
-              {sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale"}
+              {sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale")}
             </h1>
+            {sale.description && (
+              <p
+                style={{
+                  fontFamily: "var(--sr-font-sans)",
+                  fontSize: 14,
+                  color: "var(--ink-500)",
+                  lineHeight: 1.6,
+                  margin: "0 0 12px",
+                  maxWidth: 640,
+                }}
+              >
+                {sale.description}
+              </p>
+            )}
             <div
               style={{
                 display: "flex",

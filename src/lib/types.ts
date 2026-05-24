@@ -4,10 +4,13 @@ export interface ActiveSaleSummary {
   eventId: string;
   suburb: string | null;
   state: string | null;
+  title?: string | null;
+  description?: string | null;
   itemCount: number;
   minPrice: number | null;
   publishedAt: string | null;
   preview_images: string[];
+  cover_image_url?: string | null;
 }
 
 
@@ -57,6 +60,9 @@ export interface PublicSaleDetail {
   sellerUsername: string | null;
   suburb: string | null;
   state: string | null;
+  title?: string | null;
+  description?: string | null;
+  cover_image_url?: string | null;
   moveOutDate: string | null;
   publishedAt: string | null;
   bundles: PublicBundle[];
