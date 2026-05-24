@@ -5,9 +5,10 @@ import { Check } from "lucide-react";
 interface DealAgreedBannerProps {
   amount: number;
   otherUsername?: string | null;
+  phoneRevealAvailable?: boolean;
 }
 
-export function DealAgreedBanner({ amount, otherUsername }: DealAgreedBannerProps) {
+export function DealAgreedBanner({ amount, otherUsername, phoneRevealAvailable }: DealAgreedBannerProps) {
   return (
     <div
       style={{
@@ -58,9 +59,13 @@ export function DealAgreedBanner({ amount, otherUsername }: DealAgreedBannerProp
             lineHeight: 1.4,
           }}
         >
-          {otherUsername
-            ? `Arrange pickup details with @${otherUsername} in chat.`
-            : "Arrange pickup details in chat."}
+          {phoneRevealAvailable
+            ? (otherUsername
+                ? `@${otherUsername} has shared their number below.`
+                : "Seller's number is available below.")
+            : (otherUsername
+                ? `Arrange pickup details with @${otherUsername} in chat.`
+                : "Arrange pickup details in chat.")}
         </div>
       </div>
     </div>

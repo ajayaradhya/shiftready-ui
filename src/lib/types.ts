@@ -281,6 +281,12 @@ export interface ConversationSummary {
   pinSnapshot?: PinSnapshot | null;
   activeOfferId?: string | null;
   dealStatus?: DealStatus;
+  phoneSharedByMe?: boolean;
+  phoneRevealAvailable?: boolean;
+}
+
+export interface PhoneRevealResponse {
+  phoneE164: string;
 }
 
 export interface ConversationStartResponse {

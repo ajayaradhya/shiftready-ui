@@ -14,6 +14,7 @@ import { DealAgreedBanner } from "./DealAgreedBanner";
 import { PinnedItemCard } from "./PinnedItemCard";
 import { PinnedFocusCard } from "./PinnedFocusCard";
 import { PinChangeSystemMessage } from "./PinChangeSystemMessage";
+import { PhoneRevealCard } from "./PhoneRevealCard";
 import { FocusPicker } from "./FocusPicker";
 import type { ConversationSummary, PinRef } from "@/lib/types";
 
@@ -493,7 +494,11 @@ export function ConversationView({
             return (
               <div key={msg.id}>
                 {showDivider && <DateDivider dateStr={msg.createdAt} />}
-                <DealAgreedBanner amount={dealAmt} otherUsername={otherUsername} />
+                <DealAgreedBanner
+                  amount={dealAmt}
+                  otherUsername={otherUsername}
+                  phoneRevealAvailable={conversation.phoneRevealAvailable}
+                />
               </div>
             );
           }
@@ -556,6 +561,11 @@ export function ConversationView({
         })}
 
         <div ref={bottomRef} />
+
+        {/* Phone reveal — shown at thread tail after deal agreed */}
+        {conversation.dealStatus === "agreed" && conversation.phoneRevealAvailable && (
+          <PhoneRevealCard convId={convId} otherUsername={otherUsername} />
+        )}
       </div>
 
       {/* Composer */}

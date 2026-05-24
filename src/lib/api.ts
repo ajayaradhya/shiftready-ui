@@ -13,6 +13,7 @@ import type {
   MessagesListResponse,
   MessageContext,
   SavedListResponse,
+  PhoneRevealResponse,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -702,6 +703,29 @@ export async function withdrawOffer(
   return apiRequest<import("./types").Message>(
     `${API_BASE}/messages/conversations/${convId}/offers/${offerId}/withdraw`,
     { method: "POST" }
+  );
+}
+
+// --- Phone Reveal ---
+
+export async function updateMyPhone(phoneE164: string, shareOptIn: boolean): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/phone`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phoneE164, shareOptIn }),
+  });
+}
+
+export async function sharePhone(convId: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/messages/conversations/${convId}/phone/share`,
+    { method: "POST" }
+  );
+}
+
+export async function revealPhone(convId: string): Promise<PhoneRevealResponse> {
+  return apiRequest<PhoneRevealResponse>(
+    `${API_BASE}/messages/conversations/${convId}/phone`
   );
 }
 
