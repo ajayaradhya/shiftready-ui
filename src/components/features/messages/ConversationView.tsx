@@ -230,21 +230,17 @@ export function ConversationView({
 
   // Derive sale context from first message that has one (fallback for legacy threads)
   const contextMessage = allMessages.find((m) => m.context?.saleEventId);
-  const saleEventId = contextMessage?.context?.saleEventId ?? null;
+  const legacySaleEventId = contextMessage?.context?.saleEventId ?? null;
 
-  // Pinned focus card data
+  // Pin data from conversation summary (updated via WS invalidation)
+  const activePin = conversation.pin ?? null;
   const pinSnapshot = conversation.pinSnapshot ?? null;
-  // Derive pinRef from most recent pin_changed system message (since ConversationSummary doesn't include full PinRef)
-  const pinRefMsg = [...allMessages].reverse().find((m) => m.type === "system" && m.subtype === "pin_changed" && m.pinSnapshot);
-  const derivedPinRef = pinRefMsg
-    ? (allMessages.find((m) => m.type === "system" && m.subtype === "pin_changed")?.context as unknown as PinRef | null) ?? null
-    : null;
-  // Get pin info from last pin_changed system msg payload
-  const latestPinMsg = [...allMessages].reverse().find((m) => m.type === "system" && (m.subtype === "pin_changed" || m.subtype === "pin_cleared"));
-  const isPinned = latestPinMsg?.subtype === "pin_changed" && pinSnapshot;
+  const isPinned = !!(activePin && pinSnapshot);
 
-  // FocusPicker needs a saleEventId to work; use pinSnapshot's or context's
-  const focusSaleEventId = saleEventId;
+  // FocusPicker: use pin's saleEventId or legacy context saleEventId
+  const focusSaleEventId = activePin?.saleEventId ?? legacySaleEventId;
+  // For legacy PinnedItemCard fallback
+  const saleEventId = legacySaleEventId;
 
   const otherUsername = conversation.otherUsername;
 
@@ -384,11 +380,13 @@ export function ConversationView({
       </div>
 
       {/* Pinned focus card */}
-      {isPinned && pinSnapshot ? (
+      {isPinned && pinSnapshot && activePin ? (
         <PinnedFocusCard
           snapshot={pinSnapshot}
-          kind={(latestPinMsg as { context?: { kind?: string } } | undefined)?.context?.kind as "item" | "bundle" | "sale" ?? "sale"}
-          saleEventId={saleEventId ?? ""}
+          kind={activePin.kind}
+          saleEventId={activePin.saleEventId}
+          bundleId={activePin.bundleId}
+          itemId={activePin.itemId}
           saleBasePath={saleBasePath}
           onChangeFocus={focusSaleEventId ? () => setFocusPickerOpen(true) : undefined}
           onClearPin={() => clearPinMutation.mutate()}

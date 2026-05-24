@@ -262,6 +262,7 @@ export interface ConversationSummary {
   unreadCount: number;
   status: "active" | "blocked";
   updatedAt: string | null;
+  pin?: PinRef | null;
   pinSnapshot?: PinSnapshot | null;
 }
 
