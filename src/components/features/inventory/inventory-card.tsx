@@ -67,7 +67,7 @@ export function InventoryCard({ item, bundleId, onSeek }: InventoryCardProps) {
           isLowConfidence={item.confidence < 0.75}
           isSyncing={mutation.isPending}
           timestampLabel={item.timestamp_label}
-          onSeek={() => onSeek(item.video_timestamp)}
+          onSeek={() => onSeek(0)}
           onDeleteInitiate={() => setIsConfirmingDelete(true)}
         />
 

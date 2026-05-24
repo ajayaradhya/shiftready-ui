@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Play, MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRight, X, Check } from "lucide-react";
+import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRight, X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InventoryItem, RoomBundle, ItemCategory } from "@/lib/types";
 import { patchItem, deleteItem, moveItem } from "@/lib/api";
@@ -12,7 +12,6 @@ interface ItemCardV2Props {
   bundleId: string;
   item: InventoryItem;
   allBundles?: RoomBundle[];
-  onSeek?: (ts: number) => void;
 }
 
 const CATEGORY_OPTIONS: { value: ItemCategory; label: string }[] = [
@@ -23,7 +22,7 @@ const CATEGORY_OPTIONS: { value: ItemCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function ItemCardV2({ eventId, bundleId, item, allBundles = [], onSeek }: ItemCardV2Props) {
+export function ItemCardV2({ eventId, bundleId, item, allBundles = [] }: ItemCardV2Props) {
   const qc = useQueryClient();
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -115,39 +114,6 @@ export function ItemCardV2({ eventId, bundleId, item, allBundles = [], onSeek }:
             >
               {confPct}% match
             </span>
-            {/* Seek button */}
-            {item.timestamp_label && (
-              <button
-                onClick={() => onSeek?.(item.video_timestamp)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "3px 8px",
-                  borderRadius: "var(--sr-radius-sm)",
-                  background: "var(--cream-50)",
-                  border: "1px solid var(--sr-border-subtle)",
-                  fontFamily: "var(--sr-font-mono)",
-                  fontSize: 10,
-                  color: "var(--sr-text-muted)",
-                  cursor: "pointer",
-                  transition: "all 120ms",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-300)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--clay-600)";
-                  (e.currentTarget as HTMLElement).style.background = "var(--clay-50)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "var(--sr-border-subtle)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--sr-text-muted)";
-                  (e.currentTarget as HTMLElement).style.background = "var(--cream-50)";
-                }}
-              >
-                <Play size={8} fill="currentColor" />
-                {item.timestamp_label}
-              </button>
-            )}
           </div>
 
           {/* MoreHorizontal menu */}

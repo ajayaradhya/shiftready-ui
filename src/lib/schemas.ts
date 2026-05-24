@@ -17,7 +17,6 @@ export const InventoryItemSchema = z.object({
   name: z.string(),
   brand: z.string(),
   condition: z.string(),
-  video_timestamp: z.number(),
   timestamp_label: z.string(),
   confidence: z.number(),
 
@@ -43,7 +42,6 @@ export const RoomBundleSchema = z.object({
 export const SaleSummarySchema = z.object({
   id: z.string(),
   status: SaleStatusSchema,
-  videoUrl: z.string(),
   bundles: z.array(RoomBundleSchema),
   moveOutDate: z.string().optional(),
   sellerId: z.string(),

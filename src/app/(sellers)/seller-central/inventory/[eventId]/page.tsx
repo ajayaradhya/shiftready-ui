@@ -6,7 +6,6 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useSaleContext } from "@/lib/sale-context";
 import { BundleCard } from "@/components/features/seller-central/bundle-card";
 import { ItemCardV2 } from "@/components/features/seller-central/item-card-v2";
-import { VideoPanel } from "@/components/features/seller-central/video-panel";
 import { InventoryActions } from "@/components/features/inventory/inventory-actions";
 import { SaleDetailsPanel } from "@/components/features/inventory/sale-details-panel";
 import { MousePointerClick, Plus, Trash2, Sparkles } from "lucide-react";
@@ -18,7 +17,6 @@ import {
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SaleLifecycleMenu } from "@/components/features/inventory/SaleLifecycleMenu";
-import { ReplaceVideoModal } from "@/components/features/inventory/ReplaceVideoModal";
 
 const STATUS_BADGE: Record<string, { bg: string; color: string; border: string; label: string }> = {
   live:               { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Live" },
@@ -40,10 +38,8 @@ export default function SellerCentralInventoryPage() {
   const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
   const [isAddingBundle, setIsAddingBundle] = useState(false);
   const [newBundleName, setNewBundleName] = useState("");
-  const [activeItemId, setActiveItemId] = useState<string | undefined>(undefined);
   const [isRenamingBundle, setIsRenamingBundle] = useState(false);
   const [bundleRenameValue, setBundleRenameValue] = useState("");
-  const [isReplaceVideoOpen, setIsReplaceVideoOpen] = useState(false);
 
   const { summary, isProcessing, isPricing, isLoading, status, isLive, error } =
     useInventory(eventId);
@@ -155,26 +151,15 @@ export default function SellerCentralInventoryPage() {
     return () => setProcessing(false);
   }, [isGlobalLoading, setProcessing]);
 
-  const handleSeek = (ts: number) => {
-    const v = document.getElementById("inventory-video") as HTMLVideoElement | null;
-    if (v) { v.currentTime = ts; v.play().catch(() => {}); }
-    // find which item has this timestamp
-    const item = allItems.find((i) => i.video_timestamp === ts);
-    setActiveItemId(item?.id);
-  };
-
   if (isLoading && !summary) {
     return (
-      <div style={{ display: "flex", height: "calc(100vh - 64px)" }}>
-        <div className="hidden md:block" style={{ width: 320, flexShrink: 0, borderRight: "1px solid var(--sr-border)", background: "var(--sr-bg-surface)" }} />
-        <div style={{ flex: 1, padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ height: 28, width: 220, borderRadius: 6, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
-          <div style={{ height: 16, width: 140, borderRadius: 4, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{ height: 80, borderRadius: 10, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
-            ))}
-          </div>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ height: 28, width: 220, borderRadius: 6, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
+        <div style={{ height: 16, width: 140, borderRadius: 4, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ height: 80, borderRadius: 10, background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
+          ))}
         </div>
       </div>
     );
@@ -190,33 +175,17 @@ export default function SellerCentralInventoryPage() {
 
   return (
     <div
-      style={{ display: "flex", height: "calc(100vh - 64px)" }}
+      style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px", overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
+      className="custom-scrollbar pb-14"
       aria-busy={isGlobalLoading || isPricing}
     >
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {isProcessing && "Processing your inventory video…"}
+        {isProcessing && "AI is extracting your items…"}
         {isPricing && "AI is pricing your items…"}
         {reestimateMutation.isPending && "Re-analysing prices…"}
       </div>
 
-      {/* Left: video panel — hidden on mobile */}
-      <div className="hidden md:block">
-        <VideoPanel
-          videoUrl={summary?.videoUrl}
-          items={allItems}
-          activeItemId={activeItemId}
-          onSeek={handleSeek}
-          eventId={eventId}
-          isEditable={["ready_for_review", "failed"].includes(status ?? "")}
-          onReplaceVideo={() => setIsReplaceVideoOpen(true)}
-        />
-      </div>
-
-      {/* Right: main inventory */}
-      <div
-        style={{ flex: 1, overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
-        className="custom-scrollbar px-4 py-7 pb-14 md:px-8"
-      >
+      <div>
         {/* Inline status banners — non-blocking */}
         {(isPricing || reestimateMutation.isPending || isProcessing) && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20, borderRadius: "var(--sr-radius-sm)", background: "var(--clay-50)", border: "1px solid var(--clay-100)", color: "var(--clay-700)", fontSize: 13, fontWeight: 500 }}>
@@ -302,9 +271,6 @@ export default function SellerCentralInventoryPage() {
               onAddBundleClose={() => { setIsAddingBundle(false); setNewBundleName(""); }}
               onBundleNameChange={setNewBundleName}
               onBundleSubmit={() => addBundleMutation.mutate(newBundleName)}
-              onAddBundleViaVideo={() =>
-                router.push(`/seller-central/capture?appendTo=${eventId}`)
-              }
               onPublish={(payload) => publishMutation.mutate(payload)}
               onUnpublish={() => unpublishMutation.mutate()}
             />
@@ -451,7 +417,6 @@ export default function SellerCentralInventoryPage() {
                   bundleId={selectedBundle.id}
                   item={item}
                   allBundles={summary?.bundles ?? []}
-                  onSeek={handleSeek}
                 />
               ))}
             </div>
@@ -493,18 +458,6 @@ export default function SellerCentralInventoryPage() {
         )}
       </div>
 
-      {isReplaceVideoOpen && (
-        <ReplaceVideoModal
-          eventId={eventId}
-          open={isReplaceVideoOpen}
-          onClose={() => setIsReplaceVideoOpen(false)}
-          onSuccess={() => {
-            setIsReplaceVideoOpen(false);
-            queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-            queryClient.invalidateQueries({ queryKey: ["status", eventId] });
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -139,7 +139,6 @@ export interface InventoryItem {
   name: string;
   brand: string;
   condition: string;
-  video_timestamp: number;
   timestamp_label: string;
   confidence: number;
 
@@ -179,7 +178,6 @@ export interface RoomBundle {
 export interface SaleSummary {
   id: string;
   status: SaleStatus;
-  videoUrl: string;
   bundles: RoomBundle[];
   moveOutDate?: string | null;
   sellerId: string;

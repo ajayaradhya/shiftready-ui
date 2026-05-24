@@ -12,7 +12,7 @@ import { ItemReviewScreen } from "@/components/features/capture/ItemReviewScreen
 import { ProcessingScreen } from "@/components/features/create/processing-screen";
 import { useSaleContext } from "@/lib/sale-context";
 import { dataUrlToFile } from "@/lib/capture/capture-types";
-import { initCaptureSale, captureFrame, finalizeCapture, finalizeCaptureV2 } from "@/lib/api";
+import { initCaptureSale, captureFrame, finalizeCaptureV2 } from "@/lib/api";
 import type { CapturePageState, CapturedItem, PendingDetection } from "@/lib/capture/capture-types";
 
 const CaptureStage = dynamic(
@@ -168,33 +168,21 @@ function CapturePageContent() {
       // Items with GCS URIs → use finalize-v2 (pre-analyzed, no re-extraction)
       const analyzedItems = confirmedItems.filter((i) => i.gcs_uri && i.name);
 
-      if (analyzedItems.length > 0) {
-        await finalizeCaptureV2(
-          eid,
-          analyzedItems.map((i) => ({
-            temp_id: i.id,
-            name: i.name!,
-            brand: i.brand,
-            predicted_original_price: i.predicted_original_price,
-            gcs_uri: i.gcs_uri!,
-          }))
-        );
-        setProcessingEventId(eid);
-      } else {
-        // All captureFrame calls failed — fall back to re-uploading frames
-        const { dataUrlToFile: toFile } = await import("@/lib/capture/capture-types");
-        const { processFrames } = await import("@/lib/api");
-        const files = await Promise.all(
-          confirmedItems.map((item, i) => toFile(item.frameSrc, `frame_${i}.jpg`))
-        );
-        if (appendTo) {
-          await processFrames(appendTo, files);
-          router.push(`/seller-central/inventory/${appendTo}`);
-        } else {
-          await processFrames(eid, files);
-          setProcessingEventId(eid);
-        }
+      if (analyzedItems.length === 0) {
+        throw new Error("No items with valid capture data. Please try capturing again.");
       }
+
+      await finalizeCaptureV2(
+        eid,
+        analyzedItems.map((i) => ({
+          temp_id: i.id,
+          name: i.name!,
+          brand: i.brand,
+          predicted_original_price: i.predicted_original_price,
+          gcs_uri: i.gcs_uri!,
+        }))
+      );
+      setProcessingEventId(eid);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
       setIsUploading(false);

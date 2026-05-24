@@ -84,49 +84,10 @@ export async function initSale(
   );
 }
 
-export async function appendInitSale(
-  eventId: string,
-  filename: string
-): Promise<{ upload_url: string; gcs_uri: string }> {
-  return apiRequest<{ upload_url: string; gcs_uri: string }>(
-    `${API_BASE}/sales/${eventId}/append-init`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename }),
-    }
-  );
-}
-
-export async function startAppendProcessing(
-  eventId: string,
-  gcsUri: string
-): Promise<{ status: string }> {
-  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/append-process`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gcs_uri: gcsUri }),
-  });
-}
-
 export async function initCaptureSale(): Promise<{ event_id: string }> {
   return apiRequest<{ event_id: string }>(`${API_BASE}/sales/init-capture`, {
     method: "POST",
   });
-}
-
-export async function processFrames(
-  eventId: string,
-  files: File[]
-): Promise<{ event_id: string; status: string }> {
-  const form = new FormData();
-  for (const file of files) {
-    form.append("frames", file);
-  }
-  return apiRequest<{ event_id: string; status: string }>(
-    `${API_BASE}/sales/${eventId}/process-frames`,
-    { method: "POST", body: form }
-  );
 }
 
 export interface CaptureFrameResult {
@@ -142,20 +103,6 @@ export async function captureFrame(eventId: string, file: File): Promise<Capture
   return apiRequest<CaptureFrameResult>(
     `${API_BASE}/sales/${eventId}/capture/frame`,
     { method: "POST", body: form }
-  );
-}
-
-export async function finalizeCapture(
-  eventId: string,
-  gcsUris: string[]
-): Promise<{ status: string }> {
-  return apiRequest<{ status: string }>(
-    `${API_BASE}/sales/${eventId}/capture/finalize`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gcs_uris: gcsUris }),
-    }
   );
 }
 
@@ -233,33 +180,6 @@ export async function deleteSale(eventId: string): Promise<{ status: string }> {
 export async function republishSale(eventId: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/republish`, {
     method: "POST",
-  });
-}
-
-export async function replaceVideoInit(
-  eventId: string,
-  filename: string
-): Promise<{ upload_url: string; gcs_uri: string; video_id: string }> {
-  return apiRequest<{ upload_url: string; gcs_uri: string; video_id: string }>(
-    `${API_BASE}/sales/${eventId}/video/replace-init`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename }),
-    }
-  );
-}
-
-export async function replaceVideoConfirm(
-  eventId: string,
-  gcsUri: string,
-  mode: "wipe" | "append",
-  videoId: string
-): Promise<{ status: string }> {
-  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/video/replace-confirm`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gcs_uri: gcsUri, mode, video_id: videoId }),
   });
 }
 
