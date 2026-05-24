@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Phone } from "lucide-react";
-import { useRevealPhone } from "@/hooks/use-phone";
 
 function formatAUPhone(e164: string): string {
   if (e164.startsWith("+61") && e164.length === 12) {
@@ -13,12 +12,15 @@ function formatAUPhone(e164: string): string {
 }
 
 interface PhoneRevealCardProps {
-  convId: string;
+  phone: string | null;
+  isRevealed: boolean;
+  reveal: () => void;
+  isPending: boolean;
+  error: string | null;
   otherUsername?: string | null;
 }
 
-export function PhoneRevealCard({ convId, otherUsername }: PhoneRevealCardProps) {
-  const { phone, isRevealed, reveal, isPending, error } = useRevealPhone(convId);
+export function PhoneRevealCard({ phone, isRevealed, reveal, isPending, error, otherUsername }: PhoneRevealCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleReveal = () => {

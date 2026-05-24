@@ -73,7 +73,14 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
 
     ws.onerror = () => {};
 
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send("ping");
+      }
+    }, 60_000);
+
     return () => {
+      clearInterval(pingInterval);
       ws.close();
       wsRef.current = null;
     };

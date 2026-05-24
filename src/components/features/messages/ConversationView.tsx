@@ -6,6 +6,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { useSendMessage } from "@/hooks/use-send-message";
 import { useSetPin, useClearPin } from "@/hooks/use-pin";
 import { useAcceptOffer, useCounterOffer, useSendOffer, useWithdrawOffer } from "@/hooks/use-offers";
+import { useRevealPhone } from "@/hooks/use-phone";
 import { markConversationRead, blockConversation, unblockConversation } from "@/lib/api";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
@@ -15,6 +16,7 @@ import { PinnedItemCard } from "./PinnedItemCard";
 import { PinnedFocusCard } from "./PinnedFocusCard";
 import { PinChangeSystemMessage } from "./PinChangeSystemMessage";
 import { PhoneRevealCard } from "./PhoneRevealCard";
+import { SharePhoneCard } from "./SharePhoneCard";
 import { FocusPicker } from "./FocusPicker";
 import type { ConversationSummary, PinRef } from "@/lib/types";
 
@@ -24,6 +26,17 @@ interface ConversationViewProps {
   conversation: ConversationSummary;
   onRefresh: () => void;
   saleBasePath?: string;
+}
+
+function formatPresence(lastSeenAt: string | null | undefined): { online: boolean; label: string } {
+  if (!lastSeenAt) return { online: false, label: "Last seen recently" };
+  const diffMs = Date.now() - new Date(lastSeenAt).getTime();
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 5) return { online: true, label: "Online now" };
+  if (mins < 60) return { online: false, label: `Last seen ${mins}m ago` };
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return { online: false, label: `Last seen ${hours}h ago` };
+  return { online: false, label: `Last seen ${Math.floor(hours / 24)}d ago` };
 }
 
 function formatDate(ts: string | null) {
@@ -210,6 +223,7 @@ export function ConversationView({
   saleBasePath = "/market/sale",
 }: ConversationViewProps) {
   const { data, isLoading, fetchNextPage, hasNextPage } = useMessages(convId);
+  const { phone, isRevealed: phoneIsRevealed, reveal: revealPhone, isPending: phoneIsPending, error: phoneError } = useRevealPhone(convId);
   const sendMutation = useSendMessage(convId);
   const setPinMutation = useSetPin(convId);
   const clearPinMutation = useClearPin(convId);
@@ -304,22 +318,23 @@ export function ConversationView({
             >
               @{otherUsername ?? "Unknown"}
             </span>
-            {/* Verified shield */}
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-                fontFamily: "var(--sr-font-mono)",
-                fontSize: 9.5,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "var(--moss-600)",
-              }}
-            >
-              <Shield size={9} strokeWidth={2} />
-              Verified
-            </span>
+            {conversation.otherVerified && (
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  fontFamily: "var(--sr-font-mono)",
+                  fontSize: 9.5,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--moss-600)",
+                }}
+              >
+                <Shield size={9} strokeWidth={2} />
+                Verified
+              </span>
+            )}
           </div>
 
           <div
@@ -336,21 +351,24 @@ export function ConversationView({
           >
             {isBlocked ? (
               <span style={{ color: "var(--rust-500, #e05252)" }}>Conversation blocked</span>
-            ) : (
-              <>
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: "var(--moss-500)",
-                    flexShrink: 0,
-                    display: "inline-block",
-                  }}
-                />
-                Online now
-              </>
-            )}
+            ) : (() => {
+              const presence = formatPresence(conversation.otherLastSeenAt);
+              return (
+                <>
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      background: presence.online ? "var(--moss-500)" : "var(--cream-400, #c4bfb0)",
+                      flexShrink: 0,
+                      display: "inline-block",
+                    }}
+                  />
+                  {presence.label}
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -363,24 +381,82 @@ export function ConversationView({
             gap: 4,
           }}
         >
-          <button
-            disabled
-            title="Call (available after deal)"
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "var(--sr-radius-sm)",
-              border: "none",
-              background: "transparent",
-              color: "var(--sr-text-muted)",
-              display: "grid",
-              placeItems: "center",
-              cursor: "default",
-              opacity: 0.4,
-            }}
-          >
-            <Phone size={15} strokeWidth={1.75} />
-          </button>
+          {conversation.dealStatus === "agreed" && phoneIsRevealed && phone ? (
+            <a
+              href={`tel:${phone}`}
+              title={`Call @${otherUsername}`}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "var(--sr-radius-sm)",
+                border: "none",
+                background: "transparent",
+                color: "var(--moss-600)",
+                display: "grid",
+                placeItems: "center",
+                textDecoration: "none",
+                transition: "background 120ms, color 120ms",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "var(--moss-50)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+              }}
+            >
+              <Phone size={15} strokeWidth={1.75} />
+            </a>
+          ) : conversation.dealStatus === "agreed" ? (
+            <button
+              onClick={revealPhone}
+              disabled={phoneIsPending}
+              title="Reveal phone to call"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "var(--sr-radius-sm)",
+                border: "none",
+                background: "transparent",
+                color: "var(--clay-500)",
+                display: "grid",
+                placeItems: "center",
+                cursor: phoneIsPending ? "default" : "pointer",
+                opacity: phoneIsPending ? 0.6 : 1,
+                transition: "background 120ms, color 120ms",
+              }}
+              onMouseEnter={(e) => {
+                if (!phoneIsPending) {
+                  (e.currentTarget as HTMLElement).style.background = "var(--cream-200)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--clay-700)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--clay-500)";
+              }}
+            >
+              <Phone size={15} strokeWidth={1.75} />
+            </button>
+          ) : (
+            <button
+              disabled
+              title="Call (available after deal)"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "var(--sr-radius-sm)",
+                border: "none",
+                background: "transparent",
+                color: "var(--sr-text-muted)",
+                display: "grid",
+                placeItems: "center",
+                cursor: "default",
+                opacity: 0.4,
+              }}
+            >
+              <Phone size={15} strokeWidth={1.75} />
+            </button>
+          )}
 
           <MoreMenu
             convId={convId}
@@ -562,9 +638,21 @@ export function ConversationView({
 
         <div ref={bottomRef} />
 
+        {/* Share your number — shown after deal agreed when not yet shared */}
+        {conversation.dealStatus === "agreed" && !conversation.phoneSharedByMe && (
+          <SharePhoneCard convId={convId} otherUsername={otherUsername} />
+        )}
+
         {/* Phone reveal — shown at thread tail after deal agreed */}
         {conversation.dealStatus === "agreed" && conversation.phoneRevealAvailable && (
-          <PhoneRevealCard convId={convId} otherUsername={otherUsername} />
+          <PhoneRevealCard
+            phone={phone}
+            isRevealed={phoneIsRevealed}
+            reveal={revealPhone}
+            isPending={phoneIsPending}
+            error={phoneError}
+            otherUsername={otherUsername}
+          />
         )}
       </div>
 

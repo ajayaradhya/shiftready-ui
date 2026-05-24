@@ -283,6 +283,8 @@ export interface ConversationSummary {
   dealStatus?: DealStatus;
   phoneSharedByMe?: boolean;
   phoneRevealAvailable?: boolean;
+  otherLastSeenAt?: string | null;
+  otherVerified?: boolean;
 }
 
 export interface PhoneRevealResponse {

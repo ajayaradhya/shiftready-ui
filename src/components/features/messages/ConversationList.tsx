@@ -149,6 +149,29 @@ function ConvRow({
         >
           {conv.lastMessage ?? "No messages yet"}
         </div>
+
+        {/* Deal-active chip */}
+        {(conv.dealStatus === "agreed" || conv.activeOfferId) && (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginTop: 4,
+              padding: "1px 7px",
+              borderRadius: 9999,
+              background: conv.dealStatus === "agreed" ? "var(--moss-50)" : "var(--honey-50)",
+              color: conv.dealStatus === "agreed" ? "var(--moss-700)" : "var(--honey-700, #92400e)",
+              border: `1px solid ${conv.dealStatus === "agreed" ? "var(--moss-200)" : "var(--honey-200, #fde68a)"}`,
+              fontSize: 9.5,
+              fontWeight: 600,
+              fontFamily: "var(--sr-font-mono)",
+              textTransform: "uppercase" as const,
+              letterSpacing: "0.06em",
+            }}
+          >
+            {conv.dealStatus === "agreed" ? "Deal agreed" : "Offer active"}
+          </span>
+        )}
       </div>
 
       {/* Unread dot */}
