@@ -14,7 +14,7 @@ import {
   MapPin,
   Lock,
 } from "lucide-react";
-import { getPublicItem, startConversation, saveItem, unsaveItem } from "@/lib/api";
+import { getPublicItem, startConversation, saveItem, unsaveItem, setPin } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 function fmt(n: number) {
@@ -94,6 +94,12 @@ function ItemDetailContent({
         bundleId: bundleId || null,
         itemId,
       });
+      setPin(res.conversationId, {
+        kind: "item",
+        saleEventId: eventId,
+        bundleId: bundleId || null,
+        itemId,
+      }).catch(() => {});
       router.push(`/market/messages/${res.conversationId}`);
     } finally {
       setMessaging(false);

@@ -217,6 +217,25 @@ export interface PublicUser {
 
 // --- Messaging types ---
 
+export type PinKind = "item" | "bundle" | "sale";
+
+export interface PinRef {
+  kind: PinKind;
+  saleEventId: string;
+  bundleId?: string | null;
+  itemId?: string | null;
+}
+
+export interface PinSnapshot {
+  name?: string | null;
+  imageUrl?: string | null;
+  price?: number | null;
+  rrp?: number | null;
+  condition?: string | null;
+  itemCount?: number | null;
+  suburb?: string | null;
+}
+
 export interface MessageContext {
   saleEventId: string;
   bundleId?: string | null;
@@ -229,7 +248,9 @@ export interface Message {
   text: string;
   createdAt: string | null;
   type: "text" | "system";
+  subtype?: string | null;
   context?: MessageContext | null;
+  pinSnapshot?: PinSnapshot | null;
 }
 
 export interface ConversationSummary {
@@ -241,6 +262,7 @@ export interface ConversationSummary {
   unreadCount: number;
   status: "active" | "blocked";
   updatedAt: string | null;
+  pinSnapshot?: PinSnapshot | null;
 }
 
 export interface ConversationStartResponse {

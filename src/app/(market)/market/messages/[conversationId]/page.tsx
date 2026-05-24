@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversations } from "@/hooks/use-conversations";
 import { useMessagesWs } from "@/hooks/use-messages-ws";
@@ -109,27 +109,12 @@ export default function MarketConversationPage({
           width: 320,
           flexShrink: 0,
           borderRight: "1px solid var(--sr-border-subtle)",
-          overflowY: "auto",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           background: "var(--sr-bg-app)",
         }}
       >
-        <div
-          style={{
-            padding: "20px 16px 12px",
-            borderBottom: "1px solid var(--sr-border-subtle)",
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: "var(--sr-font-serif)",
-              fontSize: 17,
-              fontWeight: 700,
-              color: "var(--sr-text-primary)",
-            }}
-          >
-            Messages
-          </h1>
-        </div>
         <ConversationList activeId={conversationId} basePath="/market/messages" />
       </div>
 

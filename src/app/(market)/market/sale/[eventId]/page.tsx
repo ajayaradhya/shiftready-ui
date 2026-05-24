@@ -16,7 +16,7 @@ import {
   ChevronUp,
   Heart,
 } from "lucide-react";
-import { getPublicSale, startConversation, saveSale, unsaveSale } from "@/lib/api";
+import { getPublicSale, startConversation, saveSale, unsaveSale, setPin } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import type { PublicBundle } from "@/lib/types";
 
@@ -452,6 +452,7 @@ export default function SaleDetailPage({
       const res = await startConversation(sale.sellerId, undefined, {
         saleEventId: eventId,
       });
+      setPin(res.conversationId, { kind: "sale", saleEventId: eventId }).catch(() => {});
       router.push(`/market/messages/${res.conversationId}`);
     } finally {
       setMessaging(false);

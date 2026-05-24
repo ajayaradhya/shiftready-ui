@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { useConversations } from "@/hooks/use-conversations";
 import type { ConversationSummary } from "@/lib/types";
 
@@ -11,9 +13,12 @@ function formatRelative(ts: string | null) {
   const diffMs = now.getTime() - d.getTime();
   const diffMin = Math.floor(diffMs / 60_000);
   if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 60) return `${diffMin}m`;
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
+  if (diffH < 24) return `${diffH}h`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD === 1) return "Yesterday";
+  if (diffD < 7) return d.toLocaleDateString([], { weekday: "short" });
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
@@ -37,20 +42,22 @@ function ConvRow({
       href={`${basePath}/${conv.id}`}
       style={{
         display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "12px 16px",
+        alignItems: "flex-start",
+        gap: 11,
+        padding: "12px 14px",
         textDecoration: "none",
         background: active
           ? "var(--clay-50)"
           : hasUnread
           ? "var(--clay-50)"
           : "transparent",
-        borderLeft: active ? "3px solid var(--clay-500)" : "3px solid transparent",
-        transition: "background 120ms",
+        borderBottom: "1px solid var(--cream-200)",
+        position: "relative",
+        transition: "background 100ms",
       }}
       onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.background = "var(--cream-100)";
+        if (!active)
+          (e.currentTarget as HTMLElement).style.background = "var(--cream-50)";
       }}
       onMouseLeave={(e) => {
         if (!active)
@@ -58,17 +65,32 @@ function ConvRow({
             hasUnread ? "var(--clay-50)" : "transparent";
       }}
     >
-      {/* Gradient avatar */}
+      {/* Active / unread left rail */}
+      {(active || hasUnread) && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3,
+            background: active ? "var(--clay-500)" : "var(--clay-300)",
+            borderRadius: "0 2px 2px 0",
+          }}
+        />
+      )}
+
+      {/* Avatar */}
       <div
         style={{
           width: 40,
           height: 40,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, var(--clay-300), var(--clay-500))",
+          background: "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
           color: "#fff",
           display: "grid",
           placeItems: "center",
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: 700,
           fontFamily: "var(--sr-font-serif)",
           flexShrink: 0,
@@ -77,63 +99,71 @@ function ConvRow({
         {avatarInitial(conv.otherUsername)}
       </div>
 
+      {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 6,
+            marginBottom: 1,
+          }}
+        >
           <span
             style={{
               fontSize: 13,
               fontWeight: hasUnread ? 700 : 500,
-              color: "var(--sr-text-primary)",
+              color: hasUnread ? "var(--ink-800)" : "var(--sr-text-primary)",
               fontFamily: "var(--sr-font-sans)",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              maxWidth: 140,
             }}
           >
             @{conv.otherUsername ?? conv.otherUserId ?? "Unknown"}
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--sr-text-muted)",
-                fontFamily: "var(--sr-font-mono)",
-              }}
-            >
-              {formatRelative(conv.lastMessageAt)}
-            </span>
-            {/* Red unread dot */}
-            {hasUnread && (
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: "var(--rust-500, #e05252)",
-                  flexShrink: 0,
-                }}
-              />
-            )}
-          </div>
-        </div>
-        <div style={{ marginTop: 2 }}>
           <span
             style={{
-              fontSize: 12,
-              color: hasUnread ? "var(--sr-text-primary)" : "var(--sr-text-muted)",
-              fontWeight: hasUnread ? 500 : 400,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              display: "block",
-              fontFamily: "var(--sr-font-sans)",
+              fontFamily: "var(--sr-font-mono)",
+              fontSize: 10,
+              color: "var(--sr-text-muted)",
+              flexShrink: 0,
             }}
           >
-            {conv.lastMessage ?? "No messages yet"}
+            {formatRelative(conv.lastMessageAt)}
           </span>
         </div>
+
+        <div
+          style={{
+            fontSize: 12,
+            color: hasUnread ? "var(--sr-text-secondary)" : "var(--sr-text-muted)",
+            fontWeight: hasUnread ? 500 : 400,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "var(--sr-font-sans)",
+            lineHeight: 1.4,
+          }}
+        >
+          {conv.lastMessage ?? "No messages yet"}
+        </div>
       </div>
+
+      {/* Unread dot */}
+      {hasUnread && (
+        <div
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: "var(--clay-500)",
+            flexShrink: 0,
+            marginTop: 6,
+          }}
+        />
+      )}
     </Link>
   );
 }
@@ -146,44 +176,155 @@ export function ConversationList({
   basePath?: string;
 }) {
   const { data: convs, isLoading, error } = useConversations();
+  const [search, setSearch] = useState("");
+  const [focused, setFocused] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div style={{ padding: 24, color: "var(--sr-text-muted)", fontSize: 13 }}>
-        Loading…
-      </div>
-    );
-  }
+  const totalUnread = convs?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
 
-  if (error) {
+  const filtered = convs?.filter((c) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
     return (
-      <div style={{ padding: 24, color: "var(--rust-500)", fontSize: 13 }}>
-        Failed to load conversations
-      </div>
+      (c.otherUsername ?? "").toLowerCase().includes(q) ||
+      (c.lastMessage ?? "").toLowerCase().includes(q)
     );
-  }
-
-  if (!convs?.length) {
-    return (
-      <div
-        style={{
-          padding: 32,
-          textAlign: "center",
-          color: "var(--sr-text-muted)",
-          fontSize: 13,
-          fontFamily: "var(--sr-font-sans)",
-        }}
-      >
-        No conversations yet.
-      </div>
-    );
-  }
+  });
 
   return (
-    <div>
-      {convs.map((c) => (
-        <ConvRow key={c.id} conv={c} active={c.id === activeId} basePath={basePath} />
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Header */}
+      <div
+        style={{
+          padding: "18px 16px 12px",
+          borderBottom: "1px solid var(--sr-border-subtle)",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 11,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--sr-font-serif)",
+              fontSize: 19,
+              fontWeight: 500,
+              letterSpacing: "-0.015em",
+              color: "var(--ink-800)",
+            }}
+          >
+            Messages
+          </span>
+          {totalUnread > 0 && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 18,
+                height: 18,
+                padding: "0 5px",
+                background: "var(--clay-500)",
+                color: "#fff",
+                borderRadius: 9999,
+                fontSize: 10,
+                fontWeight: 700,
+                fontFamily: "var(--sr-font-sans)",
+              }}
+            >
+              {totalUnread}
+            </span>
+          )}
+        </div>
+
+        {/* Search */}
+        <div style={{ position: "relative" }}>
+          <Search
+            size={12}
+            strokeWidth={1.75}
+            style={{
+              position: "absolute",
+              left: 9,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--sr-text-muted)",
+              pointerEvents: "none",
+            }}
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Search conversations…"
+            style={{
+              width: "100%",
+              height: 32,
+              paddingLeft: 30,
+              paddingRight: 10,
+              background: "var(--cream-100)",
+              border: `1px solid ${focused ? "var(--clay-400)" : "var(--sr-border-subtle)"}`,
+              borderRadius: 9999,
+              fontSize: 12,
+              color: "var(--sr-text-primary)",
+              fontFamily: "var(--sr-font-sans)",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* List body */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {isLoading && (
+          <div
+            style={{
+              padding: 24,
+              color: "var(--sr-text-muted)",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+            }}
+          >
+            Loading…
+          </div>
+        )}
+
+        {error && (
+          <div
+            style={{
+              padding: 24,
+              color: "var(--rust-500, #e05252)",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+            }}
+          >
+            Failed to load conversations
+          </div>
+        )}
+
+        {!isLoading && !error && !filtered?.length && (
+          <div
+            style={{
+              padding: 32,
+              textAlign: "center",
+              color: "var(--sr-text-muted)",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+            }}
+          >
+            {search ? "No results" : "No conversations yet."}
+          </div>
+        )}
+
+        {filtered?.map((c) => (
+          <ConvRow key={c.id} conv={c} active={c.id === activeId} basePath={basePath} />
+        ))}
+      </div>
     </div>
   );
 }

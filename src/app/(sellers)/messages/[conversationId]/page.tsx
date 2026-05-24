@@ -43,27 +43,12 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
           width: 320,
           borderRight: "1px solid var(--sr-border-subtle)",
           flexShrink: 0,
-          overflowY: "auto",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           background: "var(--sr-bg-app)",
         }}
       >
-        <div
-          style={{
-            padding: "20px 16px 12px",
-            borderBottom: "1px solid var(--sr-border-subtle)",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              fontFamily: "var(--sr-font-serif)",
-              color: "var(--sr-text-primary)",
-            }}
-          >
-            Messages
-          </h1>
-        </div>
         <ConversationList activeId={conversationId} basePath="/messages" />
       </div>
 
@@ -75,6 +60,7 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
             currentUserId={user.uid}
             conversation={conversation}
             onRefresh={() => refetch()}
+            saleBasePath="/seller-central/inventory"
           />
         )}
       </div>

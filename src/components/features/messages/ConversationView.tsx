@@ -1,19 +1,201 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Phone, MoreVertical, Shield, ShieldOff, ShieldCheck } from "lucide-react";
 import { useMessages } from "@/hooks/use-messages";
 import { useSendMessage } from "@/hooks/use-send-message";
-import { markConversationRead } from "@/lib/api";
+import { useSetPin, useClearPin } from "@/hooks/use-pin";
+import { markConversationRead, blockConversation, unblockConversation } from "@/lib/api";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
-import { BlockButton } from "./BlockButton";
-import type { ConversationSummary } from "@/lib/types";
+import { PinnedItemCard } from "./PinnedItemCard";
+import { PinnedFocusCard } from "./PinnedFocusCard";
+import { PinChangeSystemMessage } from "./PinChangeSystemMessage";
+import { FocusPicker } from "./FocusPicker";
+import type { ConversationSummary, PinRef } from "@/lib/types";
 
 interface ConversationViewProps {
   convId: string;
   currentUserId: string;
   conversation: ConversationSummary;
   onRefresh: () => void;
+  saleBasePath?: string;
+}
+
+function formatDate(ts: string | null) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+}
+
+function DateDivider({ dateStr }: { dateStr: string | null }) {
+  if (!dateStr) return null;
+  return (
+    <div
+      style={{
+        position: "relative",
+        textAlign: "center",
+        margin: "4px 0 18px",
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: "50%",
+          height: 1,
+          background: "var(--cream-300)",
+        }}
+      />
+      <span
+        style={{
+          position: "relative",
+          zIndex: 1,
+          fontFamily: "var(--sr-font-mono)",
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          color: "var(--sr-text-muted)",
+          background: "var(--sr-bg-app)",
+          padding: "0 12px",
+        }}
+      >
+        {formatDate(dateStr)}
+      </span>
+    </div>
+  );
+}
+
+function MoreMenu({
+  convId,
+  isBlocked,
+  isBlocker,
+  onToggle,
+}: {
+  convId: string;
+  isBlocked: boolean;
+  isBlocker: boolean;
+  onToggle?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const handleBlock = async () => {
+    setLoading(true);
+    try {
+      if (isBlocked && isBlocker) {
+        await unblockConversation(convId);
+      } else if (!isBlocked) {
+        await blockConversation(convId);
+      }
+      onToggle?.();
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
+
+  if (isBlocked && !isBlocker) return null;
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        title="More options"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: "var(--sr-radius-sm)",
+          border: "none",
+          background: open ? "var(--cream-200)" : "transparent",
+          color: "var(--sr-text-muted)",
+          display: "grid",
+          placeItems: "center",
+          cursor: "pointer",
+          transition: "background 120ms, color 120ms",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = "var(--cream-200)";
+          el.style.color = "var(--sr-text-primary)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = open ? "var(--cream-200)" : "transparent";
+          el.style.color = "var(--sr-text-muted)";
+        }}
+      >
+        <MoreVertical size={15} strokeWidth={1.75} />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 4px)",
+            background: "var(--sr-bg-card)",
+            border: "1px solid var(--sr-border-subtle)",
+            borderRadius: "var(--sr-radius-md)",
+            boxShadow: "var(--sr-shadow-sm)",
+            minWidth: 150,
+            zIndex: 20,
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onClick={handleBlock}
+            disabled={loading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              padding: "10px 14px",
+              background: "none",
+              border: "none",
+              textAlign: "left",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+              color: isBlocked ? "var(--sr-text-secondary)" : "var(--rust-500, #e05252)",
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.6 : 1,
+              transition: "background 100ms",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.background = "var(--cream-50)")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.background = "none")
+            }
+          >
+            {isBlocked ? (
+              <><ShieldCheck size={13} strokeWidth={1.5} /> Unblock user</>
+            ) : (
+              <><ShieldOff size={13} strokeWidth={1.5} /> Block user</>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ConversationView({
@@ -21,10 +203,14 @@ export function ConversationView({
   currentUserId,
   conversation,
   onRefresh,
+  saleBasePath = "/market/sale",
 }: ConversationViewProps) {
   const { data, isLoading, fetchNextPage, hasNextPage } = useMessages(convId);
   const sendMutation = useSendMessage(convId);
+  const setPinMutation = useSetPin(convId);
+  const clearPinMutation = useClearPin(convId);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [focusPickerOpen, setFocusPickerOpen] = useState(false);
 
   const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
 
@@ -37,100 +223,199 @@ export function ConversationView({
   }, [allMessages.length]);
 
   const isBlocked = conversation.status === "blocked";
-  const isBlocker = isBlocked; // simplified: if blocked, current user may be blocker — BlockButton handles real auth
 
   const handleSend = (text: string) => {
     sendMutation.mutate({ text });
   };
+
+  // Derive sale context from first message that has one (fallback for legacy threads)
+  const contextMessage = allMessages.find((m) => m.context?.saleEventId);
+  const saleEventId = contextMessage?.context?.saleEventId ?? null;
+
+  // Pinned focus card data
+  const pinSnapshot = conversation.pinSnapshot ?? null;
+  // Derive pinRef from most recent pin_changed system message (since ConversationSummary doesn't include full PinRef)
+  const pinRefMsg = [...allMessages].reverse().find((m) => m.type === "system" && m.subtype === "pin_changed" && m.pinSnapshot);
+  const derivedPinRef = pinRefMsg
+    ? (allMessages.find((m) => m.type === "system" && m.subtype === "pin_changed")?.context as unknown as PinRef | null) ?? null
+    : null;
+  // Get pin info from last pin_changed system msg payload
+  const latestPinMsg = [...allMessages].reverse().find((m) => m.type === "system" && (m.subtype === "pin_changed" || m.subtype === "pin_cleared"));
+  const isPinned = latestPinMsg?.subtype === "pin_changed" && pinSnapshot;
+
+  // FocusPicker needs a saleEventId to work; use pinSnapshot's or context's
+  const focusSaleEventId = saleEventId;
+
+  const otherUsername = conversation.otherUsername;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Header */}
       <div
         style={{
-          padding: "12px 20px",
+          height: 62,
+          flexShrink: 0,
+          background: "var(--sr-bg-card)",
           borderBottom: "1px solid var(--sr-border-subtle)",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          background: "var(--sr-bg-card)",
-          flexShrink: 0,
-          gap: 12,
+          gap: 13,
+          padding: "0 20px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Gradient avatar */}
+        {/* Avatar */}
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
+            color: "#fff",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: "var(--sr-font-serif)",
+            flexShrink: 0,
+          }}
+        >
+          {(otherUsername ?? "?").slice(0, 1).toUpperCase()}
+        </div>
+
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: "var(--sr-text-primary)",
+                lineHeight: 1.2,
+                letterSpacing: "-0.01em",
+                fontFamily: "var(--sr-font-sans)",
+              }}
+            >
+              @{otherUsername ?? "Unknown"}
+            </span>
+            {/* Verified shield */}
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                fontFamily: "var(--sr-font-mono)",
+                fontSize: 9.5,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "var(--moss-600)",
+              }}
+            >
+              <Shield size={9} strokeWidth={2} />
+              Verified
+            </span>
+          </div>
+
           <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, var(--clay-300), var(--clay-500))",
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 14,
-              fontWeight: 700,
-              fontFamily: "var(--sr-font-serif)",
-              flexShrink: 0,
+              fontSize: 11.5,
+              color: "var(--sr-text-muted)",
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 5,
+              marginTop: 2,
+              fontFamily: "var(--sr-font-sans)",
             }}
           >
-            {(conversation.otherUsername ?? "?").slice(0, 1).toUpperCase()}
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--sr-text-primary)",
-                  fontFamily: "var(--sr-font-sans)",
-                }}
-              >
-                @{conversation.otherUsername ?? "Unknown"}
-              </span>
-              {/* Verified badge */}
-              <span
-                style={{
-                  fontSize: 9,
-                  fontWeight: 700,
-                  fontFamily: "var(--sr-font-mono)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "var(--moss-700, #2d6a4f)",
-                  background: "var(--moss-50, #e8f5ee)",
-                  border: "1px solid var(--moss-200, #b7dfc8)",
-                  borderRadius: 4,
-                  padding: "1px 5px",
-                }}
-              >
-                Verified
-              </span>
-            </div>
-            {isBlocked && (
-              <div style={{ fontSize: 11, color: "var(--rust-500)", marginTop: 1 }}>
-                Conversation blocked
-              </div>
+            {isBlocked ? (
+              <span style={{ color: "var(--rust-500, #e05252)" }}>Conversation blocked</span>
+            ) : (
+              <>
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--moss-500)",
+                    flexShrink: 0,
+                    display: "inline-block",
+                  }}
+                />
+                Online now
+              </>
             )}
           </div>
         </div>
-        <BlockButton
-          convId={convId}
-          isBlocked={isBlocked}
-          isBlocker={isBlocker}
-          onToggle={onRefresh}
-        />
+
+        {/* Right actions */}
+        <div
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <button
+            disabled
+            title="Call (available after deal)"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "var(--sr-radius-sm)",
+              border: "none",
+              background: "transparent",
+              color: "var(--sr-text-muted)",
+              display: "grid",
+              placeItems: "center",
+              cursor: "default",
+              opacity: 0.4,
+            }}
+          >
+            <Phone size={15} strokeWidth={1.75} />
+          </button>
+
+          <MoreMenu
+            convId={convId}
+            isBlocked={isBlocked}
+            isBlocker={isBlocked}
+            onToggle={onRefresh}
+          />
+        </div>
       </div>
 
-      {/* Messages */}
+      {/* Pinned focus card */}
+      {isPinned && pinSnapshot ? (
+        <PinnedFocusCard
+          snapshot={pinSnapshot}
+          kind={(latestPinMsg as { context?: { kind?: string } } | undefined)?.context?.kind as "item" | "bundle" | "sale" ?? "sale"}
+          saleEventId={saleEventId ?? ""}
+          saleBasePath={saleBasePath}
+          onChangeFocus={focusSaleEventId ? () => setFocusPickerOpen(true) : undefined}
+          onClearPin={() => clearPinMutation.mutate()}
+        />
+      ) : saleEventId ? (
+        <PinnedItemCard saleEventId={saleEventId} saleBasePath={saleBasePath} />
+      ) : null}
+
+      {focusPickerOpen && focusSaleEventId && (
+        <FocusPicker
+          saleEventId={focusSaleEventId}
+          onSelect={(pin: PinRef) => {
+            setFocusPickerOpen(false);
+            setPinMutation.mutate(pin);
+          }}
+          onClose={() => setFocusPickerOpen(false)}
+        />
+      )}
+
+      {/* Thread */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "16px 20px",
+          padding: "20px 22px 10px",
           display: "flex",
           flexDirection: "column",
-          gap: 2,
         }}
       >
         {hasNextPage && (
@@ -154,18 +439,55 @@ export function ConversationView({
         )}
 
         {isLoading && (
-          <div style={{ textAlign: "center", color: "var(--sr-text-muted)", fontSize: 13 }}>
+          <div
+            style={{
+              textAlign: "center",
+              color: "var(--sr-text-muted)",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+            }}
+          >
             Loading…
           </div>
         )}
 
-        {allMessages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            isOwn={msg.senderId === currentUserId}
-          />
-        ))}
+        {allMessages.map((msg, i) => {
+          const prev = allMessages[i - 1];
+          const msgDateKey = msg.createdAt?.split("T")[0] ?? "";
+          const prevDateKey = prev?.createdAt?.split("T")[0] ?? "";
+          const showDivider = msgDateKey !== prevDateKey;
+
+          const isOwn = msg.senderId === currentUserId;
+          const prevSenderId = prev?.senderId;
+          const showSender = !isOwn && (i === 0 || prevSenderId !== msg.senderId);
+
+          if (msg.type === "system" && (msg.subtype === "pin_changed" || msg.subtype === "pin_cleared")) {
+            return (
+              <div key={msg.id}>
+                {showDivider && <DateDivider dateStr={msg.createdAt} />}
+                <PinChangeSystemMessage
+                  text={msg.text}
+                  subtype={msg.subtype as "pin_changed" | "pin_cleared"}
+                  pinSnapshot={msg.pinSnapshot}
+                  saleBasePath={saleBasePath}
+                />
+              </div>
+            );
+          }
+
+          return (
+            <div key={msg.id}>
+              {showDivider && <DateDivider dateStr={msg.createdAt} />}
+              <MessageBubble
+                message={msg}
+                isOwn={isOwn}
+                showSender={showSender}
+                senderUsername={otherUsername}
+              />
+            </div>
+          );
+        })}
+
         <div ref={bottomRef} />
       </div>
 
@@ -173,7 +495,8 @@ export function ConversationView({
       <MessageComposer
         onSend={handleSend}
         disabled={isBlocked || sendMutation.isPending}
-        placeholder={isBlocked ? "Conversation blocked" : "Type a message…"}
+        placeholder={isBlocked ? "Conversation blocked" : undefined}
+        otherUsername={otherUsername}
       />
     </div>
   );

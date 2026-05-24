@@ -633,6 +633,28 @@ export async function unblockConversation(convId: string): Promise<void> {
   });
 }
 
+export async function setPin(
+  convId: string,
+  body: {
+    kind: "item" | "bundle" | "sale";
+    saleEventId: string;
+    bundleId?: string | null;
+    itemId?: string | null;
+  }
+): Promise<void> {
+  await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/pin`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function clearPin(convId: string): Promise<void> {
+  await apiRequest<unknown>(`${API_BASE}/messages/conversations/${convId}/pin`, {
+    method: "PATCH",
+    body: JSON.stringify({ kind: null }),
+  });
+}
+
 // --- Saved / Watchlist ---
 
 export async function saveSale(eventId: string): Promise<{ saved: boolean }> {

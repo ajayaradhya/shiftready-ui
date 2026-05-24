@@ -21,11 +21,12 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
     ws.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data as string);
-        if (payload.type === "message.new") {
+
+        if (payload.type === "message.new" || payload.type === "conversation.pin_changed") {
           const msg: Message = payload.message;
           const convId: string = payload.conversationId;
 
-          if (convId === activeConvId) {
+          if (convId === activeConvId && msg) {
             qc.setQueryData(
               ["messages", convId],
               (old: { pages: { messages: Message[] }[]; pageParams: unknown[] } | undefined) => {
