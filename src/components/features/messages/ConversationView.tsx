@@ -5,9 +5,12 @@ import { Phone, MoreVertical, Shield, ShieldOff, ShieldCheck } from "lucide-reac
 import { useMessages } from "@/hooks/use-messages";
 import { useSendMessage } from "@/hooks/use-send-message";
 import { useSetPin, useClearPin } from "@/hooks/use-pin";
+import { useAcceptOffer, useCounterOffer, useSendOffer, useWithdrawOffer } from "@/hooks/use-offers";
 import { markConversationRead, blockConversation, unblockConversation } from "@/lib/api";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
+import { OfferCard } from "./OfferCard";
+import { DealAgreedBanner } from "./DealAgreedBanner";
 import { PinnedItemCard } from "./PinnedItemCard";
 import { PinnedFocusCard } from "./PinnedFocusCard";
 import { PinChangeSystemMessage } from "./PinChangeSystemMessage";
@@ -209,6 +212,10 @@ export function ConversationView({
   const sendMutation = useSendMessage(convId);
   const setPinMutation = useSetPin(convId);
   const clearPinMutation = useClearPin(convId);
+  const sendOfferMutation = useSendOffer(convId);
+  const acceptOfferMutation = useAcceptOffer(convId);
+  const counterOfferMutation = useCounterOffer(convId);
+  const withdrawOfferMutation = useWithdrawOffer(convId);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [focusPickerOpen, setFocusPickerOpen] = useState(false);
 
@@ -226,6 +233,10 @@ export function ConversationView({
 
   const handleSend = (text: string) => {
     sendMutation.mutate({ text });
+  };
+
+  const handleSendOffer = (amount: number) => {
+    sendOfferMutation.mutate({ amount });
   };
 
   // Derive sale context from first message that has one (fallback for legacy threads)
@@ -473,6 +484,64 @@ export function ConversationView({
             );
           }
 
+          if (msg.type === "system" && msg.subtype === "deal_agreed") {
+            const dealAmt = allMessages
+              .slice(0, i + 1)
+              .reverse()
+              .find((m) => m.type === "offer_accepted")
+              ?.offerPayload?.amount ?? 0;
+            return (
+              <div key={msg.id}>
+                {showDivider && <DateDivider dateStr={msg.createdAt} />}
+                <DealAgreedBanner amount={dealAmt} otherUsername={otherUsername} />
+              </div>
+            );
+          }
+
+          if (msg.type === "offer" || msg.type === "offer_accepted") {
+            const offer = msg.offerPayload;
+            if (!offer) return null;
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: isOwn ? "flex-end" : "flex-start",
+                  marginBottom: 8,
+                }}
+              >
+                {showDivider && <DateDivider dateStr={msg.createdAt} />}
+                {!isOwn && showSender && (
+                  <div
+                    style={{
+                      marginBottom: 5,
+                      fontFamily: "var(--sr-font-mono)",
+                      fontSize: 10,
+                      textTransform: "uppercase" as const,
+                      letterSpacing: "0.08em",
+                      color: "var(--sr-text-muted)",
+                    }}
+                  >
+                    {otherUsername ?? "User"}
+                  </div>
+                )}
+                <OfferCard
+                  offer={offer}
+                  isOwn={isOwn}
+                  onAccept={(offerId) => acceptOfferMutation.mutate({ offerId })}
+                  onCounter={(offerId, amount) => counterOfferMutation.mutate({ offerId, amount })}
+                  onWithdraw={(offerId) => withdrawOfferMutation.mutate({ offerId })}
+                  disabled={
+                    acceptOfferMutation.isPending ||
+                    counterOfferMutation.isPending ||
+                    withdrawOfferMutation.isPending
+                  }
+                />
+              </div>
+            );
+          }
+
           return (
             <div key={msg.id}>
               {showDivider && <DateDivider dateStr={msg.createdAt} />}
@@ -492,6 +561,7 @@ export function ConversationView({
       {/* Composer */}
       <MessageComposer
         onSend={handleSend}
+        onSendOffer={handleSendOffer}
         disabled={isBlocked || sendMutation.isPending}
         placeholder={isBlocked ? "Conversation blocked" : undefined}
         otherUsername={otherUsername}

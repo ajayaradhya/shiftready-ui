@@ -5,12 +5,13 @@ import { Send, Paperclip, Percent, X } from "lucide-react";
 
 interface MessageComposerProps {
   onSend: (text: string) => void;
+  onSendOffer?: (amount: number) => void;
   disabled?: boolean;
   placeholder?: string;
   otherUsername?: string | null;
 }
 
-export function MessageComposer({ onSend, disabled, placeholder, otherUsername }: MessageComposerProps) {
+export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, otherUsername }: MessageComposerProps) {
   const [text, setText] = useState("");
   const [offerMode, setOfferMode] = useState(false);
   const [offerAmt, setOfferAmt] = useState("");
@@ -137,7 +138,12 @@ export function MessageComposer({ onSend, disabled, placeholder, otherUsername }
           </button>
           <button
             disabled={!canSendOffer}
-            onClick={closeOfferMode}
+            onClick={() => {
+              if (!canSendOffer) return;
+              const amt = parseFloat(offerAmt);
+              if (amt > 0) onSendOffer?.(amt);
+              closeOfferMode();
+            }}
             style={{
               display: "flex",
               alignItems: "center",

@@ -655,6 +655,56 @@ export async function clearPin(convId: string): Promise<void> {
   });
 }
 
+export async function sendOffer(
+  convId: string,
+  amount: number,
+  parentOfferId?: string | null
+): Promise<import("./types").Message> {
+  return apiRequest<import("./types").Message>(
+    `${API_BASE}/messages/conversations/${convId}/offers`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, parentOfferId: parentOfferId ?? null }),
+    }
+  );
+}
+
+export async function acceptOffer(
+  convId: string,
+  offerId: string
+): Promise<import("./types").Message> {
+  return apiRequest<import("./types").Message>(
+    `${API_BASE}/messages/conversations/${convId}/offers/${offerId}/accept`,
+    { method: "POST" }
+  );
+}
+
+export async function counterOffer(
+  convId: string,
+  offerId: string,
+  amount: number
+): Promise<import("./types").Message> {
+  return apiRequest<import("./types").Message>(
+    `${API_BASE}/messages/conversations/${convId}/offers/${offerId}/counter`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    }
+  );
+}
+
+export async function withdrawOffer(
+  convId: string,
+  offerId: string
+): Promise<import("./types").Message> {
+  return apiRequest<import("./types").Message>(
+    `${API_BASE}/messages/conversations/${convId}/offers/${offerId}/withdraw`,
+    { method: "POST" }
+  );
+}
+
 // --- Saved / Watchlist ---
 
 export async function saveSale(eventId: string): Promise<{ saved: boolean }> {

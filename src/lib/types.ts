@@ -242,16 +242,31 @@ export interface MessageContext {
   itemId?: string | null;
 }
 
+export type OfferStatus = "pending" | "countered" | "accepted" | "withdrawn";
+
+export interface OfferPayload {
+  offerId: string;
+  amount: number;
+  currency: string;
+  listPrice?: number | null;
+  parentOfferId?: string | null;
+  status: OfferStatus;
+  pinTarget?: PinRef | null;
+}
+
 export interface Message {
   id: string;
   senderId: string;
   text: string;
   createdAt: string | null;
-  type: "text" | "system";
+  type: "text" | "system" | "offer" | "offer_accepted";
   subtype?: string | null;
   context?: MessageContext | null;
   pinSnapshot?: PinSnapshot | null;
+  offerPayload?: OfferPayload | null;
 }
+
+export type DealStatus = "none" | "negotiating" | "agreed";
 
 export interface ConversationSummary {
   id: string;
@@ -264,6 +279,8 @@ export interface ConversationSummary {
   updatedAt: string | null;
   pin?: PinRef | null;
   pinSnapshot?: PinSnapshot | null;
+  activeOfferId?: string | null;
+  dealStatus?: DealStatus;
 }
 
 export interface ConversationStartResponse {

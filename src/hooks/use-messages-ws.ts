@@ -22,10 +22,7 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
       try {
         const payload = JSON.parse(event.data as string);
 
-        if (payload.type === "message.new" || payload.type === "conversation.pin_changed") {
-          const msg: Message = payload.message;
-          const convId: string = payload.conversationId;
-
+        const appendMsg = (msg: Message, convId: string) => {
           if (convId === activeConvId && msg) {
             qc.setQueryData(
               ["messages", convId],
@@ -44,9 +41,30 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
               }
             );
           }
+        };
 
+        if (
+          payload.type === "message.new" ||
+          payload.type === "conversation.pin_changed"
+        ) {
+          const msg: Message = payload.message;
+          const convId: string = payload.conversationId;
+          appendMsg(msg, convId);
           qc.invalidateQueries({ queryKey: ["conversations"] });
           qc.invalidateQueries({ queryKey: ["unread-count"] });
+        } else if (payload.type === "conversation.deal_agreed") {
+          const convId: string = payload.conversationId;
+          if (payload.message) appendMsg(payload.message as Message, convId);
+          if (payload.dealMessage) appendMsg(payload.dealMessage as Message, convId);
+          qc.invalidateQueries({ queryKey: ["conversations"] });
+          qc.invalidateQueries({ queryKey: ["unread-count"] });
+        } else if (payload.type === "offer.updated") {
+          // Refresh offer card states by invalidating messages
+          const convId: string = payload.conversationId;
+          if (convId === activeConvId) {
+            qc.invalidateQueries({ queryKey: ["messages", convId] });
+          }
+          qc.invalidateQueries({ queryKey: ["conversations"] });
         }
       } catch {
         // ignore parse errors
