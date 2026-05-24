@@ -11,10 +11,11 @@ export default function SettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleChange = (v: string) => {
-    setInput(v.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20));
+    const cleaned = v.replace(/[^a-zA-Z0-9]/g, "").slice(0, 20);
+    setInput(cleaned);
     setSaved(false);
     setSaveError(null);
-    if (v.length >= 3) check(v);
+    if (cleaned.length >= 4) check(cleaned);
   };
 
   const handleSave = async () => {
@@ -28,7 +29,7 @@ export default function SettingsPage() {
   };
 
   const isSame = profile?.username === input;
-  const canSave = input.length >= 3 && available && !isSame && !isUpdating;
+  const canSave = input.length >= 4 && /^[a-zA-Z]/.test(input) && available && !isSame && !isUpdating;
 
   if (isLoading) {
     return (
@@ -79,7 +80,7 @@ export default function SettingsPage() {
           Platform username
         </h2>
         <p style={{ fontSize: 12, color: "var(--sr-text-muted)", marginBottom: 20 }}>
-          Your @username is shown to buyers instead of your real name. 3–20 chars, letters, numbers, underscores. Can change every 7 days.
+          Your @username is shown to buyers instead of your real name. 4–20 chars, letters and numbers only, must start with a letter. Can change every 7 days.
         </p>
 
         <div style={{ marginBottom: 16 }}>
