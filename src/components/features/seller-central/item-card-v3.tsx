@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InventoryItem, RoomBundle, ItemCategory } from "@/lib/types";
+import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary } from "@/lib/types";
 import { patchItem, deleteItem, moveItem, createItemFull, repriceItem } from "@/lib/api";
 import { ItemPhotoStrip } from "./item-photo-strip";
 import { toast } from "sonner";
@@ -84,13 +84,53 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     },
   });
 
+  const [pendingReprice, setPendingReprice] = useState<{
+    predicted_listing_price: number;
+    actual_listing_price: number;
+    pricing_reasoning: string;
+  } | null>(null);
+
+  // Step 1: fetch AI suggestion — no DB write
   const repriceMutation = useMutation({
     mutationFn: () => repriceItem(eventId, bundleId, item.id),
-    onSuccess: () => {
+    onSuccess: (data) => setPendingReprice(data),
+    onError: (err: Error) => toast.error(err.message || "Re-pricing failed"),
+  });
+
+  // Step 2: user accepted — persist via PATCH
+  const acceptRepriceMutation = useMutation({
+    mutationFn: (data: NonNullable<typeof pendingReprice>) =>
+      patchItem(eventId, bundleId, item.id, {
+        predicted_listing_price: data.predicted_listing_price,
+        actual_listing_price: data.actual_listing_price,
+        pricing_reasoning: data.pricing_reasoning,
+      }),
+    onSuccess: (_res, data) => {
+      setListingVal(String(data.actual_listing_price));
+      qc.setQueryData<SaleSummary>(["summary", eventId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          bundles: old.bundles.map((b) =>
+            b.id !== bundleId ? b : {
+              ...b,
+              items: b.items.map((it) =>
+                it.id !== item.id ? it : {
+                  ...it,
+                  predicted_listing_price: data.predicted_listing_price,
+                  actual_listing_price: data.actual_listing_price,
+                  pricing_reasoning: data.pricing_reasoning,
+                }
+              ),
+            }
+          ),
+        };
+      });
       invalidate();
       setPricingStale(false);
+      setPendingReprice(null);
     },
-    onError: (err: Error) => toast.error(err.message || "Re-pricing failed"),
+    onError: (err: Error) => toast.error(err.message || "Failed to save price"),
   });
 
   const deleteMutation = useMutation({
@@ -653,6 +693,19 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           onSave={(updates) => { patchMutation.mutate(updates); setShowEditModal(false); }}
         />
       )}
+
+      {/* Re-price confirm dialog */}
+      {pendingReprice && (
+        <RepriceSuggestDialog
+          itemName={item.name}
+          oldPrice={item.actual_listing_price ?? item.predicted_listing_price ?? 0}
+          newPrice={pendingReprice.actual_listing_price}
+          reasoning={pendingReprice.pricing_reasoning}
+          saving={acceptRepriceMutation.isPending}
+          onAccept={() => acceptRepriceMutation.mutate(pendingReprice)}
+          onReject={() => setPendingReprice(null)}
+        />
+      )}
     </>
   );
 }
@@ -906,3 +959,123 @@ const modalInputStyle: React.CSSProperties = {
   fontSize: 13, color: "var(--sr-text-primary)", fontFamily: "var(--sr-font-sans)",
   outline: "none", boxSizing: "border-box",
 };
+
+function RepriceSuggestDialog({
+  itemName, oldPrice, newPrice, reasoning, saving, onAccept, onReject,
+}: {
+  itemName: string;
+  oldPrice: number;
+  newPrice: number;
+  reasoning: string;
+  saving: boolean;
+  onAccept: () => void;
+  onReject: () => void;
+}) {
+  const fmt = (v: number) =>
+    v.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
+
+  const diff = newPrice - oldPrice;
+  const diffSign = diff >= 0 ? "+" : "";
+  const diffColor = diff > 0 ? "var(--moss-600)" : diff < 0 ? "var(--rust-500)" : "var(--ink-400)";
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(20,17,13,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}
+      onClick={saving ? undefined : onReject}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)",
+          padding: "28px 32px", maxWidth: 400, width: "92%",
+          fontFamily: "var(--sr-font-sans)", boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <Sparkles size={14} style={{ color: "var(--clay-500)", flexShrink: 0 }} />
+          <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, color: "var(--ink-800)" }}>
+            AI pricing suggestion
+          </span>
+        </div>
+        <p style={{ fontSize: 12.5, color: "var(--sr-text-muted)", margin: "0 0 20px", lineHeight: 1.4 }}>
+          For <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{itemName}</em>
+        </p>
+
+        {/* Price comparison */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "14px 16px", marginBottom: 16,
+            background: "var(--cream-50)", border: "1px solid var(--cream-300)",
+            borderRadius: "var(--sr-radius-md)",
+          }}
+        >
+          <div style={{ textAlign: "center" as const }}>
+            <div style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "var(--sr-text-muted)", marginBottom: 4 }}>Current</div>
+            <div style={{ fontSize: 20, fontWeight: 600, color: "var(--ink-500)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"' }}>{fmt(oldPrice)}</div>
+          </div>
+
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 2 }}>
+            <div style={{ height: 1, width: "100%", background: "var(--cream-300)" }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: diffColor, fontFeatureSettings: '"tnum"' }}>
+              {diffSign}{fmt(Math.abs(diff))}
+            </span>
+          </div>
+
+          <div style={{ textAlign: "center" as const }}>
+            <div style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "var(--clay-600)", marginBottom: 4 }}>AI Suggested</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"' }}>{fmt(newPrice)}</div>
+          </div>
+        </div>
+
+        {/* Reasoning */}
+        <div
+          style={{
+            padding: "10px 12px", marginBottom: 22,
+            background: "linear-gradient(135deg, var(--clay-50), var(--cream-50))",
+            border: "1px solid var(--clay-100)", borderRadius: "var(--sr-radius-md)",
+            display: "flex", gap: 8, alignItems: "flex-start",
+          }}
+        >
+          <Sparkles size={10} style={{ color: "var(--clay-400)", flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontSize: 11.5, color: "var(--sr-text-secondary)", lineHeight: 1.55, margin: 0, fontStyle: "italic" }}>
+            {reasoning}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button
+            onClick={onReject}
+            disabled={saving}
+            style={{
+              padding: "8px 16px", borderRadius: "var(--sr-radius-sm)",
+              border: "1px solid var(--sr-border-subtle)", background: "transparent",
+              fontSize: 13, cursor: saving ? "default" : "pointer",
+              color: "var(--sr-text-primary)", opacity: saving ? 0.5 : 1,
+            }}
+          >
+            Keep current
+          </button>
+          <button
+            onClick={onAccept}
+            disabled={saving}
+            style={{
+              padding: "8px 20px", borderRadius: "var(--sr-radius-sm)",
+              border: "none", background: saving ? "var(--clay-300)" : "var(--clay-600)",
+              color: "#fff", fontSize: 13, fontWeight: 600,
+              cursor: saving ? "default" : "pointer",
+              display: "flex", alignItems: "center", gap: 6,
+              transition: "background 100ms",
+            }}
+            onMouseEnter={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "var(--clay-700)"; }}
+            onMouseLeave={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "var(--clay-600)"; }}
+          >
+            {saving ? "Saving…" : <><Check size={13} /> Accept price</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

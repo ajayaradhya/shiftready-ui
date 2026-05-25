@@ -135,12 +135,6 @@ export async function startProcessing(eventId: string): Promise<{ message: strin
   });
 }
 
-export async function triggerReestimation(eventId: string, moveOutDate: string): Promise<{ status: string }> {
-  return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/estimate`, {
-    method: "POST",
-    body: JSON.stringify({ move_out_date: moveOutDate }),
-  });
-}
 
 export interface PublishPayload {
   move_out_date: string;

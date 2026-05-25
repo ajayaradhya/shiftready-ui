@@ -14,7 +14,7 @@ import {
   Pencil, Eye, Box, DollarSign, MapPin, Calendar,
 } from "lucide-react";
 import {
-  publishSale, unpublishSale, triggerReestimation,
+  publishSale, unpublishSale,
   createBundle, deleteBundle, renameBundle, patchBundle,
   archiveSale, deleteSale, republishSale,
 } from "@/lib/api";
@@ -163,12 +163,6 @@ export default function SellerCentralInventoryPage() {
     },
   });
 
-  const reestimateMutation = useMutation({
-    mutationFn: () => triggerReestimation(eventId, summary?.moveOutDate ?? new Date().toISOString().split("T")[0]),
-    onSuccess: () =>
-      queryClient.setQueryData(["status", eventId], { status: "pricing_in_progress" }),
-  });
-
   const archiveMutation = useMutation({
     mutationFn: () => archiveSale(eventId),
     onSuccess: () => {
@@ -198,7 +192,7 @@ export default function SellerCentralInventoryPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const isGlobalLoading = isProcessing || reestimateMutation.isPending || activeMutations > 0;
+  const isGlobalLoading = isProcessing || activeMutations > 0;
 
   const titleFromUrl = searchParams.get("title");
 
@@ -253,17 +247,15 @@ export default function SellerCentralInventoryPage() {
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {isProcessing && "AI is extracting your items…"}
         {isPricing && "AI is pricing your items…"}
-        {reestimateMutation.isPending && "Re-analysing prices…"}
       </div>
 
       {/* Processing banner */}
-      {(isPricing || reestimateMutation.isPending || isProcessing) && (
+      {(isPricing || isProcessing) && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20, borderRadius: "var(--sr-radius-sm)", background: "var(--clay-50)", border: "1px solid var(--clay-100)", color: "var(--clay-700)", fontSize: 13, fontWeight: 500 }}>
           <Sparkles size={15} style={{ flexShrink: 0, animation: "pulse 2s ease-in-out infinite" }} />
           <span>
             {isProcessing && "AI is extracting items from your inventory — bundles will appear shortly."}
             {isPricing && !isProcessing && "Gemini is pricing your items against Sydney market data — prices will appear shortly."}
-            {reestimateMutation.isPending && "Re-analysing prices…"}
           </span>
         </div>
       )}
@@ -279,22 +271,6 @@ export default function SellerCentralInventoryPage() {
 
           {/* Right: Edit details + Preview listing + lifecycle */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <button
-                onClick={() => reestimateMutation.mutate()}
-                disabled={isGlobalLoading}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "7px 12px", borderRadius: "var(--sr-radius-sm)", fontSize: 12, fontWeight: 500,
-                  cursor: isGlobalLoading ? "not-allowed" : "pointer",
-                  border: "1px solid var(--sr-border-subtle)", background: "transparent",
-                  color: "var(--sr-text-muted)", transition: "all 120ms", opacity: isGlobalLoading ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => { if (!isGlobalLoading) (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-              >
-                <Sparkles size={12} />
-                Re-analyse
-              </button>
             <SaleLifecycleMenu
               status={status ?? ""}
               isLive={isLive}

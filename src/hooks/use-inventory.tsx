@@ -20,7 +20,9 @@ export function useInventory(eventId: string) {
   // Receives real-time STATUS_UPDATE frames from the backend pipeline notifier.
   const handleWsMessage = useCallback(
     (msg: WsMessage) => {
-      if (msg.type === "STATUS_UPDATE" && msg.status) {
+      // Pipeline messages carry `status` but no `type`.
+      // Event messages (ITEM_UPDATED, BUNDLE_UPDATED, etc.) carry `type` but no `status`.
+      if (msg.status) {
         queryClient.setQueryData(["status", eventId], { status: msg.status });
       }
     },
@@ -49,6 +51,9 @@ export function useInventory(eventId: string) {
 
   // 3. SUMMARY DATA
   // Fetches the full hierarchical inventory (Bundles → Items).
+  const isPipelineActive =
+    currentStatus === "processing" || currentStatus === "pricing_in_progress";
+
   const {
     data: summary,
     isLoading,
@@ -60,6 +65,9 @@ export function useInventory(eventId: string) {
     enabled: !!eventId,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
+    // Poll summary while pipeline is active so prices appear as soon as the
+    // backend finishes, even if the WS transition is missed.
+    refetchInterval: isPipelineActive ? 3_000 : false,
   });
 
   // AUTOMATIC SYNC LOGIC
