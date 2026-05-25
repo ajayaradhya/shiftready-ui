@@ -34,6 +34,7 @@ export type PatchItemPayload = Partial<InventoryItem>;
 async function apiRequest<T>(url: string, options?: RequestInit, _retried = false): Promise<T> {
   const existingHeaders = (options?.headers as Record<string, string>) ?? {};
   const headers: Record<string, string> = {
+    ...(options?.body ? { "Content-Type": "application/json" } : {}),
     ...existingHeaders,
     ...(_idToken ? { Authorization: `Bearer ${_idToken}` } : {}),
   };
@@ -134,9 +135,10 @@ export async function startProcessing(eventId: string): Promise<{ message: strin
   });
 }
 
-export async function triggerReestimation(eventId: string): Promise<{ status: string }> {
+export async function triggerReestimation(eventId: string, moveOutDate: string): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(`${API_BASE}/sales/${eventId}/estimate`, {
     method: "POST",
+    body: JSON.stringify({ move_out_date: moveOutDate }),
   });
 }
 
@@ -360,6 +362,23 @@ export async function patchItem(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     }
+  );
+}
+
+export interface ItemRepriceResult {
+  predicted_listing_price: number;
+  actual_listing_price: number;
+  pricing_reasoning: string;
+}
+
+export async function repriceItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<ItemRepriceResult> {
+  return apiRequest<ItemRepriceResult>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/reprice`,
+    { method: "POST" }
   );
 }
 

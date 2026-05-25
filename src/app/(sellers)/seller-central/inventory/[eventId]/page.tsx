@@ -164,7 +164,7 @@ export default function SellerCentralInventoryPage() {
   });
 
   const reestimateMutation = useMutation({
-    mutationFn: () => triggerReestimation(eventId),
+    mutationFn: () => triggerReestimation(eventId, summary?.moveOutDate ?? new Date().toISOString().split("T")[0]),
     onSuccess: () =>
       queryClient.setQueryData(["status", eventId], { status: "pricing_in_progress" }),
   });

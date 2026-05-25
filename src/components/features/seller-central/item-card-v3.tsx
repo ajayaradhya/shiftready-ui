@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InventoryItem, RoomBundle, ItemCategory } from "@/lib/types";
-import { patchItem, deleteItem, moveItem, createItemFull } from "@/lib/api";
+import { patchItem, deleteItem, moveItem, createItemFull, repriceItem } from "@/lib/api";
 import { ItemPhotoStrip } from "./item-photo-strip";
 import { toast } from "sonner";
 
@@ -68,11 +68,29 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     String(item.actual_listing_price ?? item.predicted_listing_price ?? "")
   );
 
+  const [pricingStale, setPricingStale] = useState(false);
+
+  const PRICING_FIELDS = new Set<keyof InventoryItem>(["name", "brand", "condition", "actual_year_of_purchase", "actual_original_price"]);
+
   const invalidate = () => qc.invalidateQueries({ queryKey: ["summary", eventId] });
 
   const patchMutation = useMutation({
     mutationFn: (updates: Partial<InventoryItem>) => patchItem(eventId, bundleId, item.id, updates),
-    onSuccess: invalidate,
+    onSuccess: (_data, updates) => {
+      invalidate();
+      if (Object.keys(updates).some((k) => PRICING_FIELDS.has(k as keyof InventoryItem))) {
+        setPricingStale(true);
+      }
+    },
+  });
+
+  const repriceMutation = useMutation({
+    mutationFn: () => repriceItem(eventId, bundleId, item.id),
+    onSuccess: () => {
+      invalidate();
+      setPricingStale(false);
+    },
+    onError: (err: Error) => toast.error(err.message || "Re-pricing failed"),
   });
 
   const deleteMutation = useMutation({
@@ -126,8 +144,11 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
 
   function saveName() {
     const trimmed = nameVal.trim();
-    if (trimmed && trimmed !== item.name) patchMutation.mutate({ name: trimmed });
-    else setNameVal(item.name);
+    if (trimmed && trimmed !== item.name) {
+      patchMutation.mutate({ name: trimmed });
+    } else {
+      setNameVal(item.name);
+    }
     setNameEditing(false);
   }
 
@@ -416,6 +437,40 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               </select>
             </AttrCell>
           </div>
+
+          {/* Pricing stale banner */}
+          {pricingStale && (
+            <div
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                gap: 8, padding: "7px 10px", marginBottom: 10,
+                background: "var(--honey-50)", border: "1px solid var(--honey-200)",
+                borderRadius: "var(--sr-radius-sm)",
+              }}
+            >
+              <span style={{ fontSize: 11.5, color: "var(--honey-700)", flex: 1 }}>
+                Item details changed — listing price may be outdated.
+              </span>
+              <button
+                onClick={() => repriceMutation.mutate()}
+                disabled={repriceMutation.isPending}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "4px 10px", borderRadius: "var(--sr-radius-sm)",
+                  border: "1px solid var(--honey-300)", background: repriceMutation.isPending ? "var(--honey-100)" : "var(--honey-500)",
+                  color: repriceMutation.isPending ? "var(--honey-600)" : "#fff",
+                  fontSize: 11.5, fontWeight: 600, cursor: repriceMutation.isPending ? "default" : "pointer",
+                  transition: "background 100ms",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-600)"; }}
+                onMouseLeave={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-500)"; }}
+              >
+                <Sparkles size={10} />
+                {repriceMutation.isPending ? "Pricing…" : "Re-price"}
+              </button>
+            </div>
+          )}
 
           {/* Pricing row */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: "1px solid var(--sr-border-subtle)", paddingTop: 12, marginBottom: 12 }}>
