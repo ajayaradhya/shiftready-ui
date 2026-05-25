@@ -204,6 +204,47 @@ export interface UserProfile {
   usernameChangedAt: string | null;
 }
 
+export interface NotifPrefs {
+  msg: boolean;
+  offer: boolean;
+  counter: boolean;
+  deal: boolean;
+  ready: boolean;
+  viewed: boolean;
+  buy_msg: boolean;
+  buy_offer: boolean;
+  price_drop: boolean;
+}
+
+export interface SellerPrefs {
+  paymentMethods: string[];
+  pickupDays: string[];
+  pickupTimes: string[];
+  minOfferPercent: number;
+}
+
+export interface PrivacyPrefs {
+  messagingFilter: string;
+  profileVisible: boolean;
+}
+
+export interface UserSettings {
+  id: string;
+  username: string;
+  usernameSetByUser: boolean;
+  usernameChangedAt: string | null;
+  displayName: string | null;
+  bio: string | null;
+  phoneE164: string | null;
+  phoneShareOptIn: boolean;
+  suburb: string | null;
+  state: string | null;
+  joinedAt: string | null;
+  notifPrefs: NotifPrefs;
+  sellerPrefs: SellerPrefs;
+  privacyPrefs: PrivacyPrefs;
+}
+
 export interface UsernameAvailable {
   available: boolean;
   username: string;

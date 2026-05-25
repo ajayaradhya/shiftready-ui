@@ -14,6 +14,10 @@ import type {
   MessageContext,
   SavedListResponse,
   PhoneRevealResponse,
+  UserSettings,
+  NotifPrefs,
+  SellerPrefs,
+  PrivacyPrefs,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -535,6 +539,45 @@ export async function updateUsername(username: string): Promise<UserProfile> {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username }),
+  });
+}
+
+export async function getMySettings(): Promise<UserSettings> {
+  return apiRequest<UserSettings>(`${API_BASE}/users/me/settings`);
+}
+
+export async function updateProfile(displayName: string | null, bio: string | null): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/profile`, {
+    method: "PATCH",
+    body: JSON.stringify({ displayName, bio }),
+  });
+}
+
+export async function updateLocation(suburb: string | null, state: string | null): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/location`, {
+    method: "PATCH",
+    body: JSON.stringify({ suburb, state }),
+  });
+}
+
+export async function updateNotifications(prefs: NotifPrefs): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/notifications`, {
+    method: "PATCH",
+    body: JSON.stringify({ prefs }),
+  });
+}
+
+export async function updatePreferences(prefs: SellerPrefs): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/preferences`, {
+    method: "PATCH",
+    body: JSON.stringify({ prefs }),
+  });
+}
+
+export async function updatePrivacy(prefs: PrivacyPrefs): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/privacy`, {
+    method: "PATCH",
+    body: JSON.stringify({ prefs }),
   });
 }
 
