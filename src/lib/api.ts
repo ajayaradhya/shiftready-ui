@@ -276,12 +276,20 @@ export async function renameBundle(
   bundleId: string,
   name: string
 ): Promise<{ status: string }> {
+  return patchBundle(eventId, bundleId, { name });
+}
+
+export async function patchBundle(
+  eventId: string,
+  bundleId: string,
+  updates: { name?: string; bundle_discount_percent?: number | null }
+): Promise<{ status: string }> {
   return apiRequest<{ status: string }>(
     `${API_BASE}/sales/${eventId}/bundles/${bundleId}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(updates),
     }
   );
 }

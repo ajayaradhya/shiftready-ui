@@ -37,6 +37,7 @@ export const RoomBundleSchema = z.object({
   suggestedPrice: z.number(),
   isPublished: z.boolean(),
   createdAt: z.string(),
+  bundleDiscountPercent: z.number().nullable().optional(),
 });
 
 export const SaleSummarySchema = z.object({

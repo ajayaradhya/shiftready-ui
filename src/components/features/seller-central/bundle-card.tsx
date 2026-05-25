@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Trash2, Plus } from "lucide-react";
+import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Percent, Trash2, Plus } from "lucide-react";
 import type { RoomBundle } from "@/lib/types";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const PALETTES = [
   {
@@ -38,20 +43,31 @@ interface BundleCardProps {
   onAddItem: () => void;
   onDelete: () => void;
   onRenameSubmit: (name: string) => void;
+  onDiscountChange?: (pct: number | null) => void;
 }
 
 export function BundleCard({
   bundle, index, active, isLive,
-  onClick, onAddItem, onDelete, onRenameSubmit,
+  onClick, onAddItem, onDelete, onRenameSubmit, onDiscountChange,
 }: BundleCardProps) {
   const p = PALETTES[index % PALETTES.length];
   const Icon = ICONS[index % ICONS.length];
   const conf = Math.round(avgConfidence(bundle) * 100);
+  const discountPct = bundle.bundleDiscountPercent ?? 0;
+  const itemTotal = bundle.suggestedPrice;
+  const bundlePrice = discountPct > 0 ? Math.round(itemTotal * (1 - discountPct / 100) * 100) / 100 : itemTotal;
+  const savings = Math.round((itemTotal - bundlePrice) * 100) / 100;
+  const hasBundleDiscount = discountPct > 0 && itemTotal > 0;
   const preview = bundle.items.slice(0, 3).map((i) => i.name);
   const extra = bundle.items.length > 3 ? bundle.items.length - 3 : 0;
   const [headerHover, setHeaderHover] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(bundle.name);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [discountEditing, setDiscountEditing] = useState(false);
+  const [discountVal, setDiscountVal] = useState(
+    String(bundle.bundleDiscountPercent ?? "")
+  );
 
   function submitRename() {
     const trimmed = renameVal.trim();
@@ -59,7 +75,42 @@ export function BundleCard({
     setIsRenaming(false);
   }
 
+  function submitDiscount() {
+    if (!onDiscountChange) return;
+    setDiscountEditing(false);
+    const trimmed = discountVal.trim();
+    if (trimmed === "") {
+      onDiscountChange(null);
+      return;
+    }
+    const v = parseFloat(trimmed);
+    if (!isNaN(v) && v >= 0 && v <= 100) {
+      const stored = bundle.bundleDiscountPercent ?? null;
+      if (v !== stored) onDiscountChange(v);
+    } else {
+      setDiscountVal(String(bundle.bundleDiscountPercent ?? ""));
+    }
+  }
+
   return (
+    <>
+    <Dialog open={confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(false)}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Delete &ldquo;{bundle.name}&rdquo;?</DialogTitle>
+          <DialogDescription>
+            All {bundle.items.length} item{bundle.items.length !== 1 ? "s" : ""} in this bundle will be permanently deleted. This cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={() => { onDelete(); setConfirmDelete(false); }}>
+            <Trash2 size={12} aria-hidden />
+            Delete bundle
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <div
       role="button"
       tabIndex={0}
@@ -111,7 +162,7 @@ export function BundleCard({
           {bundle.items.length}
         </span>
         {/* Hover controls — top left (rename + delete) */}
-        {!isLive && headerHover && (
+        {headerHover && (
           <div
             style={{ position: "absolute", top: 8, left: 10, display: "flex", gap: 4 }}
             onClick={(e) => e.stopPropagation()}
@@ -123,7 +174,7 @@ export function BundleCard({
               <Pencil size={12} color={p.icon} />
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
               style={{ width: 26, height: 26, borderRadius: 6, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}
             >
               <Trash2 size={12} color="var(--rust-500)" />
@@ -157,19 +208,77 @@ export function BundleCard({
         ) : (
           <div
             style={{ fontFamily: "var(--sr-font-serif)", fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 4px" }}
-            onDoubleClick={(e) => { if (!isLive) { e.stopPropagation(); setRenameVal(bundle.name); setIsRenaming(true); } }}
-            title={isLive ? undefined : "Double-click to rename"}
+            onDoubleClick={(e) => { e.stopPropagation(); setRenameVal(bundle.name); setIsRenaming(true); }}
+            title="Double-click to rename"
           >
             {bundle.name}
           </div>
         )}
 
-        <div style={{ fontSize: 13, color: "var(--sr-text-muted)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-          <strong style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>
-            ${bundle.suggestedPrice.toLocaleString()}
-          </strong>
-          listing value
-        </div>
+        {hasBundleDiscount ? (
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: "var(--sr-text-muted)", textDecoration: "line-through", lineHeight: 1.3 }}>
+              ${itemTotal.toLocaleString()} individually
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2 }}>
+              <strong style={{ fontSize: 16, fontWeight: 700, color: "var(--moss-700)" }}>
+                ${bundlePrice.toLocaleString()}
+              </strong>
+              <span style={{ fontSize: 11, color: "var(--moss-600)", fontWeight: 600 }}>
+                save ${savings.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: "var(--sr-text-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <strong style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>
+              ${bundle.suggestedPrice.toLocaleString()}
+            </strong>
+            listing value
+          </div>
+        )}
+
+        {/* Bundle discount */}
+        {onDiscountChange && (
+          <div
+            style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Percent size={10} style={{ color: "var(--sr-text-muted)", flexShrink: 0 }} />
+            {discountEditing ? (
+              <input
+                autoFocus
+                type="number"
+                min={0}
+                max={100}
+                value={discountVal}
+                onChange={(e) => setDiscountVal(e.target.value)}
+                onBlur={submitDiscount}
+                onKeyDown={(e) => { if (e.key === "Enter") submitDiscount(); if (e.key === "Escape") { setDiscountEditing(false); setDiscountVal(String(bundle.bundleDiscountPercent ?? "")); } }}
+                placeholder="0"
+                style={{
+                  width: 48, fontSize: 12, fontWeight: 600, color: "var(--sr-text-primary)",
+                  background: "transparent", border: "none", borderBottom: `1.5px solid ${p.border}`,
+                  outline: "none", padding: "1px 2px",
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setDiscountEditing(true)}
+                title="Set bundle discount %"
+                style={{
+                  fontSize: 12, color: bundle.bundleDiscountPercent != null ? "var(--moss-700)" : "var(--sr-text-muted)",
+                  fontWeight: bundle.bundleDiscountPercent != null ? 600 : 400,
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
+                }}
+              >
+                {bundle.bundleDiscountPercent != null
+                  ? `${bundle.bundleDiscountPercent}% off when bought together`
+                  : "add bundle discount"}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Item preview tags */}
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 12 }}>
@@ -235,5 +344,6 @@ export function BundleCard({
         )}
       </div>
     </div>
+    </>
   );
 }

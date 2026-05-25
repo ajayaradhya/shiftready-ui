@@ -120,24 +120,20 @@ export function BundleSection({
           ) : (
             <>
               <h3 className="text-xl font-medium text-on-surface">{bundle.name}</h3>
-              {!isLive && (
-                <button
+              <button
                   onClick={startRename}
                   aria-label={`Rename room ${bundle.name}`}
                   className="opacity-0 group-hover/bundle:opacity-100 p-1 text-outline hover:text-on-surface transition-all rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:opacity-100"
                 >
                   <Pencil size={12} aria-hidden />
                 </button>
-              )}
-              {!isLive && (
-                <button
+              <button
                   onClick={() => setIsConfirmingDelete(true)}
                   aria-label={`Delete room ${bundle.name}`}
                   className="opacity-0 group-hover/bundle:opacity-100 p-1 text-outline hover:text-error transition-all rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/50 focus-visible:opacity-100"
                 >
                   <Trash2 size={14} aria-hidden />
                 </button>
-              )}
             </>
           )}
         </div>
@@ -156,8 +152,7 @@ export function BundleSection({
             onSeek={onSeek}
           />
         ))}
-        {!isLive && (
-          <button
+        <button
             onClick={() => onAddItem(bundle.id)}
             aria-label={`Add item to ${bundle.name}`}
             className="flex items-center justify-center gap-3 py-8 rounded-xl border-2 border-dashed border-outline-variant/10 text-outline/40 hover:border-primary/40 hover:bg-primary/[0.02] hover:text-primary transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
@@ -165,7 +160,6 @@ export function BundleSection({
             <PlusCircle size={20} className="group-hover:scale-110 transition-transform" aria-hidden />
             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Add Manual Asset</span>
           </button>
-        )}
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
-  createBundle, deleteBundle, renameBundle,
+  createBundle, deleteBundle, renameBundle, patchBundle,
   archiveSale, deleteSale, republishSale,
 } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
@@ -139,6 +139,12 @@ export default function SellerCentralInventoryPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
   });
 
+  const patchBundleMutation = useMutation({
+    mutationFn: ({ bundleId, updates }: { bundleId: string; updates: { bundle_discount_percent?: number | null } }) =>
+      patchBundle(eventId, bundleId, updates),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
+  });
+
   const publishMutation = useMutation({
     mutationFn: (payload: import("@/lib/api").PublishPayload) => publishSale(eventId, payload),
     onSuccess: () => {
@@ -197,9 +203,9 @@ export default function SellerCentralInventoryPage() {
   const titleFromUrl = searchParams.get("title");
 
   useEffect(() => {
-    setSale({ label: "Sale · Inventory", name: titleFromUrl ?? eventId.slice(0, 8) });
+    setSale({ label: "Sale · Inventory", name: summary?.title ?? titleFromUrl ?? eventId.slice(0, 8) });
     return () => setSale(null);
-  }, [titleFromUrl, eventId, setSale]);
+  }, [summary?.title, titleFromUrl, eventId, setSale]);
 
   useEffect(() => {
     setProcessing(isGlobalLoading);
@@ -232,10 +238,11 @@ export default function SellerCentralInventoryPage() {
     ? new Date(summary.moveOutDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })
     : null;
 
-  // Title parts
-  const titleParts = titleFromUrl?.split(",").map((s) => s.trim()) ?? [];
-  const titleMain = titleParts[0] ?? "Inventory";
-  const titleAccent = titleParts[1] ?? "review";
+  // Title parts — prefer the real sale title once loaded, fall back to URL param (suburb, state)
+  const rawTitle = summary?.title ?? titleFromUrl ?? "";
+  const titleWords = rawTitle.trim().split(/\s+/);
+  const titleMain = titleWords.length > 1 ? titleWords.slice(0, -1).join(" ") : rawTitle;
+  const titleAccent = titleWords.length > 1 ? titleWords[titleWords.length - 1] : "";
 
   return (
     <div
@@ -272,8 +279,7 @@ export default function SellerCentralInventoryPage() {
 
           {/* Right: Edit details + Preview listing + lifecycle */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            {!isLive && (
-              <button
+            <button
                 onClick={() => reestimateMutation.mutate()}
                 disabled={isGlobalLoading}
                 style={{
@@ -289,14 +295,11 @@ export default function SellerCentralInventoryPage() {
                 <Sparkles size={12} />
                 Re-analyse
               </button>
-            )}
             <SaleLifecycleMenu
               status={status ?? ""}
               isLive={isLive}
-              isArchiving={archiveMutation.isPending}
               isDeleting={deleteMutation.isPending}
               isRepublishing={republishMutation.isPending}
-              onArchive={() => archiveMutation.mutate()}
               onDelete={() => deleteMutation.mutate()}
               onRepublish={() => republishMutation.mutate()}
             />
@@ -368,14 +371,14 @@ export default function SellerCentralInventoryPage() {
         <SaleDetailsPanel
           eventId={eventId}
           summary={summary}
-          isEditable={["ready_for_review", "live", "partially_sold", "failed"].includes(status ?? "")}
+          isEditable={true}
           isOpen={detailsOpen}
           onOpenChange={setDetailsOpen}
         />
       )}
 
       {/* Bundle tray — 4-col grid */}
-      {summary?.bundles && (summary.bundles.length > 0 || !isLive) && (
+      {summary?.bundles && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px] mb-8">
           {summary.bundles.map((bundle, idx) => (
             <BundleCard
@@ -391,11 +394,10 @@ export default function SellerCentralInventoryPage() {
               }}
               onDelete={() => delBundleMutation.mutate(bundle.id)}
               onRenameSubmit={(name) => renameBundleMutation.mutate({ bundleId: bundle.id, name })}
+              onDiscountChange={(pct) => patchBundleMutation.mutate({ bundleId: bundle.id, updates: { bundle_discount_percent: pct } })}
             />
           ))}
-          {!isLive && (
-            <NewBundleTile onSubmit={(name) => addBundleMutation.mutate(name)} />
-          )}
+          <NewBundleTile onSubmit={(name) => addBundleMutation.mutate(name)} />
         </div>
       )}
 
@@ -470,11 +472,14 @@ export default function SellerCentralInventoryPage() {
               <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
             </div>
             <InventoryActions
+              status={status ?? ""}
               isLive={isLive}
               isPublishing={publishMutation.isPending}
               isUnpublishing={unpublishMutation.isPending}
+              isArchiving={archiveMutation.isPending}
               onPublish={(payload) => publishMutation.mutate(payload)}
               onUnpublish={() => unpublishMutation.mutate()}
+              onArchive={() => archiveMutation.mutate()}
             />
           </div>
         </div>

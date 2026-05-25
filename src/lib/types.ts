@@ -173,6 +173,7 @@ export interface RoomBundle {
   suggestedPrice: number;
   isPublished: boolean;
   createdAt: string;
+  bundleDiscountPercent?: number | null;
 }
 
 export interface SaleSummary {

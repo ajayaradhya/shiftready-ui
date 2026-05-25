@@ -61,6 +61,12 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     String(item.actual_year_of_purchase ?? item.predicted_year_of_purchase ?? "")
   );
   const [category, setCategory] = useState<string>(item.category ?? "");
+  const [retailVal, setRetailVal] = useState(
+    String(item.actual_original_price ?? item.predicted_original_price ?? "")
+  );
+  const [listingVal, setListingVal] = useState(
+    String(item.actual_listing_price ?? item.predicted_listing_price ?? "")
+  );
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["summary", eventId] });
 
@@ -419,9 +425,23 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               </span>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontWeight: 500 }}>$</span>
-                <span style={{ fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)" }}>
-                  {retail?.toLocaleString() ?? "—"}
-                </span>
+                <input
+                  type="number"
+                  min={0}
+                  value={retailVal}
+                  onChange={(e) => setRetailVal(e.target.value)}
+                  onBlur={() => {
+                    const v = parseFloat(retailVal);
+                    const original = item.actual_original_price ?? item.predicted_original_price;
+                    if (!isNaN(v) && v >= 0 && v !== original) {
+                      patchMutation.mutate({ actual_original_price: v });
+                    } else if (retailVal === "" && original != null) {
+                      patchMutation.mutate({ actual_original_price: 0 });
+                    }
+                  }}
+                  placeholder="—"
+                  style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", width: "100%", padding: "2px 4px" }}
+                />
               </div>
             </div>
             <div style={{ paddingLeft: 14, borderLeft: "1px solid var(--sr-border-subtle)" }}>
@@ -447,9 +467,23 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <span style={{ fontSize: 14, color: "var(--clay-500)", fontWeight: 600 }}>$</span>
-                <span style={{ fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"' }}>
-                  {listing?.toLocaleString() ?? "—"}
-                </span>
+                <input
+                  type="number"
+                  min={0}
+                  value={listingVal}
+                  onChange={(e) => setListingVal(e.target.value)}
+                  onBlur={() => {
+                    const v = parseFloat(listingVal);
+                    const original = item.actual_listing_price ?? item.predicted_listing_price;
+                    if (!isNaN(v) && v >= 0 && v !== original) {
+                      patchMutation.mutate({ actual_listing_price: v });
+                    } else if (listingVal === "" && original != null) {
+                      patchMutation.mutate({ actual_listing_price: 0 });
+                    }
+                  }}
+                  placeholder="—"
+                  style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', width: "100%", padding: "2px 4px" }}
+                />
               </div>
             </div>
           </div>

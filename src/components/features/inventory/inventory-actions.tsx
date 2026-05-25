@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, ShieldCheck, Send, Power, Loader2 } from "lucide-react";
+import { Globe, ShieldCheck, Send, Power, Loader2, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,11 +15,14 @@ import {
 import type { PublishPayload } from "@/lib/api";
 
 interface InventoryActionsProps {
+  status: string;
   isLive: boolean;
   isPublishing: boolean;
   isUnpublishing: boolean;
+  isArchiving: boolean;
   onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
+  onArchive: () => void;
 }
 
 const today = new Date().toISOString().split("T")[0];
@@ -33,14 +36,20 @@ const emptyForm = (): PublishPayload => ({
 });
 
 export function InventoryActions({
+  status,
   isLive,
   isPublishing,
   isUnpublishing,
+  isArchiving,
   onPublish,
   onUnpublish,
+  onArchive,
 }: InventoryActionsProps) {
   const [isConfirmingUnpublish, setIsConfirmingUnpublish] = useState(false);
+  const [isConfirmingArchive, setIsConfirmingArchive] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+
+  const canArchive = !["processing", "pricing_in_progress", "archived"].includes(status);
   const [publishForm, setPublishForm] = useState<PublishPayload>(emptyForm);
 
   const setField = (field: keyof PublishPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -156,6 +165,33 @@ export function InventoryActions({
         </DialogContent>
       </Dialog>
 
+      {/* Archive confirm dialog */}
+      <Dialog open={isConfirmingArchive} onOpenChange={(v) => !isArchiving && setIsConfirmingArchive(v)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Archive this sale?</DialogTitle>
+            <DialogDescription>
+              The listing will be removed from the marketplace and marked as archived. You can still view it but not edit it.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="md" onClick={() => setIsConfirmingArchive(false)} disabled={isArchiving}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              disabled={isArchiving}
+              aria-busy={isArchiving}
+              onClick={() => { onArchive(); setIsConfirmingArchive(false); }}
+            >
+              {isArchiving ? <Loader2 className="animate-spin" size={12} aria-hidden /> : <Archive size={12} aria-hidden />}
+              Archive
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Unpublish confirm dialog */}
       <Dialog
         open={isConfirmingUnpublish}
@@ -207,6 +243,22 @@ export function InventoryActions({
       </div>
 
       <div className="flex items-center gap-2">
+        {canArchive && (
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setIsConfirmingArchive(true)}
+            disabled={isArchiving}
+            aria-busy={isArchiving}
+          >
+            {isArchiving ? (
+              <Loader2 className="animate-spin" size={14} aria-hidden />
+            ) : (
+              <Archive size={14} aria-hidden />
+            )}
+            Archive Sale
+          </Button>
+        )}
         {!isLive ? (
           <Button
             variant="primary"
