@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Package } from "lucide-react";
+import { Plus, Camera } from "lucide-react";
 import { useSalesList } from "@/hooks/use-sales";
 import { SaleRow } from "@/components/features/seller-central/sale-row";
 import type { SaleStatus } from "@/lib/types";
@@ -25,11 +25,11 @@ export default function SellerCentralPage() {
             My <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>Sales</em>
           </h1>
           <p style={{ color: "var(--sr-text-muted)", fontSize: 14, margin: 0 }}>
-            Manage your relocation sales from upload to live.
+            Point your camera, tap to capture — we handle the rest.
           </p>
         </div>
         <Link
-          href="/seller-central/create"
+          href="/seller-central/capture"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -63,7 +63,7 @@ export default function SellerCentralPage() {
           }}
         >
           {[
-            { label: "Total listings",  value: String(sales.length),                            delta: "Across all time" },
+            { label: "Total sales",      value: String(sales.length),                            delta: "Across all time" },
             { label: "Items listed",    value: String(totalItems),                              delta: liveItems > 0 ? `↑ ${liveItems} live now` : "No items live", up: liveItems > 0 },
             { label: "Total value",     value: `$${(totalValue / 1000).toFixed(1)}k`,            delta: activeValue > 0 ? `↑ $${activeValue.toLocaleString()} active` : "No active sales", up: activeValue > 0 },
             { label: "Sold to date",    value: "$0",                                            delta: "Coming soon" },
@@ -124,24 +124,16 @@ export default function SellerCentralPage() {
           }}
         >
           <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--clay-50)", color: "var(--clay-500)", display: "grid", placeItems: "center", marginBottom: 20, boxShadow: "inset 0 0 0 1px var(--clay-100)" }}>
-            <Package size={28} strokeWidth={1.4} />
+            <Camera size={28} strokeWidth={1.4} />
           </div>
           <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 8px" }}>
-            No sales <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>yet</em>
+            Ready to <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>list?</em>
           </h2>
-          <p style={{ color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: "0 0 12px" }}>
-            Film a walkthrough of your home and let AI extract and price every item in minutes.
+          <p style={{ color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: "0 0 24px" }}>
+            Point your camera at items around your home and tap to capture — AI extracts and prices everything in minutes.
           </p>
-          <a
-            href="https://www.youtube.com/shorts"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: 13, color: "var(--clay-600)", textDecoration: "underline", textUnderlineOffset: 3, marginBottom: 24, display: "block" }}
-          >
-            Watch how it works — takes 2 min
-          </a>
           <Link
-            href="/seller-central/create"
+            href="/seller-central/capture"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -156,7 +148,7 @@ export default function SellerCentralPage() {
               textDecoration: "none",
             }}
           >
-            <Plus size={14} strokeWidth={2} />
+            <Camera size={14} strokeWidth={2} />
             Start your first sale
           </Link>
         </div>

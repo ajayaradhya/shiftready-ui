@@ -17,11 +17,18 @@ interface Props {
   eventId: string;
   summary: SaleSummary;
   isEditable: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (v: boolean) => void;
 }
 
-export function SaleDetailsPanel({ eventId, summary, isEditable }: Props) {
+export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenChange }: Props) {
   const qc = useQueryClient();
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = isOpen !== undefined ? isOpen : internalExpanded;
+  function setExpanded(v: boolean) {
+    if (onOpenChange) onOpenChange(v);
+    else setInternalExpanded(v);
+  }
   const [title, setTitle] = useState(summary.title ?? "");
   const [description, setDescription] = useState(summary.description ?? "");
   const [streetAddress, setStreetAddress] = useState(summary.streetAddress ?? "");
@@ -99,7 +106,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable }: Props) {
     >
       {/* Header row — always visible */}
       <button
-        onClick={() => setExpanded((p) => !p)}
+        onClick={() => setExpanded(!expanded)}
         style={{
           width: "100%",
           display: "flex",

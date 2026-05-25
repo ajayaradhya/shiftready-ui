@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, ShieldCheck, Plus, X, Check, Send, Power, Loader2 } from "lucide-react";
+import { Globe, ShieldCheck, Send, Power, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,14 +16,8 @@ import type { PublishPayload } from "@/lib/api";
 
 interface InventoryActionsProps {
   isLive: boolean;
-  isAddingBundle: boolean;
-  newBundleName: string;
   isPublishing: boolean;
   isUnpublishing: boolean;
-  onAddBundleOpen: () => void;
-  onAddBundleClose: () => void;
-  onBundleNameChange: (name: string) => void;
-  onBundleSubmit: () => void;
   onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
 }
@@ -40,14 +34,8 @@ const emptyForm = (): PublishPayload => ({
 
 export function InventoryActions({
   isLive,
-  isAddingBundle,
-  newBundleName,
   isPublishing,
   isUnpublishing,
-  onAddBundleOpen,
-  onAddBundleClose,
-  onBundleNameChange,
-  onBundleSubmit,
   onPublish,
   onUnpublish,
 }: InventoryActionsProps) {
@@ -220,60 +208,20 @@ export function InventoryActions({
 
       <div className="flex items-center gap-2">
         {!isLive ? (
-          <>
-            {isAddingBundle ? (
-              <div
-                role="group"
-                aria-label="Add bundle input"
-                className="flex items-center gap-2 bg-surface-container-highest rounded-md px-2 py-1 animate-in slide-in-from-right-4"
-              >
-                <Input
-                  autoFocus
-                  placeholder="Room Name..."
-                  aria-label="New room name"
-                  className="bg-transparent border-none h-auto p-0 text-[10px] font-black uppercase tracking-widest focus-visible:ring-0 w-32"
-                  value={newBundleName}
-                  onChange={(e) => onBundleNameChange(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && newBundleName && onBundleSubmit()}
-                />
-                <button
-                  onClick={onAddBundleClose}
-                  aria-label="Cancel adding bundle"
-                  className="text-outline hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-sm"
-                >
-                  <X size={14} aria-hidden />
-                </button>
-                <button
-                  onClick={() => newBundleName && onBundleSubmit()}
-                  aria-label="Submit new bundle"
-                  disabled={!newBundleName}
-                  className="text-primary hover:scale-110 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-sm disabled:opacity-40"
-                >
-                  <Check size={14} aria-hidden />
-                </button>
-              </div>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsPublishDialogOpen(true)}
+            disabled={isPublishing}
+            aria-busy={isPublishing}
+          >
+            {isPublishing ? (
+              <Loader2 className="animate-spin" size={14} aria-hidden />
             ) : (
-              <Button variant="secondary" size="md" onClick={onAddBundleOpen}>
-                <Plus size={14} aria-hidden />
-                Add Bundle
-              </Button>
+              <Send size={14} aria-hidden />
             )}
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => setIsPublishDialogOpen(true)}
-              disabled={isPublishing}
-              aria-busy={isPublishing}
-            >
-              {isPublishing ? (
-                <Loader2 className="animate-spin" size={14} aria-hidden />
-              ) : (
-                <Send size={14} aria-hidden />
-              )}
-              Publish Sale
-            </Button>
-          </>
+            Publish Sale
+          </Button>
         ) : (
           <Button
             variant="outline"

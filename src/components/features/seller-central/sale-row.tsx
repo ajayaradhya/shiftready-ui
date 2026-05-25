@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag } from "lucide-react";
+import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal, Archive, Pencil } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import type { SaleListing, SaleStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {
@@ -44,6 +45,8 @@ interface SaleRowProps {
 
 export function SaleRow({ sale }: SaleRowProps) {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const isLive = sale.status === "live" || sale.status === "partially_sold";
   const badge = STATUS_BADGE[sale.status] ?? STATUS_BADGE.archived;
   const dotColor = DOT_COLORS[sale.status] ?? "var(--ink-300)";
@@ -52,6 +55,17 @@ export function SaleRow({ sale }: SaleRowProps) {
   const previews = (sale.preview_images ?? []).slice(0, 4);
 
   const inventoryUrl = `/seller-central/inventory/${sale.id}?title=${encodeURIComponent([sale.suburb, sale.state].filter(Boolean).join(", "))}`;
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   return (
     <div
@@ -226,6 +240,90 @@ export function SaleRow({ sale }: SaleRowProps) {
             Inventory <ArrowRight size={11} />
           </Link>
         )}
+
+        {/* Kebab */}
+        <div ref={menuRef} style={{ position: "relative" }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              width: 30,
+              height: 30,
+              borderRadius: "var(--sr-radius-sm)",
+              border: "1px solid var(--sr-border-subtle)",
+              background: menuOpen ? "var(--cream-100)" : "transparent",
+              color: "var(--ink-400)",
+              cursor: "pointer",
+              transition: "all 120ms",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; (e.currentTarget as HTMLElement).style.color = "var(--ink-700)"; }}
+            onMouseLeave={(e) => { if (!menuOpen) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--ink-400)"; } }}
+          >
+            <MoreHorizontal size={14} />
+          </button>
+
+          {menuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: "calc(100% + 4px)",
+                zIndex: 50,
+                minWidth: 160,
+                background: "var(--sr-bg-card)",
+                border: "1px solid var(--sr-border-subtle)",
+                borderRadius: "var(--sr-radius-md)",
+                boxShadow: "var(--sr-shadow-md)",
+                overflow: "hidden",
+              }}
+            >
+              {hasInventory && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(inventoryUrl); }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "transparent",
+                    border: "none",
+                    fontSize: 13,
+                    color: "var(--ink-700)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <Pencil size={13} strokeWidth={1.6} />
+                  Edit inventory
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: "transparent",
+                  border: "none",
+                  fontSize: 13,
+                  color: "var(--ink-400)",
+                  cursor: "not-allowed",
+                  textAlign: "left",
+                  opacity: 0.5,
+                }}
+              >
+                <Archive size={13} strokeWidth={1.6} />
+                Archive
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
