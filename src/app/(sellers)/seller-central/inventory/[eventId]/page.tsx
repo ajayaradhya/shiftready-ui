@@ -5,7 +5,8 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useInventory } from "@/hooks/use-inventory";
 import { useSaleContext } from "@/lib/sale-context";
 import { BundleCard } from "@/components/features/seller-central/bundle-card";
-import { ItemCardV2 } from "@/components/features/seller-central/item-card-v2";
+import { ItemCardV3 } from "@/components/features/seller-central/item-card-v3";
+import { AddItemDrawer } from "@/components/features/seller-central/add-item-drawer";
 import { InventoryActions } from "@/components/features/inventory/inventory-actions";
 import { SaleDetailsPanel } from "@/components/features/inventory/sale-details-panel";
 import {
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   publishSale, unpublishSale, triggerReestimation,
-  createBundle, deleteBundle, createItem, renameBundle,
+  createBundle, deleteBundle, renameBundle,
   archiveSale, deleteSale, republishSale,
 } from "@/lib/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
@@ -109,6 +110,7 @@ export default function SellerCentralInventoryPage() {
 
   const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [addItemDrawerBundleId, setAddItemDrawerBundleId] = useState<string | null>(null);
 
   const { summary, isProcessing, isPricing, isLoading, status, isLive, error } =
     useInventory(eventId);
@@ -129,11 +131,6 @@ export default function SellerCentralInventoryPage() {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       setSelectedBundleId(null);
     },
-  });
-
-  const addItemMutation = useMutation({
-    mutationFn: ({ bId, name }: { bId: string; name: string }) => createItem(eventId, bId, name),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
   });
 
   const renameBundleMutation = useMutation({
@@ -390,7 +387,7 @@ export default function SellerCentralInventoryPage() {
               onClick={() => setSelectedBundleId(selectedBundleId === bundle.id ? null : bundle.id)}
               onAddItem={() => {
                 setSelectedBundleId(bundle.id);
-                addItemMutation.mutate({ bId: bundle.id, name: "New Item" });
+                setAddItemDrawerBundleId(bundle.id);
               }}
               onDelete={() => delBundleMutation.mutate(bundle.id)}
               onRenameSubmit={(name) => renameBundleMutation.mutate({ bundleId: bundle.id, name })}
@@ -429,12 +426,13 @@ export default function SellerCentralInventoryPage() {
           {/* Items grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px]">
             {selectedBundle.items.map((item) => (
-              <ItemCardV2
+              <ItemCardV3
                 key={item.id}
                 eventId={eventId}
                 bundleId={selectedBundle.id}
                 item={item}
                 allBundles={summary?.bundles ?? []}
+                bundleIndex={summary?.bundles?.findIndex((b) => b.id === selectedBundle.id) ?? 0}
               />
             ))}
           </div>
@@ -480,6 +478,17 @@ export default function SellerCentralInventoryPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Add Item Drawer */}
+      {summary?.bundles && (
+        <AddItemDrawer
+          eventId={eventId}
+          bundles={summary.bundles}
+          defaultBundleId={addItemDrawerBundleId ?? (summary.bundles[0]?.id ?? "")}
+          open={!!addItemDrawerBundleId}
+          onClose={() => setAddItemDrawerBundleId(null)}
+        />
       )}
     </div>
   );

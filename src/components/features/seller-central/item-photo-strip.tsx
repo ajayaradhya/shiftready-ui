@@ -11,6 +11,7 @@ import {
   setItemImageCover,
   reorderItemImages,
 } from "@/lib/api";
+import { Lightbox } from "./lightbox";
 
 const MAX_TOTAL = 8;
 const THUMB_COUNT = 3;
@@ -20,9 +21,10 @@ interface ItemPhotoStripProps {
   bundleId: string;
   itemId: string;
   images: InventoryImage[];
+  noBleed?: boolean;
 }
 
-export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoStripProps) {
+export function ItemPhotoStrip({ eventId, bundleId, itemId, images, noBleed }: ItemPhotoStripProps) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -116,7 +118,7 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
     return (
       <div
         style={{
-          margin: "-20px -22px 16px",
+          margin: noBleed ? 0 : "-20px -22px 16px",
           borderBottom: "1px solid var(--sr-border-subtle)",
           padding: "20px 22px",
           display: "flex",
@@ -184,7 +186,7 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
     <>
       <div
         style={{
-          margin: "-20px -22px 16px",
+          margin: noBleed ? 0 : "-20px -22px 16px",
           borderBottom: "1px solid var(--sr-border-subtle)",
           padding: "12px 14px",
           display: "flex",
@@ -303,7 +305,7 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
 
       {/* Lightbox */}
       {lightboxIdx !== null && (
-        <ItemLightbox
+        <Lightbox
           images={sorted}
           initialIdx={lightboxIdx}
           onClose={() => setLightboxIdx(null)}
@@ -314,24 +316,6 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images }: ItemPhotoS
         />
       )}
     </>
-  );
-}
-
-function Spinner({ color = "var(--clay-500)" }: { color?: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        width: 11,
-        height: 11,
-        borderRadius: "50%",
-        border: `1.5px solid transparent`,
-        borderTopColor: color,
-        borderRightColor: color,
-        animation: "spin 0.7s linear infinite",
-        flexShrink: 0,
-      }}
-    />
   );
 }
 
@@ -495,179 +479,3 @@ function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCoverin
   );
 }
 
-interface LightboxProps {
-  images: InventoryImage[];
-  initialIdx: number;
-  onClose: () => void;
-  onDelete: (id: string) => Promise<void>;
-  onSetCover: (id: string) => Promise<void>;
-  deletingId: string | null;
-  coveringId: string | null;
-}
-
-function ItemLightbox({ images, initialIdx, onClose, onDelete, onSetCover, deletingId, coveringId }: LightboxProps) {
-  const [idx, setIdx] = useState(Math.min(initialIdx, images.length - 1));
-  const current = images[idx];
-  const isBusy = !!(deletingId || coveringId);
-
-  function prev() { if (!isBusy) setIdx((i) => Math.max(0, i - 1)); }
-  function next() { if (!isBusy) setIdx((i) => Math.min(images.length - 1, i + 1)); }
-
-  if (!current) return null;
-
-  return (
-    <div
-      role="dialog"
-      aria-modal
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(20,17,13,0.94)",
-        zIndex: 1000,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Toolbar */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 20px",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 11, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-          {idx + 1} / {images.length}
-        </span>
-        <div style={{ display: "flex", gap: 8 }}>
-          {!current.is_cover && (
-            <button
-              onClick={() => !isBusy && onSetCover(current.id)}
-              disabled={isBusy}
-              style={{
-                padding: "5px 12px",
-                borderRadius: "var(--sr-radius-sm)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "transparent",
-                color: "#fff",
-                fontFamily: "var(--sr-font-sans)",
-                fontSize: 12,
-                cursor: isBusy ? "default" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                opacity: isBusy ? 0.5 : 1,
-              }}
-            >
-              {coveringId === current.id ? <Spinner /> : <Star size={11} strokeWidth={1.5} />}
-              {coveringId === current.id ? "Setting…" : "Set as cover"}
-            </button>
-          )}
-          <button
-            onClick={() => { if (!isBusy) { onDelete(current.id); if (idx >= images.length - 1) setIdx(Math.max(0, idx - 1)); } }}
-            disabled={isBusy}
-            style={{
-              padding: "5px 12px",
-              borderRadius: "var(--sr-radius-sm)",
-              border: "1px solid rgba(220,80,60,0.4)",
-              background: "transparent",
-              color: "rgba(220,120,100,1)",
-              fontFamily: "var(--sr-font-sans)",
-              fontSize: 12,
-              cursor: isBusy ? "default" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              opacity: isBusy ? 0.5 : 1,
-            }}
-          >
-            {deletingId === current.id ? <Spinner color="rgba(220,120,100,1)" /> : null}
-            {deletingId === current.id ? "Removing…" : "Remove"}
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              border: "1px solid rgba(255,255,255,0.2)",
-              background: "transparent",
-              display: "grid",
-              placeItems: "center",
-              cursor: "pointer",
-              color: "#fff",
-            }}
-          >
-            <X size={14} strokeWidth={1.5} />
-          </button>
-        </div>
-      </div>
-
-      {/* Main image */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "0 48px", position: "relative" }}
-      >
-        {idx > 0 && (
-          <button onClick={prev} style={{ ...arrowStyle, left: 4 }}>‹</button>
-        )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={current.url ?? "/item-placeholder.svg"}
-          alt=""
-          style={{ maxWidth: "100%", maxHeight: "calc(100vh - 180px)", objectFit: "contain", borderRadius: "var(--sr-radius-lg)" }}
-        />
-        {idx < images.length - 1 && (
-          <button onClick={next} style={{ ...arrowStyle, right: 4 }}>›</button>
-        )}
-      </div>
-
-      {/* Thumbnail strip */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ display: "flex", gap: 8, padding: "12px 20px", justifyContent: "center", overflowX: "auto" }}
-      >
-        {images.map((img, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={img.id}
-            src={img.url ?? "/item-placeholder.svg"}
-            alt=""
-            onClick={() => setIdx(i)}
-            style={{
-              width: 52,
-              height: 52,
-              objectFit: "cover",
-              borderRadius: "var(--sr-radius-sm)",
-              cursor: "pointer",
-              border: i === idx ? "2px solid var(--clay-400)" : "2px solid transparent",
-              opacity: i === idx ? 1 : 0.55,
-              flexShrink: 0,
-              transition: "opacity 120ms, border-color 120ms",
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const arrowStyle: React.CSSProperties = {
-  position: "absolute",
-  top: "50%",
-  transform: "translateY(-50%)",
-  width: 40,
-  height: 40,
-  borderRadius: "50%",
-  border: "1px solid rgba(255,255,255,0.2)",
-  background: "rgba(255,255,255,0.08)",
-  color: "#fff",
-  fontSize: 22,
-  display: "grid",
-  placeItems: "center",
-  cursor: "pointer",
-};

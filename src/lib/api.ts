@@ -308,6 +308,37 @@ export async function createItem(
   );
 }
 
+export interface CreateItemFullPayload {
+  name: string;
+  brand?: string;
+  condition?: string;
+  actual_listing_price?: number;
+  actual_original_price?: number;
+  actual_year_of_purchase?: number;
+  dimensions?: string | null;
+  material?: string | null;
+  is_fragile?: boolean;
+  disassembly_required?: boolean;
+  description?: string | null;
+  category?: string | null;
+  quantity?: number | null;
+}
+
+export async function createItemFull(
+  eventId: string,
+  bundleId: string,
+  payload: CreateItemFullPayload
+): Promise<{ item_id: string }> {
+  return apiRequest<{ item_id: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
 export async function patchItem(
   eventId: string,
   bundleId: string,
