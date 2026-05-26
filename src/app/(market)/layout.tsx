@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { MarketSidebar } from "@/components/ui/market-sidebar";
-import { AppHeader } from "@/components/ui/app-header";
+import { ShellSidebar } from "@/components/shell/sidebar";
+import { ShellHeader } from "@/components/shell/header";
+import { BottomTabBar } from "@/components/shell/bottom-tab-bar";
 import { SaleContextProvider } from "@/lib/sale-context";
 
 export default function MarketLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <SaleContextProvider>
       <a
@@ -17,15 +15,16 @@ export default function MarketLayout({ children }: { children: React.ReactNode }
       >
         Skip to content
       </a>
-      <MarketSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <AppHeader onMenuClick={() => setSidebarOpen(true)} />
+      <ShellSidebar variant="market" />
+      <ShellHeader hasSidebar />
       <main
         id="main-content"
-        className="md:pl-[200px] min-h-screen relative"
-        style={{ paddingTop: 64, background: "var(--sr-bg-app)" }}
+        className="md:pl-[224px] min-h-screen relative pb-16 md:pb-0"
+        style={{ paddingTop: 48, background: "var(--sr-bg-app)" }}
       >
         {children}
       </main>
+      <BottomTabBar variant="market" />
     </SaleContextProvider>
   );
 }

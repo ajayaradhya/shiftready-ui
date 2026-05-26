@@ -1,14 +1,15 @@
 "use client";
 
-import { AppHeader } from "@/components/ui/app-header";
+import { ShellHeader } from "@/components/shell/header";
+import { SaleContextProvider } from "@/lib/sale-context";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <AppHeader />
-      <main style={{ paddingTop: 64, minHeight: "100vh", background: "var(--sr-bg-app)" }}>
+    <SaleContextProvider>
+      <ShellHeader hasSidebar={false} />
+      <main style={{ paddingTop: 48, minHeight: "100vh", background: "var(--sr-bg-app)" }}>
         {children}
       </main>
-    </>
+    </SaleContextProvider>
   );
 }

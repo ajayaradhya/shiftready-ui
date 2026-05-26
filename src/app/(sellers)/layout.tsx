@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { AppSidebar } from "@/components/ui/app-sidebar";
-import { AppHeader } from "@/components/ui/app-header";
+import { ShellSidebar } from "@/components/shell/sidebar";
+import { ShellHeader } from "@/components/shell/header";
+import { BottomTabBar } from "@/components/shell/bottom-tab-bar";
 import { SaleContextProvider } from "@/lib/sale-context";
 
 export default function SellersLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,15 +29,16 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
       >
         Skip to content
       </a>
-      {user && <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
-      {user && <AppHeader onMenuClick={() => setSidebarOpen(true)} />}
+      {user && <ShellSidebar variant="seller" />}
+      {user && <ShellHeader hasSidebar />}
       <main
         id="main-content"
-        className="md:pl-[200px] min-h-screen relative"
-        style={{ paddingTop: 64, background: "var(--sr-bg-app)" }}
+        className="md:pl-[224px] min-h-screen relative pb-16 md:pb-0"
+        style={{ paddingTop: 48, background: "var(--sr-bg-app)" }}
       >
         {children}
       </main>
+      {user && <BottomTabBar variant="seller" />}
     </SaleContextProvider>
   );
 }
