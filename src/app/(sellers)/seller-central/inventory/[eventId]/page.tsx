@@ -117,6 +117,7 @@ export default function SellerCentralInventoryPage() {
     useInventory(eventId);
   const activeMutations = useIsMutating();
 
+  useEffect(() => { document.title = "Inventory — ShiftReady"; }, []);
   useEffect(() => {
     if (error) toast.error("Could not reach the server. Retrying…");
   }, [error]);

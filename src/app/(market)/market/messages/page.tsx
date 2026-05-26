@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { MessageSquare, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,6 +8,7 @@ import { ConversationList } from "@/components/features/messages/ConversationLis
 
 export default function MarketMessagesPage() {
   const { user, loading } = useAuth();
+  useEffect(() => { document.title = "Messages — ShiftReady"; }, []);
 
   if (loading) {
     return (

@@ -19,6 +19,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const { profile } = useUsername();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -176,12 +177,13 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           padding: "0 24px",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: 340,
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = searchQuery.trim();
+            if (q) router.push(`/market?q=${encodeURIComponent(q)}`);
           }}
+          style={{ position: "relative", width: "100%", maxWidth: 340 }}
         >
           <Search
             size={14}
@@ -198,7 +200,8 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           <input
             type="search"
             placeholder="Search items, sales…"
-            onChange={() => {}}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: "100%",
               height: 36,
@@ -213,7 +216,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
               outline: "none",
             }}
           />
-        </div>
+        </form>
       </div>
 
       {/* Spacer for mobile (no search) */}

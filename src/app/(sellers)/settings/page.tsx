@@ -1092,6 +1092,7 @@ type SectionId = typeof NAV_SECTIONS[number]["id"];
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeId, setActiveId] = useState<SectionId>("profile");
+  useEffect(() => { document.title = "Settings — ShiftReady"; }, []);
 
   const sections: Record<SectionId, React.ReactNode> = {
     profile:       <ProfileSection userEmail={user?.email}/>,

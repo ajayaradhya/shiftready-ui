@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { ShoppingBag } from "lucide-react";
 
 export default function PurchasesPage() {
+  useEffect(() => { document.title = "Purchases — ShiftReady"; }, []);
   return (
     <div style={{ padding: "40px 32px", maxWidth: 800, margin: "0 auto" }}>
       <h1

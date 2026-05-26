@@ -227,7 +227,10 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
 
 export default function BrowsePage() {
   useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
-  const [heroDismissed, setHeroDismissed] = useState(false);
+  const [heroDismissed, setHeroDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sr_seller_hero_dismissed") === "1";
+  });
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const {
@@ -238,6 +241,12 @@ export default function BrowsePage() {
     items, itemCount, itemsLoading, itemsError,
     sales, salesLoading,
   } = useLanding();
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) handleSearchChange(q);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -258,7 +267,7 @@ export default function BrowsePage() {
         {/* ── SELLER HERO ── */}
         {!heroDismissed && (
           <section className={s.sellerHero} aria-label="Sell with ShiftReady">
-            <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => setHeroDismissed(true)}>
+            <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => { setHeroDismissed(true); localStorage.setItem("sr_seller_hero_dismissed", "1"); }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
                 <path d="m4 4 8 8M12 4l-8 8" />
               </svg>

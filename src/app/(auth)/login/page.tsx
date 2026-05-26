@@ -237,9 +237,9 @@ export default function LoginPage() {
               border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, overflow: "hidden",
             }}>
               {[
-                { val: "12,400+", label: "Items listed today" },
-                { val: "4.9 ★", label: "Avg seller rating" },
-                { val: "$2.1M", label: "Items sold this month" },
+                { val: "AI-priced", label: "Every item, automatically" },
+                { val: "< 5 min", label: "From walkthrough to listing" },
+                { val: "Free", label: "To start, always" },
               ].map((s, i) => (
                 <div key={i} style={{
                   flex: 1, display: "flex", flexDirection: "column", gap: 3, padding: "16px 20px",

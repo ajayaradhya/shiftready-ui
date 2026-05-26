@@ -69,7 +69,7 @@ export function SuburbChip({ value, onChange }: Props) {
           <MapPin size={13} />
         </span>
         <span className={ls.suburbLabel}>Suburb:</span>
-        <span className={ls.suburbValue}>{value || "All Sydney"}</span>
+        <span className={ls.suburbValue}>{value || "Anywhere"}</span>
         <span className={s.caret}><ChevronDown /></span>
       </button>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, LogIn, ChevronRight, Package, X } from "lucide-react";
@@ -319,6 +319,7 @@ export default function SavedPage() {
   const { data, isLoading, refetch } = useSaved();
   const invalidateSaved = useInvalidateSaved();
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  useEffect(() => { document.title = "Saved — ShiftReady"; }, []);
 
   const handleRemoveSale = async (eventId: string) => {
     setRemoving((s) => new Set(s).add(eventId));
