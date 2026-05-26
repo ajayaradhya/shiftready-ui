@@ -94,7 +94,7 @@ function CapturePageContent() {
             ? {
                 ...i,
                 name: result.name,
-                brand: result.brand,
+                brand: result.brand ?? undefined,
                 predicted_original_price: result.predicted_original_price,
                 gcs_uri: result.gcs_uri,
                 isLoading: false,
