@@ -60,7 +60,7 @@ export function FilterChip<T extends string>({
   }, [open]);
 
   const activeLabel = value ? options.find(o => o.value === value)?.label : null;
-  const isActive = !!value;
+  const isActive = !!value && !prefixLabel;
 
   const chipClass = [s.chip, isActive ? s.chipActive : "", open ? s.chipOpen : ""]
     .filter(Boolean).join(" ");

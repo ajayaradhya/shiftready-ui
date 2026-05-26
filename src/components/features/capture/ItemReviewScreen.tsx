@@ -7,6 +7,8 @@ interface Props {
   items: CapturedItem[];
   isUploading: boolean;
   uploadError: string | null;
+  saleTitle: string;
+  onSaleTitleChange: (v: string) => void;
   onRemove: (id: string) => void;
   onProcess: () => void;
   onBack: () => void;
@@ -16,6 +18,8 @@ export function ItemReviewScreen({
   items,
   isUploading,
   uploadError,
+  saleTitle,
+  onSaleTitleChange,
   onRemove,
   onProcess,
   onBack,
@@ -292,6 +296,48 @@ export function ItemReviewScreen({
           gap: 12,
         }}
       >
+        {/* Optional sale title */}
+        <div>
+          <label
+            htmlFor="sale-title-input"
+            style={{
+              display: "block",
+              fontSize: 11,
+              fontFamily: "var(--sr-font-mono)",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "var(--sr-text-muted)",
+              marginBottom: 6,
+            }}
+          >
+            Sale name <span style={{ color: "var(--cream-400)", textTransform: "none", letterSpacing: 0, fontFamily: "var(--sr-font-sans)" }}>(optional)</span>
+          </label>
+          <input
+            id="sale-title-input"
+            type="text"
+            value={saleTitle}
+            onChange={(e) => onSaleTitleChange(e.target.value)}
+            placeholder="e.g. Newtown 3BR Moving Sale"
+            disabled={isUploading}
+            style={{
+              width: "100%",
+              height: 42,
+              padding: "0 12px",
+              borderRadius: "var(--sr-radius-md)",
+              border: "1px solid var(--sr-border-subtle)",
+              background: "var(--sr-bg-app)",
+              fontSize: 13,
+              color: "var(--sr-text-primary)",
+              fontFamily: "var(--sr-font-sans)",
+              outline: "none",
+              boxSizing: "border-box",
+              opacity: isUploading ? 0.5 : 1,
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "var(--clay-400)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--sr-border-subtle)"; }}
+          />
+        </div>
+
         {uploadError && (
           <div
             style={{

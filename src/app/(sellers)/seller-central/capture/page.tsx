@@ -12,7 +12,7 @@ import { ItemReviewScreen } from "@/components/features/capture/ItemReviewScreen
 import { ProcessingScreen } from "@/components/features/create/processing-screen";
 import { useSaleContext } from "@/lib/sale-context";
 import { dataUrlToFile } from "@/lib/capture/capture-types";
-import { initCaptureSale, captureFrame, finalizeCaptureV2 } from "@/lib/api";
+import { initCaptureSale, captureFrame, finalizeCaptureV2, updateSale } from "@/lib/api";
 import type { CapturePageState, CapturedItem, PendingDetection } from "@/lib/capture/capture-types";
 
 const CaptureStage = dynamic(
@@ -39,6 +39,7 @@ function CapturePageContent() {
   const [processingEventId, setProcessingEventId] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(appendTo ?? null);
   const [toasts, setToasts] = useState<import("@/lib/capture/capture-types").CaptureToast[]>([]);
+  const [saleTitle, setSaleTitle] = useState("");
 
   const eventIdRef = useRef<string | null>(appendTo ?? null);
   const confirmedItemsRef = useRef<CapturedItem[]>([]);
@@ -183,6 +184,11 @@ function CapturePageContent() {
           gcs_uri: i.gcs_uri!,
         }))
       );
+
+      if (saleTitle.trim()) {
+        await updateSale(eid, { title: saleTitle.trim() }).catch(() => {});
+      }
+
       setProcessingEventId(eid);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
@@ -245,6 +251,8 @@ function CapturePageContent() {
           items={confirmedItems}
           isUploading={isUploading}
           uploadError={uploadError}
+          saleTitle={saleTitle}
+          onSaleTitleChange={setSaleTitle}
           onRemove={handleRemoveById}
           onProcess={handleProcess}
           onBack={handleBackToCapture}
