@@ -10,6 +10,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUnreadCount } from "@/hooks/use-conversations";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type NavItemDef = {
   icon: React.ComponentType<{ size: number; strokeWidth: number }>;
@@ -59,11 +60,13 @@ function NavItem({
   const active = isActive(item.href, pathname);
   const unread = item.showUnread ? unreadCount : 0;
 
-  return (
+  const linkEl = (
     <Link
       href={item.disabled ? "#" : item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
+      aria-disabled={item.disabled ? "true" : undefined}
+      tabIndex={item.disabled ? -1 : undefined}
       className={cn(
         "group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13px] transition-all duration-[140ms] no-underline select-none w-full",
         active
@@ -82,7 +85,7 @@ function NavItem({
       <item.icon size={16} strokeWidth={active ? 2 : 1.5} />
       <span className="flex-1 leading-none">{item.label}</span>
       {unread > 0 && (
-        <span className="bg-[var(--clay-500)] text-white rounded-[10px] px-1.5 py-px text-[10px] font-bold leading-[14px]">
+        <span className="bg-[var(--clay-500)] text-white rounded-[10px] px-1.5 py-px text-[10px] font-bold leading-[14px]" aria-label={`${unread} unread`}>
           {unread > 99 ? "99+" : unread}
         </span>
       )}
@@ -91,6 +94,17 @@ function NavItem({
       )}
     </Link>
   );
+
+  if (item.disabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{linkEl}</TooltipTrigger>
+        <TooltipContent side="right">Coming soon</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return linkEl;
 }
 
 interface ShellSidebarProps {

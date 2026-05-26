@@ -7,6 +7,7 @@ import {
   Package, ArrowRight, Clock, Search, X,
 } from "lucide-react";
 import { Command } from "cmdk";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { useSalesList } from "@/hooks/use-sales";
 import { useAuth } from "@/hooks/use-auth";
@@ -114,33 +115,29 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const hasRecent = !hasQuery && recent.length > 0;
 
   return (
-    <>
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-[2px]"
-          onClick={() => onOpenChange(false)}
-          aria-hidden
-        />
-      )}
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        {/* Backdrop */}
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
 
-      {/* Palette */}
-      <div
-        role="dialog"
-        aria-label="Command palette"
-        aria-modal
-        className={cn(
-          "fixed z-[100] top-[18%] left-1/2 -translate-x-1/2 w-full max-w-[580px] mx-4",
-          "rounded-2xl shadow-2xl overflow-hidden",
-          "transition-all duration-150",
-          open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
-        )}
-        style={{
-          background: "var(--sr-bg-card)",
-          border: "1px solid var(--sr-border-subtle)",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)",
-        }}
-      >
+        {/* Palette */}
+        <DialogPrimitive.Content
+          aria-label="Command palette"
+          onOpenAutoFocus={(e) => { e.preventDefault(); setTimeout(() => inputRef.current?.focus(), 10); }}
+          className={cn(
+            "fixed z-[100] top-[18%] left-1/2 -translate-x-1/2 w-full max-w-[580px] mx-4",
+            "rounded-2xl shadow-2xl overflow-hidden focus:outline-none",
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+          )}
+          style={{
+            background: "var(--sr-bg-card)",
+            border: "1px solid var(--sr-border-subtle)",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)",
+          }}
+        >
+          <DialogPrimitive.Title className="sr-only">Command palette</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">Search pages, sales, and actions. Use arrow keys to navigate, Enter to select, Escape to close.</DialogPrimitive.Description>
         <Command label="Command palette" shouldFilter={hasQuery} loop>
           {/* Search row */}
           <div
@@ -276,8 +273,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <span><kbd style={kbdStyle}>esc</kbd> close</span>
           </div>
         </Command>
-      </div>
-    </>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
 

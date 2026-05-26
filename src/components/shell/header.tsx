@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 import { useNotifUnreadCount } from "@/hooks/use-notifications";
 import { useSaleContext } from "@/lib/sale-context";
 import { cn } from "@/lib/utils";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationsPanel } from "./notifications-panel";
 import { CommandPalette } from "./command-palette";
+import { ShortcutsCheatsheet } from "./shortcuts-cheatsheet";
 
 interface ShellHeaderProps {
   /** When true, desktop header is offset left by sidebar width (224px) */
@@ -19,25 +21,62 @@ interface ShellHeaderProps {
 
 export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { sale, isProcessing } = useSaleContext();
   const { data: notifCount } = useNotifUnreadCount();
   const unreadNotifs = notifCount?.unread_count ?? 0;
   const [notifOpen, setNotifOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const gPending = useRef(false);
+  const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openPalette = useCallback(() => setPaletteOpen(true), []);
 
   useEffect(() => {
+    const isInputFocused = () => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el) return false;
+      const tag = el.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
+    };
+
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setPaletteOpen((v) => !v);
+        return;
       }
-      if (e.key === "Escape") setPaletteOpen(false);
+
+      if (isInputFocused()) return;
+
+      if (e.key === "?") {
+        e.preventDefault();
+        setCheatsheetOpen((v) => !v);
+        return;
+      }
+
+      if (gPending.current) {
+        gPending.current = false;
+        if (gTimer.current) clearTimeout(gTimer.current);
+        if (e.key === "s") { e.preventDefault(); router.push("/seller-central"); }
+        else if (e.key === "m") { e.preventDefault(); router.push("/market"); }
+        else if (e.key === "i") { e.preventDefault(); router.push("/seller-central"); }
+        return;
+      }
+
+      if (e.key === "g" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        gPending.current = true;
+        gTimer.current = setTimeout(() => { gPending.current = false; }, 500);
+        return;
+      }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      if (gTimer.current) clearTimeout(gTimer.current);
+    };
+  }, [router]);
 
   return (
     <>
@@ -160,6 +199,28 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
           </kbd>
         </button>
 
+        {/* Shortcuts hint button (desktop) */}
+        <button
+          onClick={() => setCheatsheetOpen(true)}
+          aria-label="Keyboard shortcuts (?)"
+          className="hidden md:grid w-7 h-7 rounded-full place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent text-[12px] font-bold"
+          style={{
+            color: "var(--ink-300)",
+            border: "1.5px solid var(--sr-border-subtle)",
+            fontFamily: "var(--sr-font-mono)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--ink-600)";
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--sr-border-default)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--ink-300)";
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--sr-border-subtle)";
+          }}
+        >
+          ?
+        </button>
+
         {/* Notification bell */}
         <button
           onClick={() => setNotifOpen(true)}
@@ -225,6 +286,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
 
       <NotificationsPanel open={notifOpen} onOpenChange={setNotifOpen} />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <ShortcutsCheatsheet open={cheatsheetOpen} onOpenChange={setCheatsheetOpen} />
     </>
   );
 }

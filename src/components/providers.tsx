@@ -9,6 +9,7 @@ import {
 import { type ReactNode, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { AuthProvider } from "@/contexts/auth-context";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -38,6 +39,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={400}>
       <AuthProvider>
         {children}
         <Toaster
@@ -52,6 +54,7 @@ export default function Providers({ children }: { children: ReactNode }) {
           }}
         />
       </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
