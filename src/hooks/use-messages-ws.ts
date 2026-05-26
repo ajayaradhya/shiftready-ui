@@ -59,12 +59,14 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
           qc.invalidateQueries({ queryKey: ["conversations"] });
           qc.invalidateQueries({ queryKey: ["unread-count"] });
         } else if (payload.type === "offer.updated") {
-          // Refresh offer card states by invalidating messages
           const convId: string = payload.conversationId;
           if (convId === activeConvId) {
             qc.invalidateQueries({ queryKey: ["messages", convId] });
           }
           qc.invalidateQueries({ queryKey: ["conversations"] });
+        } else if (payload.type === "notification.new") {
+          qc.invalidateQueries({ queryKey: ["notifications"] });
+          qc.invalidateQueries({ queryKey: ["notif-unread-count"] });
         }
       } catch {
         // ignore parse errors

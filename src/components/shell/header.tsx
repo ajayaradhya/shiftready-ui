@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useNotifUnreadCount } from "@/hooks/use-notifications";
 import { useSaleContext } from "@/lib/sale-context";
 import { cn } from "@/lib/utils";
 import { ProfileMenu } from "./profile-menu";
@@ -19,6 +20,8 @@ interface ShellHeaderProps {
 export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
   const { user } = useAuth();
   const { sale, isProcessing } = useSaleContext();
+  const { data: notifCount } = useNotifUnreadCount();
+  const unreadNotifs = notifCount?.unread_count ?? 0;
   const [notifOpen, setNotifOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -160,8 +163,8 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
         {/* Notification bell */}
         <button
           onClick={() => setNotifOpen(true)}
-          aria-label="Notifications"
-          className="w-8 h-8 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
+          aria-label={`Notifications${unreadNotifs > 0 ? ` (${unreadNotifs} unread)` : ""}`}
+          className="relative w-8 h-8 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
           style={{ color: "var(--ink-400)" }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.color = "var(--ink-700)";
@@ -173,6 +176,21 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
           }}
         >
           <Bell size={17} strokeWidth={1.5} />
+          {unreadNotifs > 0 && (
+            <span
+              className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-white leading-none"
+              style={{
+                background: "var(--clay-500)",
+                fontSize: 9,
+                fontWeight: 700,
+                fontFamily: "var(--sr-font-sans)",
+                padding: "0 3px",
+              }}
+              aria-hidden
+            >
+              {unreadNotifs > 99 ? "99+" : unreadNotifs}
+            </span>
+          )}
         </button>
 
         {/* Profile or auth */}

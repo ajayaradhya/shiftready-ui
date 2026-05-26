@@ -18,6 +18,8 @@ import type {
   NotifPrefs,
   SellerPrefs,
   PrivacyPrefs,
+  Notification,
+  UnreadNotifCount,
   MarkSoldPayload,
   MarkBundleSoldPayload,
   TransactionRecord,
@@ -895,4 +897,22 @@ export async function withdrawSale(
 
 export async function listTransactions(eventId: string): Promise<TransactionRecord[]> {
   return apiRequest<TransactionRecord[]>(`${API_BASE}/sales/${eventId}/transactions`);
+}
+
+// --- Notifications ---
+
+export async function getNotifications(): Promise<Notification[]> {
+  return apiRequest<Notification[]>(`${API_BASE}/notifications`);
+}
+
+export async function getNotifUnreadCount(): Promise<UnreadNotifCount> {
+  return apiRequest<UnreadNotifCount>(`${API_BASE}/notifications/unread-count`);
+}
+
+export async function markNotifRead(notifId: string): Promise<void> {
+  await apiRequest<Record<string, never>>(`${API_BASE}/notifications/${notifId}/read`, { method: "POST" });
+}
+
+export async function markAllNotifsRead(): Promise<void> {
+  await apiRequest<Record<string, never>>(`${API_BASE}/notifications/mark-all-read`, { method: "POST" });
 }

@@ -1,3 +1,21 @@
+// --- Notifications ---
+
+export type NotifType = "message.new" | "offer.new" | "offer.accepted" | "offer.countered" | "sale.ready";
+
+export interface Notification {
+  id: string;
+  type: NotifType;
+  title: string;
+  body: string;
+  link: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface UnreadNotifCount {
+  unread_count: number;
+}
+
 // --- Marketplace & Dashboard types ---
 
 export interface ActiveSaleSummary {
