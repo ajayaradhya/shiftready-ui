@@ -266,10 +266,29 @@ export default function SellerCentralInventoryPage() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
           {/* Title */}
-          <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: 0 }}>
-            {titleMain}{" "}
-            <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{titleAccent}</em>
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: 0 }}>
+              {titleMain}{" "}
+              <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{titleAccent}</em>
+            </h2>
+            {!summary?.title && status === "ready_for_review" && (
+              <button
+                onClick={() => setDetailsOpen(true)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "4px 10px", borderRadius: "var(--sr-radius-sm)",
+                  fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  border: "1px solid var(--honey-200)", background: "var(--honey-50)",
+                  color: "var(--honey-700)", transition: "all 120ms", flexShrink: 0,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--honey-300)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--honey-200)"; }}
+              >
+                <Pencil size={10} strokeWidth={2} />
+                Name your sale
+              </button>
+            )}
+          </div>
 
           {/* Right: Edit details + Preview listing + lifecycle */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>

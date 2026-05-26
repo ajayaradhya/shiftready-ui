@@ -19,32 +19,6 @@ function isItemActive(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-function UnreadBadge({ count }: { count: number }) {
-  if (count <= 0) return null;
-  return (
-    <span
-      style={{
-        position: "absolute",
-        top: 4,
-        right: 4,
-        minWidth: 14,
-        height: 14,
-        background: "var(--clay-500)",
-        color: "#fff",
-        borderRadius: 7,
-        fontSize: 8,
-        fontWeight: 700,
-        display: "grid",
-        placeItems: "center",
-        padding: "0 3px",
-        lineHeight: 1,
-      }}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
-
 function NavItem({
   icon: Icon,
   label,
@@ -69,14 +43,14 @@ function NavItem({
       style={{
         position: "relative",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         alignItems: "center",
-        gap: 5,
-        padding: "10px 8px",
-        borderRadius: "var(--sr-radius-lg)",
+        gap: 10,
+        padding: "9px 14px",
+        borderRadius: "var(--sr-radius-md)",
         textDecoration: "none",
         transition: "all 140ms",
-        background: "transparent",
+        background: active ? "var(--clay-50)" : "transparent",
         color: active ? "var(--clay-600)" : "var(--ink-400)",
         width: "100%",
         cursor: "pointer",
@@ -94,20 +68,33 @@ function NavItem({
         }
       }}
     >
-      <Icon size={18} strokeWidth={active ? 2 : 1.5} />
-      {unreadCount !== undefined && <UnreadBadge count={unreadCount} />}
+      <Icon size={17} strokeWidth={active ? 2 : 1.5} />
       <span
         style={{
           fontFamily: "var(--sr-font-sans)",
-          fontSize: 9,
+          fontSize: 13,
           fontWeight: active ? 600 : 500,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
           lineHeight: 1,
+          flex: 1,
         }}
       >
         {label}
       </span>
+      {unreadCount !== undefined && unreadCount > 0 && (
+        <span
+          style={{
+            background: "var(--clay-500)",
+            color: "#fff",
+            borderRadius: 10,
+            padding: "1px 6px",
+            fontSize: 10,
+            fontWeight: 700,
+            lineHeight: "14px",
+          }}
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
     </Link>
   );
 }
@@ -124,7 +111,7 @@ export function MarketSidebar({ open, onClose }: MarketSidebarProps) {
 
   return (
     <>
-      {/* Desktop rail */}
+      {/* Desktop sidebar */}
       <nav
         aria-label="Marketplace navigation"
         className="hidden md:flex"
@@ -133,14 +120,13 @@ export function MarketSidebar({ open, onClose }: MarketSidebarProps) {
           left: 0,
           top: 0,
           bottom: 0,
-          width: 72,
+          width: 200,
           flexDirection: "column",
-          alignItems: "center",
-          paddingTop: 80,
+          paddingTop: 72,
           paddingBottom: 24,
           paddingLeft: 8,
           paddingRight: 8,
-          gap: 4,
+          gap: 2,
           background: "var(--sr-bg-card)",
           borderRight: "1px solid var(--sr-border-subtle)",
           zIndex: 40,
@@ -249,11 +235,10 @@ export function MarketSidebar({ open, onClose }: MarketSidebarProps) {
                     }}
                   >
                     <item.icon size={18} strokeWidth={active ? 2 : 1.5} aria-hidden />
-                    <span>{item.label}</span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
                     {item.href === "/market/messages" && unreadCount > 0 && (
                       <span
                         style={{
-                          marginLeft: "auto",
                           background: "var(--clay-500)",
                           color: "#fff",
                           borderRadius: 10,

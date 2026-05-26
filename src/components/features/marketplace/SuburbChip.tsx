@@ -58,6 +58,12 @@ export function SuburbChip({ value, onChange }: Props) {
     ? SYDNEY_SUBURBS_UNIQUE.filter(sub => sub.toLowerCase().includes(search.toLowerCase()))
     : SYDNEY_SUBURBS_UNIQUE;
 
+  const searchTrimmed = search.trim();
+  const exactMatch = SYDNEY_SUBURBS_UNIQUE.some(
+    sub => sub.toLowerCase() === searchTrimmed.toLowerCase()
+  );
+  const showCustomOption = searchTrimmed.length >= 2 && !exactMatch;
+
   const isActive = !!value;
   const chipClass = [s.chip, ls.suburbChip, isActive ? s.chipActive : "", open ? s.chipOpen : ""]
     .filter(Boolean).join(" ");
@@ -92,9 +98,20 @@ export function SuburbChip({ value, onChange }: Props) {
               className={`${s.option} ${!value ? s.optionSelected : ""}`}
               onClick={() => { onChange(""); setOpen(false); }}
             >
-              <span>All Sydney</span>
+              <span>Anywhere</span>
               {!value && <span className={s.check}><CheckIcon /></span>}
             </li>
+            {showCustomOption && (
+              <li
+                role="option"
+                aria-selected={value === searchTrimmed}
+                className={`${s.option} ${value === searchTrimmed ? s.optionSelected : ""}`}
+                onClick={() => { onChange(searchTrimmed); setOpen(false); }}
+              >
+                <span>Use &ldquo;{searchTrimmed}&rdquo;</span>
+                {value === searchTrimmed && <span className={s.check}><CheckIcon /></span>}
+              </li>
+            )}
             {filtered.map(sub => {
               const selected = value === sub;
               return (

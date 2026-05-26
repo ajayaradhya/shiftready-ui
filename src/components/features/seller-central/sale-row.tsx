@@ -56,7 +56,7 @@ export function SaleRow({ sale }: SaleRowProps) {
   const hasInventory = sale.status !== "pending_upload" && sale.status !== "processing";
   const previews = (sale.preview_images ?? []).slice(0, 4);
 
-  const inventoryUrl = `/seller-central/inventory/${sale.id}?title=${encodeURIComponent(sale.title || [sale.suburb, sale.state].filter(Boolean).join(", "))}`;
+  const inventoryUrl = `/seller-central/inventory/${sale.id}?title=${encodeURIComponent(sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Your Moving Sale"))}`;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -153,7 +153,7 @@ export function SaleRow({ sale }: SaleRowProps) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)" }}>
-            {sale.title || [sale.suburb, sale.state].filter(Boolean).join(", ") || "Untitled Sale"}
+            {sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Your Moving Sale")}
           </span>
           <span
             style={{

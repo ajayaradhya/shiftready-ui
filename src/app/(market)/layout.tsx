@@ -21,7 +21,7 @@ export default function MarketLayout({ children }: { children: React.ReactNode }
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
       <main
         id="main-content"
-        className="md:pl-[72px] min-h-screen relative"
+        className="md:pl-[200px] min-h-screen relative"
         style={{ paddingTop: 64, background: "var(--sr-bg-app)" }}
       >
         {children}

@@ -3,11 +3,14 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { Package } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Bell, Package } from "lucide-react";
+import { toast } from "sonner";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
+import { useAuth } from "@/hooks/use-auth";
+import { useSalesList } from "@/hooks/use-sales";
 import { FilterChip } from "@/components/features/marketplace/FilterChip";
 import { SuburbChip } from "@/components/features/marketplace/SuburbChip";
 import {
@@ -84,13 +87,26 @@ function SaleSkeleton() {
   );
 }
 
-function ItemCard({ item, index, isFav, onToggleFav }: {
+function ItemCard({ item, index, isFav, onToggleFav, isLoggedIn }: {
   item: MarketplaceItem;
   index: number;
   isFav: boolean;
   onToggleFav: (id: string, e: React.MouseEvent) => void;
+  isLoggedIn: boolean;
 }) {
   const v = variantForIndex(index);
+  const router = useRouter();
+
+  const handleExpressInterest = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isLoggedIn) {
+      router.push(`/market/messages?eventId=${item.eventId}&itemId=${item.id}`);
+    } else {
+      router.push(`/login?next=${encodeURIComponent(`/market/messages?eventId=${item.eventId}&itemId=${item.id}`)}`);
+    }
+  };
+
   return (
     <Link href={`/market/sale/${item.eventId}`} style={{ textDecoration: "none" }}>
       <article className={s.item}>
@@ -133,6 +149,35 @@ function ItemCard({ item, index, isFav, onToggleFav }: {
               <span>from <span className={s.itemSellerName}>{item.bundleName}</span> moving sale</span>
             </div>
           )}
+          <button
+            onClick={handleExpressInterest}
+            style={{
+              marginTop: 10,
+              width: "100%",
+              padding: "7px 12px",
+              borderRadius: "var(--sr-radius-md)",
+              border: "1px solid var(--sr-border-default)",
+              background: "var(--sr-bg-app)",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--clay-600)",
+              fontFamily: "var(--sr-font-sans)",
+              cursor: "pointer",
+              textAlign: "center",
+              transition: "background 120ms, border-color 120ms",
+              letterSpacing: "0.01em",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--clay-50)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-300)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--sr-bg-app)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--sr-border-default)";
+            }}
+          >
+            Express Interest
+          </button>
         </div>
       </article>
     </Link>
@@ -213,15 +258,51 @@ function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
 }
 
 function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
+  const handleNotify = () => {
+    const key = "sr_notify_subscribed";
+    if (localStorage.getItem(key)) {
+      toast("You're already on the list — we'll let you know when new sales go live.");
+    } else {
+      localStorage.setItem(key, "1");
+      toast.success("You're in! We'll notify you when new sales go live in your area.");
+    }
+  };
+
   return (
-    <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 0" }}>
+    <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 24px" }}>
       <Package size={40} style={{ margin: "0 auto 16px", color: "var(--ink-300)" }} />
       <p style={{ fontSize: 14, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-400)" }}>
         No items found
       </p>
       <p style={{ fontSize: 13, color: "var(--ink-300)", marginTop: 8 }}>
-        {hasSearch ? "Try a different search or suburb." : "Check back soon - new sales added regularly."}
+        {hasSearch ? "Try a different search or suburb." : "No items listed yet — new sales go live regularly."}
       </p>
+      {!hasSearch && (
+        <button
+          onClick={handleNotify}
+          style={{
+            marginTop: 20,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "9px 18px",
+            borderRadius: "var(--sr-radius-md)",
+            border: "1px solid var(--sr-border-default)",
+            background: "var(--sr-bg-card)",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--ink-600)",
+            fontFamily: "var(--sr-font-sans)",
+            cursor: "pointer",
+            transition: "background 120ms",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sr-bg-card)"; }}
+        >
+          <Bell size={14} strokeWidth={1.5} />
+          Notify me when sales go live
+        </button>
+      )}
     </div>
   );
 }
@@ -229,6 +310,9 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
 function BrowsePageContent() {
   useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const { data: mySales } = useSalesList();
+  const hasActiveSales = (mySales?.length ?? 0) > 0;
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sr_seller_hero_dismissed") === "1";
@@ -267,7 +351,7 @@ function BrowsePageContent() {
       <main className={s.container}>
 
         {/* ── SELLER HERO ── */}
-        {!heroDismissed && (
+        {!heroDismissed && !(user && hasActiveSales) && (
           <section className={s.sellerHero} aria-label="Sell with ShiftReady">
             <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => { setHeroDismissed(true); localStorage.setItem("sr_seller_hero_dismissed", "1"); }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
@@ -360,6 +444,7 @@ function BrowsePageContent() {
                     index={i}
                     isFav={favorites.has(item.id)}
                     onToggleFav={toggleFav}
+                    isLoggedIn={!!user}
                   />
                 ))
             }

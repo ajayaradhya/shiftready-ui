@@ -128,7 +128,7 @@ export default function LoginPage() {
     setServerError(null);
     try {
       await signIn(data.email, data.password);
-      router.push("/create");
+      router.push("/seller-central");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Sign in failed");
     }
@@ -138,7 +138,7 @@ export default function LoginPage() {
     setServerError(null);
     try {
       await registerUser(data.name, data.email, data.password);
-      router.push("/create");
+      router.push("/seller-central");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Registration failed");
     }
@@ -149,7 +149,7 @@ export default function LoginPage() {
     setServerError(null);
     try {
       await signInWithGoogle();
-      router.push("/create");
+      router.push("/seller-central");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Google sign in failed");
     } finally {

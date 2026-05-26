@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   stepActive: number;
-  stepLabel: string;
+  stepLabel?: string;
 }
 
-export function StepHeader({ stepActive, stepLabel }: Props) {
+export function StepHeader({ stepActive }: Props) {
   const router = useRouter();
 
   return (
@@ -54,8 +54,23 @@ export function StepHeader({ stepActive, stepLabel }: Props) {
 
       <div style={{ flex: 1 }} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--sr-text-muted)" }}>
-        <span>{stepLabel}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="hidden sm:flex" style={{ alignItems: "center", gap: 6, fontSize: 11, color: "var(--sr-text-muted)" }}>
+          {["Add items", "Review", "Set details", "Publish"].map((name, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontFamily: "var(--sr-font-mono)",
+                letterSpacing: "0.04em",
+                fontWeight: i === stepActive ? 700 : 400,
+                color: i === stepActive ? "var(--clay-600)" : i < stepActive ? "var(--ink-400)" : "var(--cream-400)",
+                textDecoration: i < stepActive ? "line-through" : "none",
+              }}>
+                {name}
+              </span>
+              {i < 3 && <span style={{ color: "var(--cream-300)" }}>›</span>}
+            </span>
+          ))}
+        </div>
         <div style={{ display: "flex", gap: 4 }}>
           {[0, 1, 2, 3].map(i => (
             <span
