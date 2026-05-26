@@ -483,9 +483,26 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
               </span>
             )}
           </div>
-          <button onClick={handleSaveUsername} disabled={!canSaveUsername} className="s-btn-primary">
-            {isUpdating ? "Saving…" : "Save username"}
-          </button>
+          {!canSaveUsername ? (
+            <span
+              title={
+                usernameInput.length < 4 ? "Username must be at least 4 characters" :
+                !/^[a-zA-Z]/.test(usernameInput) ? "Username must start with a letter" :
+                usernameInput === profile?.username ? "Same as your current username" :
+                available === false ? "That username is already taken" :
+                `You can change your username again on ${new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}`
+              }
+              style={{ cursor: "not-allowed" }}
+            >
+              <button onClick={handleSaveUsername} disabled className="s-btn-primary" style={{ pointerEvents: "none" }}>
+                {isUpdating ? "Saving…" : "Save username"}
+              </button>
+            </span>
+          ) : (
+            <button onClick={handleSaveUsername} className="s-btn-primary">
+              {isUpdating ? "Saving…" : "Save username"}
+            </button>
+          )}
         </div>
       </SCard>
 

@@ -19,13 +19,18 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const { profile } = useUsername();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setBellOpen(false);
       }
     }
     document.addEventListener("mousedown", onClickOutside);
@@ -224,22 +229,89 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
 
       {/* Right controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <button
-          aria-label="Notifications"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            display: "grid",
-            placeItems: "center",
-            background: "transparent",
-            border: "none",
-            color: "var(--ink-400)",
-            cursor: "pointer",
-          }}
-        >
-          <Bell size={18} strokeWidth={1.5} />
-        </button>
+        <div ref={bellRef} style={{ position: "relative" }}>
+          <button
+            aria-label="Notifications"
+            aria-expanded={bellOpen}
+            onClick={() => setBellOpen((o) => !o)}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              display: "grid",
+              placeItems: "center",
+              background: "transparent",
+              border: "none",
+              color: bellOpen ? "var(--ink-700)" : "var(--ink-400)",
+              cursor: "pointer",
+              position: "relative",
+            }}
+          >
+            <Bell size={18} strokeWidth={1.5} />
+          </button>
+
+          {bellOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                right: 0,
+                width: 300,
+                background: "var(--sr-bg-card)",
+                border: "1px solid var(--sr-border-subtle)",
+                borderRadius: "var(--sr-radius-lg)",
+                boxShadow: "var(--sr-shadow-md)",
+                zIndex: 100,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderBottom: "1px solid var(--sr-border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sr-text-primary)" }}>
+                  Notifications
+                </span>
+                <button
+                  style={{
+                    fontSize: 12,
+                    color: "var(--clay-600)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--sr-font-sans)",
+                    padding: 0,
+                  }}
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              <div
+                style={{
+                  padding: "40px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Bell size={28} strokeWidth={1.25} style={{ color: "var(--cream-400)" }} />
+                <p style={{ fontSize: 13, color: "var(--sr-text-muted)", margin: 0, lineHeight: 1.5 }}>
+                  No notifications yet.
+                  <br />
+                  <span style={{ fontSize: 12 }}>Messages, offers, and updates will appear here.</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div
           style={{

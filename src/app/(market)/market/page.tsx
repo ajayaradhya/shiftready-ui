@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Package, Search as SearchIcon } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
@@ -225,8 +226,9 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
   );
 }
 
-export default function BrowsePage() {
+function BrowsePageContent() {
   useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
+  const searchParams = useSearchParams();
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sr_seller_hero_dismissed") === "1";
@@ -243,10 +245,10 @@ export default function BrowsePage() {
   } = useLanding();
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("q");
-    if (q) handleSearchChange(q);
+    const q = searchParams.get("q") ?? "";
+    handleSearchChange(q);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -423,5 +425,13 @@ export default function BrowsePage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={null}>
+      <BrowsePageContent />
+    </Suspense>
   );
 }

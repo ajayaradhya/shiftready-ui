@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, AlertTriangle, Wifi } from "lucide-react";
+import Link from "next/link";
+import { Camera, AlertTriangle, Wifi, ArrowLeft } from "lucide-react";
 
 interface Props {
   onGranted: (stream: MediaStream) => void;
@@ -42,8 +43,39 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         fontFamily: "var(--sr-font-sans)",
         textAlign: "center",
         gap: 24,
+        position: "relative",
       }}
     >
+      {/* Back navigation */}
+      <Link
+        href="/seller-central"
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          fontSize: 13,
+          fontWeight: 500,
+          color: "var(--sr-text-secondary)",
+          textDecoration: "none",
+          padding: "6px 10px",
+          borderRadius: "var(--sr-radius-md)",
+          transition: "background 120ms, color 120ms",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.background = "var(--cream-200)";
+          (e.currentTarget as HTMLElement).style.color = "var(--sr-text-primary)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = "var(--sr-text-secondary)";
+        }}
+      >
+        <ArrowLeft size={14} strokeWidth={1.75} />
+        Back
+      </Link>
       {/* Icon */}
       <div
         style={{
