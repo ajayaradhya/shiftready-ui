@@ -18,6 +18,9 @@ import type {
   NotifPrefs,
   SellerPrefs,
   PrivacyPrefs,
+  MarkSoldPayload,
+  MarkBundleSoldPayload,
+  TransactionRecord,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -784,4 +787,98 @@ export async function unsaveItem(
 
 export async function getSaved(): Promise<SavedListResponse> {
   return apiRequest<SavedListResponse>(`${API_BASE}/users/me/saved`);
+}
+
+// --- Sold Lifecycle ---
+
+export async function markItemSold(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  payload: MarkSoldPayload
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/mark-sold`,
+    { method: "POST", body: JSON.stringify(payload) }
+  );
+}
+
+export async function withdrawItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  notes?: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/withdraw`,
+    { method: "POST", body: JSON.stringify({ notes: notes ?? null }) }
+  );
+}
+
+export async function releaseItemReservation(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/release-reservation`,
+    { method: "POST" }
+  );
+}
+
+export async function relistItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/relist`,
+    { method: "POST" }
+  );
+}
+
+export async function markBundleSold(
+  eventId: string,
+  bundleId: string,
+  payload: MarkBundleSoldPayload
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/mark-sold`,
+    { method: "POST", body: JSON.stringify(payload) }
+  );
+}
+
+export async function withdrawBundle(
+  eventId: string,
+  bundleId: string,
+  notes?: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/withdraw`,
+    { method: "POST", body: JSON.stringify({ notes: notes ?? null }) }
+  );
+}
+
+export async function markSaleSold(
+  eventId: string,
+  payload: MarkSoldPayload
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/mark-sold`,
+    { method: "POST", body: JSON.stringify(payload) }
+  );
+}
+
+export async function withdrawSale(
+  eventId: string,
+  notes?: string
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/withdraw`,
+    { method: "POST", body: JSON.stringify({ notes: notes ?? null }) }
+  );
+}
+
+export async function listTransactions(eventId: string): Promise<TransactionRecord[]> {
+  return apiRequest<TransactionRecord[]>(`${API_BASE}/sales/${eventId}/transactions`);
 }

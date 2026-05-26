@@ -13,6 +13,7 @@ const STATUS_LABELS: Record<SaleStatus, string> = {
   pricing_in_progress: "Pricing in Progress",
   live: "Live",
   partially_sold: "Partially Sold",
+  sold: "Sold",
   expired: "Expired",
   failed: "Failed",
   archived: "Archived",
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<SaleStatus, string> = {
 const STATUS_BADGE: Record<SaleStatus, { bg: string; color: string; border: string }> = {
   live:              { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)"  },
   partially_sold:    { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)"  },
+  sold:              { bg: "var(--moss-100)",  color: "var(--moss-800)",  border: "var(--moss-200)"  },
   ready_for_review:  { bg: "var(--honey-50)",  color: "var(--honey-700)", border: "var(--honey-100)" },
   pricing_in_progress:{ bg: "var(--clay-50)",  color: "var(--clay-700)",  border: "var(--clay-100)"  },
   processing:        { bg: "var(--clay-50)",   color: "var(--clay-700)",  border: "var(--clay-100)"  },

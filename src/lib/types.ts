@@ -112,9 +112,13 @@ export type SaleStatus =
   | "pricing_in_progress"
   | "live"
   | "partially_sold"
+  | "sold"
   | "expired"
   | "failed"
   | "archived";
+
+export type ItemSaleStatus = "available" | "reserved" | "sold" | "withdrawn";
+export type BundleSaleStatus = "available" | "partially_sold" | "reserved" | "sold" | "withdrawn";
 
 export interface InventoryImage {
   id: string;
@@ -164,6 +168,17 @@ export interface InventoryItem {
 
   // Media
   images?: InventoryImage[];
+
+  // Sold lifecycle
+  sale_status?: ItemSaleStatus;
+  reserved_for_uid?: string | null;
+  reserved_at?: string | null;
+  sold_to_uid?: string | null;
+  sold_at?: string | null;
+  final_price?: number | null;
+  sold_payment_method?: string | null;
+  sold_as?: "item" | "bundle" | "sale" | null;
+  buyer_label?: string | null;
 }
 
 export interface RoomBundle {
@@ -174,6 +189,44 @@ export interface RoomBundle {
   isPublished: boolean;
   createdAt: string;
   bundleDiscountPercent?: number | null;
+  sale_status?: BundleSaleStatus;
+  sold_count?: number;
+  total_count?: number;
+}
+
+export interface MarkSoldPayload {
+  final_price?: number | null;
+  buyer_uid?: string | null;
+  buyer_label?: string | null;
+  conversation_id?: string | null;
+  offer_id?: string | null;
+  payment_method?: string | null;
+  notes?: string | null;
+}
+
+export interface MarkBundleSoldPayload {
+  scope?: "bundle_as_unit" | "all_items";
+  final_price?: number | null;
+  buyer_uid?: string | null;
+  buyer_label?: string | null;
+  conversation_id?: string | null;
+  payment_method?: string | null;
+  notes?: string | null;
+}
+
+export interface TransactionRecord {
+  id: string;
+  type: string;
+  granularity: string;
+  amount?: number | null;
+  paymentMethod?: string | null;
+  buyerUid?: string | null;
+  buyerLabel?: string | null;
+  sellerUid?: string | null;
+  notes?: string | null;
+  bundleId?: string | null;
+  itemId?: string | null;
+  createdAt?: string | null;
 }
 
 export interface SaleSummary {

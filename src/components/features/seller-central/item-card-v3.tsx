@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check } from "lucide-react";
+import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary } from "@/lib/types";
-import { patchItem, deleteItem, moveItem, createItemFull, repriceItem } from "@/lib/api";
+import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus } from "@/lib/types";
+import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation } from "@/lib/api";
+import { MarkSoldDialog } from "./MarkSoldDialog";
 import { ItemPhotoStrip } from "./item-photo-strip";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ interface ItemCardV3Props {
   item: InventoryItem;
   allBundles?: RoomBundle[];
   bundleIndex?: number;
+  saleStatus?: SaleStatus;
 }
 
 const BUNDLE_PALETTES = [
@@ -40,7 +42,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleIndex = 0 }: ItemCardV3Props) {
+export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleIndex = 0, saleStatus }: ItemCardV3Props) {
   const qc = useQueryClient();
 
   const [reasoningOpen, setReasoningOpen] = useState(false);
@@ -82,6 +84,36 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         setPricingStale(true);
       }
     },
+  });
+
+  const [showMarkSold, setShowMarkSold] = useState(false);
+
+  const itemSaleStatus = item.sale_status ?? "available";
+  const isSold = itemSaleStatus === "sold";
+  const isReserved = itemSaleStatus === "reserved";
+  const isWithdrawn = itemSaleStatus === "withdrawn";
+  const isActive = saleStatus === "live" || saleStatus === "partially_sold";
+  const canMarkSold = isActive && (itemSaleStatus === "available" || itemSaleStatus === "reserved");
+  const canWithdraw = isActive && (itemSaleStatus === "available" || itemSaleStatus === "reserved");
+  const canRelist = isActive && isWithdrawn;
+  const canRelease = isActive && isReserved;
+
+  const withdrawMutation = useMutation({
+    mutationFn: () => withdrawItem(eventId, bundleId, item.id),
+    onSuccess: () => { invalidate(); toast.success(`"${item.name}" withdrawn`); },
+    onError: (err: Error) => toast.error(err.message || "Withdraw failed"),
+  });
+
+  const relistMutation = useMutation({
+    mutationFn: () => relistItem(eventId, bundleId, item.id),
+    onSuccess: () => { invalidate(); toast.success(`"${item.name}" relisted`); },
+    onError: (err: Error) => toast.error(err.message || "Relist failed"),
+  });
+
+  const releaseMutation = useMutation({
+    mutationFn: () => releaseItemReservation(eventId, bundleId, item.id),
+    onSuccess: () => { invalidate(); toast.success("Reservation released"); },
+    onError: (err: Error) => toast.error(err.message || "Release failed"),
   });
 
   const [pendingReprice, setPendingReprice] = useState<{
@@ -193,18 +225,21 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   }
 
   const dimmed = deleteMutation.isPending || moveMutation.isPending;
+  const greyed = isSold || isWithdrawn;
 
   return (
     <>
       <div
         style={{
-          background: isWarn ? "#FFFEF5" : "var(--sr-bg-card)",
-          border: `1px solid ${isWarn ? "var(--honey-200)" : "var(--sr-border-subtle)"}`,
+          background: isWarn && !greyed ? "#FFFEF5" : "var(--sr-bg-card)",
+          border: `1px solid ${isWarn && !greyed ? "var(--honey-200)" : "var(--sr-border-subtle)"}`,
           borderRadius: "var(--sr-radius-lg)",
           overflow: "hidden",
           transition: "border-color 160ms, box-shadow 160ms",
           fontFamily: "var(--sr-font-sans)",
-          opacity: dimmed ? 0.5 : 1,
+          opacity: dimmed ? 0.5 : greyed ? 0.6 : 1,
+          filter: greyed ? "saturate(0.4)" : "none",
+          position: "relative",
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = isWarn ? "var(--honey-300)" : "var(--sr-border-default)";
@@ -270,6 +305,28 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
 
           <div style={{ flex: 1 }} />
 
+          {/* Sale status badge */}
+          {itemSaleStatus !== "available" && (
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "var(--sr-radius-sm)",
+                fontFamily: "var(--sr-font-mono)",
+                fontSize: 9.5,
+                fontWeight: 600,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.1em",
+                ...(isSold
+                  ? { background: "var(--moss-50)", color: "var(--moss-700)", border: "1px solid var(--moss-100)" }
+                  : isReserved
+                  ? { background: "var(--honey-50)", color: "var(--honey-700)", border: "1px solid var(--honey-100)" }
+                  : { background: "var(--cream-200)", color: "var(--ink-500)", border: "1px solid var(--cream-300)" }),
+              }}
+            >
+              {isSold ? "Sold" : isReserved ? "Reserved" : "Withdrawn"}
+            </span>
+          )}
+
           {/* ··· menu */}
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
@@ -294,12 +351,40 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                     position: "absolute", right: 0, top: 30, zIndex: 50,
                     background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)",
                     borderRadius: "var(--sr-radius-md)", boxShadow: "var(--sr-shadow-md)",
-                    minWidth: 160, padding: "4px 0",
+                    minWidth: 168, padding: "4px 0",
                   }}
                 >
-                  <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
-                  <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
-                  <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                  {canMarkSold && (
+                    <DropMenuItem icon={<ShoppingBag size={12} />} label="Mark as sold" onClick={() => { setShowMarkSold(true); setMenuOpen(false); }} />
+                  )}
+                  {canRelease && (
+                    <DropMenuItem icon={<Unlock size={12} />} label="Release reservation" onClick={() => { releaseMutation.mutate(); setMenuOpen(false); }} />
+                  )}
+                  {canRelist && (
+                    <DropMenuItem icon={<RotateCcw size={12} />} label="Relist item" onClick={() => { relistMutation.mutate(); setMenuOpen(false); }} />
+                  )}
+                  {(canMarkSold || canRelease || canRelist) && (
+                    <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                  )}
+                  {!isSold && !isWithdrawn && (
+                    <>
+                      <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
+                      <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
+                    </>
+                  )}
+                  {canWithdraw && (
+                    <>
+                      <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                      <DropMenuItem icon={<EyeOff size={12} />} label="Withdraw item" onClick={() => { withdrawMutation.mutate(); setMenuOpen(false); }} danger />
+                    </>
+                  )}
+                  {!canMarkSold && !canRelease && !canRelist && !canWithdraw && (
+                    <>
+                      <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
+                      <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
+                      <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                    </>
+                  )}
                   <DropMenuItem icon={<Trash2 size={12} />} label="Delete item" onClick={() => { setShowDeleteConfirm(true); setMenuOpen(false); }} danger />
                 </div>
               </>
@@ -600,6 +685,42 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
             </div>
           )}
 
+          {/* Sold info banner */}
+          {isSold && (
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 10px", marginBottom: 10,
+                background: "var(--moss-50)", border: "1px solid var(--moss-100)",
+                borderRadius: "var(--sr-radius-sm)",
+              }}
+            >
+              <Check size={11} style={{ color: "var(--moss-600)", flexShrink: 0 }} />
+              <span style={{ fontSize: 11.5, color: "var(--moss-700)" }}>
+                Sold
+                {item.final_price != null && ` · $${item.final_price.toLocaleString()}`}
+                {item.buyer_label && ` to ${item.buyer_label}`}
+                {item.sold_payment_method && ` · ${item.sold_payment_method}`}
+              </span>
+            </div>
+          )}
+
+          {/* Reserved info banner */}
+          {isReserved && (
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 10px", marginBottom: 10,
+                background: "var(--honey-50)", border: "1px solid var(--honey-100)",
+                borderRadius: "var(--sr-radius-sm)",
+              }}
+            >
+              <span style={{ fontSize: 11.5, color: "var(--honey-700)" }}>
+                Reserved — use &ldquo;Mark as sold&rdquo; once pickup is done
+              </span>
+            </div>
+          )}
+
           {/* Footer */}
           <div
             style={{
@@ -607,24 +728,43 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               paddingTop: 10, borderTop: "1px solid var(--sr-border-subtle)",
             }}
           >
-            <FooterBtn
-              label="Move"
-              icon={<ArrowRightLeft size={11} />}
-              suffix={<ChevronDown size={10} style={{ transition: "transform 120ms", transform: movePanelOpen ? "rotate(180deg)" : "none" }} />}
-              onClick={() => setMovePanelOpen((o) => !o)}
-              active={movePanelOpen}
-            />
-            <FooterBtn
-              label="Details"
-              icon={<Pencil size={11} />}
-              onClick={() => setShowEditModal(true)}
-            />
-            <FooterBtn
-              label="Duplicate"
-              icon={<Copy size={11} />}
-              onClick={() => duplicateMutation.mutate()}
-              loading={duplicateMutation.isPending}
-            />
+            {canMarkSold && (
+              <FooterBtn
+                label="Mark sold"
+                icon={<ShoppingBag size={11} />}
+                onClick={() => setShowMarkSold(true)}
+              />
+            )}
+            {canRelist && (
+              <FooterBtn
+                label="Relist"
+                icon={<RotateCcw size={11} />}
+                onClick={() => relistMutation.mutate()}
+                loading={relistMutation.isPending}
+              />
+            )}
+            {!isSold && !isWithdrawn && (
+              <>
+                <FooterBtn
+                  label="Move"
+                  icon={<ArrowRightLeft size={11} />}
+                  suffix={<ChevronDown size={10} style={{ transition: "transform 120ms", transform: movePanelOpen ? "rotate(180deg)" : "none" }} />}
+                  onClick={() => setMovePanelOpen((o) => !o)}
+                  active={movePanelOpen}
+                />
+                <FooterBtn
+                  label="Details"
+                  icon={<Pencil size={11} />}
+                  onClick={() => setShowEditModal(true)}
+                />
+                <FooterBtn
+                  label="Duplicate"
+                  icon={<Copy size={11} />}
+                  onClick={() => duplicateMutation.mutate()}
+                  loading={duplicateMutation.isPending}
+                />
+              </>
+            )}
             <div style={{ flex: 1 }} />
             <FooterBtn
               label="Delete"
@@ -691,6 +831,16 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           item={item}
           onClose={() => setShowEditModal(false)}
           onSave={(updates) => { patchMutation.mutate(updates); setShowEditModal(false); }}
+        />
+      )}
+
+      {/* Mark sold dialog */}
+      {showMarkSold && (
+        <MarkSoldDialog
+          eventId={eventId}
+          bundleId={bundleId}
+          item={item}
+          onClose={() => setShowMarkSold(false)}
         />
       )}
 

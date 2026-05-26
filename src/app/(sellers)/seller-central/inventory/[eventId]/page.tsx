@@ -24,7 +24,8 @@ import { SaleLifecycleMenu } from "@/components/features/inventory/SaleLifecycle
 
 const STATUS_BADGE: Record<string, { bg: string; color: string; border: string; label: string }> = {
   live:                { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Live" },
-  partially_sold:      { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Partially Sold" },
+  partially_sold:      { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Partly Sold" },
+  sold:                { bg: "var(--moss-100)",  color: "var(--moss-800)",  border: "var(--moss-200)",  label: "Sold" },
   ready_for_review:    { bg: "var(--honey-50)",  color: "var(--honey-700)", border: "var(--honey-100)", label: "Ready for Review" },
   pricing_in_progress: { bg: "var(--clay-50)",   color: "var(--clay-700)",  border: "var(--clay-100)",  label: "Pricing…" },
   processing:          { bg: "var(--clay-50)",   color: "var(--clay-700)",  border: "var(--clay-100)",  label: "Processing…" },
@@ -411,6 +412,7 @@ export default function SellerCentralInventoryPage() {
                 item={item}
                 allBundles={summary?.bundles ?? []}
                 bundleIndex={summary?.bundles?.findIndex((b) => b.id === selectedBundle.id) ?? 0}
+                saleStatus={summary?.status}
               />
             ))}
           </div>
