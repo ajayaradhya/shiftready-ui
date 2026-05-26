@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, Search } from "lucide-react";
@@ -9,6 +9,7 @@ import { useSaleContext } from "@/lib/sale-context";
 import { cn } from "@/lib/utils";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationsPanel } from "./notifications-panel";
+import { CommandPalette } from "./command-palette";
 
 interface ShellHeaderProps {
   /** When true, desktop header is offset left by sidebar width (224px) */
@@ -19,6 +20,21 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
   const { user } = useAuth();
   const { sale, isProcessing } = useSaleContext();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+      if (e.key === "Escape") setPaletteOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <>
@@ -111,8 +127,9 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Command palette pill (desktop stub — Phase B wires cmdk) */}
+        {/* Command palette trigger */}
         <button
+          onClick={openPalette}
           className={cn(
             "hidden md:flex items-center gap-2 h-8 px-3 rounded-lg cursor-pointer select-none",
             "border bg-[var(--cream-50)] transition-colors duration-150",
@@ -124,7 +141,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
             fontSize: 12,
             fontFamily: "var(--sr-font-sans)",
           }}
-          aria-label="Open command palette"
+          aria-label="Open command palette (⌘K)"
         >
           <Search size={12} strokeWidth={1.5} />
           <span>Search…</span>
@@ -189,6 +206,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
       </header>
 
       <NotificationsPanel open={notifOpen} onOpenChange={setNotifOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );
 }

@@ -148,3 +148,14 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-surface-container-highest rounded-full;
 }
+/* cmdk command palette headings */
+[cmdk-group-heading] {
+  padding: 4px 16px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sr-text-muted);
+  font-family: var(--sr-font-sans);
+  user-select: none;
+}
