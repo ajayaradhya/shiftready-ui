@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { ConversationList } from "@/components/features/messages/ConversationList";
 
 export default function InboxPage() {
+  useEffect(() => { document.title = "Messages — ShiftReady"; }, []);
   return (
     <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
       {/* Sidebar */}

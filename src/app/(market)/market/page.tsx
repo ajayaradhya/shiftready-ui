@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Package, Search as SearchIcon } from "lucide-react";
@@ -226,6 +226,7 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
 }
 
 export default function BrowsePage() {
+  useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
   const [heroDismissed, setHeroDismissed] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 

@@ -111,7 +111,10 @@ const KEYFRAMES = `
 export default function LoginPage() {
   const { signIn, signInWithGoogle, register: registerUser } = useAuth();
   const router = useRouter();
-  const [tab, setTab] = useState<"signin" | "create">("signin");
+  const [tab, setTab] = useState<"signin" | "create">(() => {
+    if (typeof window === "undefined") return "signin";
+    return new URLSearchParams(window.location.search).get("tab") === "create" ? "create" : "signin";
+  });
   const [showPw, setShowPw] = useState(false);
   const [showCreatePw, setShowCreatePw] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);

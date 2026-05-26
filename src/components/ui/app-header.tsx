@@ -341,7 +341,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
                       maxWidth: 180,
                     }}
                   >
-                    {user.email}
+                    {displayName}
                   </div>
                 </div>
 
@@ -420,21 +420,38 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
             )}
           </div>
         ) : (
-          <Link
-            href="/login"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--clay-600)",
-              textDecoration: "none",
-              padding: "6px 14px",
-              borderRadius: "var(--sr-radius-md)",
-              border: "1px solid var(--sr-border-default)",
-              transition: "background 120ms",
-            }}
-          >
-            Sign In
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Link
+              href="/login?tab=create"
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                textDecoration: "none",
+                padding: "6px 14px",
+                borderRadius: "var(--sr-radius-md)",
+                background: "var(--clay-500)",
+                transition: "background 120ms",
+              }}
+            >
+              Sign up free
+            </Link>
+            <Link
+              href="/login"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "var(--ink-500)",
+                textDecoration: "none",
+                padding: "6px 14px",
+                borderRadius: "var(--sr-radius-md)",
+                border: "1px solid var(--sr-border-default)",
+                transition: "background 120ms",
+              }}
+            >
+              Sign in
+            </Link>
+          </div>
         )}
       </div>
     </header>

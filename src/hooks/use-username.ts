@@ -3,14 +3,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { checkUsernameAvailable, getMe, updateUsername } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useUsername() {
   const queryClient = useQueryClient();
+  const { idToken } = useAuth();
 
   const profileQuery = useQuery({
     queryKey: ["user-profile"],
     queryFn: getMe,
     staleTime: 5 * 60 * 1000,
+    enabled: !!idToken,
   });
 
   const updateMutation = useMutation({

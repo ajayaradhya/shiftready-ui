@@ -8,14 +8,17 @@ import {
   updatePrivacy,
 } from "@/lib/api";
 import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 
 const SETTINGS_KEY = ["settings", "me"];
 
 export function useMySettings() {
+  const { idToken } = useAuth();
   return useQuery({
     queryKey: SETTINGS_KEY,
     queryFn: getMySettings,
     staleTime: 5 * 60 * 1000,
+    enabled: !!idToken,
   });
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Plus, Camera } from "lucide-react";
 import { useSalesList } from "@/hooks/use-sales";
@@ -10,6 +11,8 @@ const LIVE_STATUSES: SaleStatus[] = ["live", "partially_sold"];
 
 export default function SellerCentralPage() {
   const { data: sales, isLoading, error } = useSalesList();
+
+  useEffect(() => { document.title = "My Sales — ShiftReady"; }, []);
 
   const totalItems = sales?.reduce((s, a) => s + a.itemCount, 0) ?? 0;
   const totalValue = sales?.reduce((s, a) => s + a.totalValue, 0) ?? 0;

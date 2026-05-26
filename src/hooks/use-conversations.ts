@@ -2,22 +2,27 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUnreadCount, listConversations } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useConversations() {
+  const { idToken } = useAuth();
   return useQuery({
     queryKey: ["conversations"],
     queryFn: listConversations,
     staleTime: 30_000,
     refetchOnWindowFocus: true,
+    enabled: !!idToken,
   });
 }
 
 export function useUnreadCount() {
+  const { idToken } = useAuth();
   return useQuery({
     queryKey: ["unread-count"],
     queryFn: getUnreadCount,
     refetchInterval: 30_000,
     staleTime: 15_000,
+    enabled: !!idToken,
   });
 }
 
