@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
 import { useAuth } from "@/hooks/use-auth";
-import { useSalesList } from "@/hooks/use-sales";
 import { searchMarketplace } from "@/lib/api";
 import { FilterChip } from "@/components/features/marketplace/FilterChip";
 import { SuburbChip } from "@/components/features/marketplace/SuburbChip";
@@ -204,8 +203,6 @@ function BrowsePageContent() {
   useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { data: mySales } = useSalesList();
-  const hasActiveSales = (mySales?.length ?? 0) > 0;
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sr_seller_hero_dismissed") === "1";
@@ -226,18 +223,20 @@ function BrowsePageContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // Polaroid pile = freshest listings (suburb-aware, ignores other filters)
+  // Polaroid pile = freshest listings — deferred until main items finish to avoid cold-start burst
   const newestQuery = useQuery({
     queryKey: ["market-newest", suburb],
     queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "newest" }),
     staleTime: 60_000,
+    enabled: !itemsLoading,
   });
 
-  // Receipt roll = cheapest (suburb-aware, ignores other filters)
+  // Receipt roll = cheapest — deferred until newest resolves
   const cheapestQuery = useQuery({
     queryKey: ["market-cheapest", suburb],
     queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "price_asc" }),
     staleTime: 60_000,
+    enabled: !newestQuery.isLoading,
   });
 
   const hasSearch = !!(searchInput || suburb || category || condition || priceRange);
@@ -247,7 +246,7 @@ function BrowsePageContent() {
       <main className={s.container}>
 
         {/* ── SELLER HERO ── */}
-        {!heroDismissed && !(user && hasActiveSales) && (
+        {!heroDismissed && (
           <section className={s.sellerHero} aria-label="Sell with ShiftReady">
             <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => { setHeroDismissed(true); localStorage.setItem("sr_seller_hero_dismissed", "1"); }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">

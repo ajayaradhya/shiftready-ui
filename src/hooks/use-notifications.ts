@@ -26,6 +26,8 @@ export function useNotifUnreadCount() {
     queryFn: getNotifUnreadCount,
     enabled: !!user,
     staleTime: 30_000,
+    refetchOnMount: false,
+    placeholderData: { unread_count: 0 },
   });
 }
 

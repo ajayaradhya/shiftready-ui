@@ -22,6 +22,8 @@ export function useUnreadCount() {
     queryFn: getUnreadCount,
     refetchInterval: 30_000,
     staleTime: 15_000,
+    refetchOnMount: false,
+    placeholderData: { unreadCount: 0 },
     enabled: !!idToken,
   });
 }
