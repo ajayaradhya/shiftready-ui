@@ -3,17 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Package, Search as SearchIcon, MapPin } from "lucide-react";
+import { Package, Search as SearchIcon } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
+import { FilterChip } from "@/components/features/marketplace/FilterChip";
+import { SuburbChip } from "@/components/features/marketplace/SuburbChip";
+import {
+  CATEGORY_OPTIONS,
+  CATEGORY_LABELS,
+  CONDITION_OPTIONS,
+  PRICE_RANGE_OPTIONS,
+  SORT_OPTIONS,
+  type CategoryFilter,
+} from "@/lib/marketplace-filters";
 import s from "../../landing.module.css";
-
-const SYDNEY_SUBURBS = [
-  "Bondi", "Bondi Junction", "Coogee", "Darlinghurst", "Glebe", "Newtown",
-  "Paddington", "Potts Point", "Pyrmont", "Redfern", "Rozelle",
-  "Surry Hills", "Waterloo", "Woolloomooloo", "Zetland",
-];
 
 type Variant = "default" | "tinted" | "moss" | "honey" | "ink";
 const VARIANTS: Variant[] = ["tinted", "moss", "honey", "ink", "default"];
@@ -40,14 +44,6 @@ function MiniAvatar({ text, variant }: { text: string; variant: Variant }) {
       : "",
   ].filter(Boolean).join(" ");
   return <div className={cls}>{text.slice(0, 2).toUpperCase()}</div>;
-}
-
-function ChevronDown() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m3 5 3 3 3-3" />
-    </svg>
-  );
 }
 
 function ConditionBadge({ condition }: { condition: string }) {
@@ -125,6 +121,11 @@ function ItemCard({ item, index, isFav, onToggleFav }: {
               <span style={{ fontSize: 12, color: "var(--ink-400)" }}>{item.brand}</span>
             )}
           </div>
+          {item.category && (
+            <div className={s.itemCategory}>
+              {CATEGORY_LABELS[item.category as CategoryFilter] ?? item.category}
+            </div>
+          )}
           {item.bundleName && (
             <div className={s.itemSeller}>
               <MiniAvatar text={item.eventId} variant={v} />
@@ -218,7 +219,7 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
         No items found
       </p>
       <p style={{ fontSize: 13, color: "var(--ink-300)", marginTop: 8 }}>
-        {hasSearch ? "Try a different search or suburb." : "Check back soon — new sales added regularly."}
+        {hasSearch ? "Try a different search or suburb." : "Check back soon - new sales added regularly."}
       </p>
     </div>
   );
@@ -229,8 +230,10 @@ export default function BrowsePage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const {
-    searchInput, suburb,
+    searchInput, suburb, category, condition, priceRange, sort,
     handleSearchChange, handleSuburbChange,
+    handleCategoryChange, handleConditionChange,
+    handlePriceRangeChange, handleSortChange,
     items, itemCount, itemsLoading, itemsError,
     sales, salesLoading,
   } = useLanding();
@@ -245,7 +248,7 @@ export default function BrowsePage() {
     });
   };
 
-  const hasSearch = !!(searchInput || suburb);
+  const hasSearch = !!(searchInput || suburb || category || condition || priceRange);
 
   return (
     <div className={s.landing}>
@@ -263,7 +266,7 @@ export default function BrowsePage() {
               <div>
                 <div className={s.sellerHeroEyebrow}>For sellers · AI walkthrough</div>
                 <h1 className={s.sellerHeroTitle}>Moving house? Turn your stuff into <em>cash</em>.</h1>
-                <p className={s.sellerHeroSub}>Film a walkthrough — AI extracts and prices everything in minutes. List a whole sale in the time it takes to make a coffee.</p>
+                <p className={s.sellerHeroSub}>Film a walkthrough - AI extracts and prices everything in minutes. List a whole sale in the time it takes to make a coffee.</p>
               </div>
               <div className={s.sellerHeroActions}>
                 <Link href="/seller-central/capture" className={`${s.btn} ${s.btnPrimary}`}>
@@ -280,8 +283,8 @@ export default function BrowsePage() {
 
         {/* ── FILTER BAR ── */}
         <div className={s.filterBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div className={s.search} style={{ width: 260 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className={s.search} style={{ width: 240 }}>
               <SearchIcon size={15} className={s.searchIcon} />
               <input
                 className={s.searchInput}
@@ -294,40 +297,35 @@ export default function BrowsePage() {
 
             <div style={{ width: 1, height: 20, background: "var(--sr-border-subtle)", flexShrink: 0 }} />
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--sr-text-primary)" }}>
-              <span className={s.locationPin}>
-                <MapPin size={14} color="var(--clay-600)" />
-              </span>
-              <span className={s.locationLabel}>Suburb:</span>
-              <select
-                value={suburb}
-                onChange={e => handleSuburbChange(e.target.value)}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  fontFamily: "var(--sr-font-sans)",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--sr-text-primary)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-              >
-                <option value="">All Sydney</option>
-                {SYDNEY_SUBURBS.map(sub => (
-                  <option key={sub} value={sub}>{sub}</option>
-                ))}
-              </select>
-            </div>
+            <SuburbChip value={suburb} onChange={handleSuburbChange} />
           </div>
 
           <div className={s.chips}>
-            <button className={s.chip}>Category <span className={s.chipCaret}><ChevronDown /></span></button>
-            <button className={s.chip}>Price <span className={s.chipCaret}><ChevronDown /></span></button>
-            <button className={s.chip}>Condition <span className={s.chipCaret}><ChevronDown /></span></button>
-            <button className={`${s.chip} ${s.chipSort}`}>
-              <span className={s.chipSortLabel}>Sort:</span> Newest <span className={s.chipCaret}><ChevronDown /></span>
-            </button>
+            <FilterChip
+              label="Category"
+              options={CATEGORY_OPTIONS}
+              value={category}
+              onChange={handleCategoryChange}
+            />
+            <FilterChip
+              label="Price"
+              options={PRICE_RANGE_OPTIONS}
+              value={priceRange}
+              onChange={handlePriceRangeChange}
+            />
+            <FilterChip
+              label="Condition"
+              options={CONDITION_OPTIONS}
+              value={condition}
+              onChange={handleConditionChange}
+            />
+            <FilterChip
+              label="Sort"
+              options={SORT_OPTIONS}
+              value={sort}
+              onChange={handleSortChange}
+              prefixLabel
+            />
           </div>
         </div>
 
@@ -387,7 +385,7 @@ export default function BrowsePage() {
               : sales.length === 0
               ? (
                 <div style={{ color: "var(--ink-400)", fontSize: 14, padding: "32px 0" }}>
-                  No live sales right now — check back soon.
+                  No live sales right now, check back soon.
                 </div>
               )
               : sales.map((sale, i) => (

@@ -222,7 +222,7 @@ export default function LoginPage() {
                 <em style={{ fontStyle: "italic", color: "#E0A285" }}>finds its person.</em>
               </h1>
               <p style={{ margin: "16px 0 0", fontSize: 16, lineHeight: 1.6, color: "rgba(255,255,255,.55)", maxWidth: "50%" }}>
-                Australia&apos;s residential moving marketplace. List a whole house sale in minutes — AI does the pricing.
+                Australia&apos;s residential moving marketplace. List a whole house sale in minutes - AI does the pricing.
               </p>
             </div>
 
@@ -253,7 +253,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Bottom scrim — keeps stats readable over cards */}
+          {/* Bottom scrim - keeps stats readable over cards */}
           <div style={{
             position: "absolute", bottom: 0, left: 0, right: 0, height: 180,
             background: "linear-gradient(to top, #6E3829 40%, transparent)",
@@ -263,7 +263,7 @@ export default function LoginPage() {
           {/* Floating listing cards */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
 
-            {/* Card 1 — sofa */}
+            {/* Card 1 - sofa */}
             <div style={{
               position: "absolute", top: "10%", left: "64%",
               background: "#fff", borderRadius: 12,
@@ -287,7 +287,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Card 2 — dining table */}
+            {/* Card 2 - dining table */}
             <div style={{
               position: "absolute", top: "40%", left: "60%",
               background: "#fff", borderRadius: 12,
@@ -311,7 +311,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Card 3 — floor lamp */}
+            {/* Card 3 - floor lamp */}
             <div style={{
               position: "absolute", top: "56%", left: "66%",
               background: "#fff", borderRadius: 12,

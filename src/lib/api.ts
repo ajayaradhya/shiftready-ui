@@ -391,14 +391,28 @@ export async function listSales(): Promise<SaleListing[]> {
 
 // --- Marketplace ---
 
+export interface MarketplaceSearchParams {
+  q?: string;
+  suburb?: string;
+  category?: string;
+  condition?: string;
+  min_price?: number;
+  max_price?: number;
+  sort?: string;
+}
+
 export async function searchMarketplace(
-  q?: string,
-  suburb?: string
+  params: MarketplaceSearchParams = {}
 ): Promise<MarketplaceSearchResult> {
-  const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  if (suburb) params.set("suburb", suburb);
-  const qs = params.toString();
+  const p = new URLSearchParams();
+  if (params.q)           p.set("q", params.q);
+  if (params.suburb)      p.set("suburb", params.suburb);
+  if (params.category)    p.set("category", params.category);
+  if (params.condition)   p.set("condition", params.condition);
+  if (params.min_price != null) p.set("min_price", String(params.min_price));
+  if (params.max_price != null) p.set("max_price", String(params.max_price));
+  if (params.sort)        p.set("sort", params.sort);
+  const qs = p.toString();
   return apiRequest<MarketplaceSearchResult>(
     `${API_BASE}/marketplace/search${qs ? `?${qs}` : ""}`
   );

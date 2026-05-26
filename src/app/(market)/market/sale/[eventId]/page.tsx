@@ -345,7 +345,7 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                       fontWeight: 700,
                     }}
                   >
-                    Bundle deal — save {fmt(savings)}
+                    Bundle deal - save {fmt(savings)}
                   </div>
                   <div
                     style={{
@@ -730,7 +730,7 @@ export default function SaleDetailPage({
             <StatBox label="Items" value={String(totalItems)} />
             <StatBox
               label="Est. value"
-              value={totalValue > 0 ? fmt(totalValue) : "—"}
+              value={totalValue > 0 ? fmt(totalValue) : "-"}
             />
             <StatBox label="Rooms" value={String(rooms)} />
             <StatBox
@@ -740,7 +740,7 @@ export default function SaleDetailPage({
                   ? daysLeft <= 0
                     ? "Today!"
                     : `${daysLeft}d`
-                  : "—"
+                  : "-"
               }
             />
           </div>
@@ -1019,7 +1019,7 @@ export default function SaleDetailPage({
                     { label: "Items", value: String(totalItems) },
                     {
                       label: "Value",
-                      value: totalValue > 0 ? fmt(totalValue) : "—",
+                      value: totalValue > 0 ? fmt(totalValue) : "-",
                     },
                     { label: "Rooms", value: String(rooms) },
                     {
@@ -1029,7 +1029,7 @@ export default function SaleDetailPage({
                           ? daysLeft <= 0
                             ? "Today"
                             : `${daysLeft}d`
-                          : "—",
+                          : "-",
                     },
                   ].map(({ label, value }) => (
                     <div

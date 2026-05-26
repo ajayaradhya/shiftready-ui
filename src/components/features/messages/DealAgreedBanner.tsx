@@ -48,7 +48,7 @@ export function DealAgreedBanner({ amount, otherUsername, phoneRevealAvailable }
             lineHeight: 1.2,
           }}
         >
-          Deal agreed — ${amount.toLocaleString("en-AU", { maximumFractionDigits: 0 })}
+          Deal agreed - ${amount.toLocaleString("en-AU", { maximumFractionDigits: 0 })}
         </div>
         <div
           style={{

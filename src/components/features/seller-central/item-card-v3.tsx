@@ -122,14 +122,14 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     pricing_reasoning: string;
   } | null>(null);
 
-  // Step 1: fetch AI suggestion — no DB write
+  // Step 1: fetch AI suggestion - no DB write
   const repriceMutation = useMutation({
     mutationFn: () => repriceItem(eventId, bundleId, item.id),
     onSuccess: (data) => setPendingReprice(data),
     onError: (err: Error) => toast.error(err.message || "Re-pricing failed"),
   });
 
-  // Step 2: user accepted — persist via PATCH
+  // Step 2: user accepted - persist via PATCH
   const acceptRepriceMutation = useMutation({
     mutationFn: (data: NonNullable<typeof pendingReprice>) =>
       patchItem(eventId, bundleId, item.id, {
@@ -555,7 +555,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 }}
                 style={attrInputStyle}
               >
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
@@ -574,7 +574,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               }}
             >
               <span style={{ fontSize: 11.5, color: "var(--honey-700)", flex: 1 }}>
-                Item details changed — listing price may be outdated.
+                Item details changed - listing price may be outdated.
               </span>
               <button
                 onClick={() => repriceMutation.mutate()}
@@ -619,7 +619,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                       patchMutation.mutate({ actual_original_price: 0 });
                     }
                   }}
-                  placeholder="—"
+                  placeholder="-"
                   style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", width: "100%", padding: "2px 4px" }}
                 />
               </div>
@@ -661,7 +661,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                       patchMutation.mutate({ actual_listing_price: 0 });
                     }
                   }}
-                  placeholder="—"
+                  placeholder="-"
                   style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', width: "100%", padding: "2px 4px" }}
                 />
               </div>
@@ -716,7 +716,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               }}
             >
               <span style={{ fontSize: 11.5, color: "var(--honey-700)" }}>
-                Reserved — use &ldquo;Mark as sold&rdquo; once pickup is done
+                Reserved - use &ldquo;Mark as sold&rdquo; once pickup is done
               </span>
             </div>
           )}
@@ -1010,7 +1010,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)" }}>
-            Edit — <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{item.name}</em>
+            Edit - <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{item.name}</em>
           </div>
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--sr-text-muted)", width: 28, height: 28, display: "grid", placeItems: "center", borderRadius: "var(--sr-radius-sm)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-200)"; }}
@@ -1036,7 +1036,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <ModalField label="Category">
               <select value={category} onChange={(e) => setCategory(e.target.value as ItemCategory)} style={modalInputStyle}>
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 {CATEGORY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}

@@ -6,19 +6,19 @@
 [![Cloud Run](https://img.shields.io/badge/Deploy-Cloud%20Run-4285F4.svg)](https://cloud.google.com/run)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#license)
 
-Seller dashboard and public marketplace for ShiftReady — an AI-driven residential relocation platform. Sellers capture or upload home walkthroughs, Gemini AI extracts and prices inventory, and buyers browse live sales.
+Seller dashboard and public marketplace for ShiftReady - an AI-driven residential relocation platform. Sellers capture or upload home walkthroughs, Gemini AI extracts and prices inventory, and buyers browse live sales.
 
-**Companion backend:** [`../shiftready-backend`](../shiftready-backend) — FastAPI / Gemini service.
+**Companion backend:** [`../shiftready-backend`](../shiftready-backend) - FastAPI / Gemini service.
 
 ---
 
 ## Key Features
 
-- **Guided Live Capture** — on-device MediaPipe detects items via camera; per-frame Gemini identifies name/brand/price in real time; sellers confirm as they walk through the home
-- **AI Inventory Dashboard** — interactive review cockpit for Gemini-extracted bundles and items with per-item photo galleries
-- **Live ProcessingScreen** — after capture, shows real captured items with thumbnails and live "Pricing…" status (not a fake ticker)
-- **Urgency Pricing Cockpit** — market-grounded price recommendations based on move-out deadline
-- **Public Marketplace** — `/` and `/sale/[eventId]` for buyers to browse and view live sales
+- **Guided Live Capture** - on-device MediaPipe detects items via camera; per-frame Gemini identifies name/brand/price in real time; sellers confirm as they walk through the home
+- **AI Inventory Dashboard** - interactive review cockpit for Gemini-extracted bundles and items with per-item photo galleries
+- **Live ProcessingScreen** - after capture, shows real captured items with thumbnails and live "Pricing…" status (not a fake ticker)
+- **Urgency Pricing Cockpit** - market-grounded price recommendations based on move-out deadline
+- **Public Marketplace** - `/` and `/sale/[eventId]` for buyers to browse and view live sales
 
 ---
 
@@ -106,7 +106,7 @@ src/
 
 Automated deployment via Google Cloud Build on push to `master`:
 
-1. Build — multi-stage Docker image (`output: 'standalone'`)
+1. Build - multi-stage Docker image (`output: 'standalone'`)
 2. Push to Google Artifact Registry
 3. Deploy to Cloud Run (`australia-southeast1`) with automatic traffic migration
 
@@ -135,4 +135,4 @@ See [`../shiftready-backend`](../shiftready-backend) for the backend README.
 
 ## License
 
-Internal proprietary — ShiftReady 2026.
+Internal proprietary - ShiftReady 2026.

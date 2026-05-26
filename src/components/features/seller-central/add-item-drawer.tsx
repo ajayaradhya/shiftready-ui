@@ -188,7 +188,7 @@ export function AddItemDrawer({ eventId, bundles, defaultBundleId, open, onClose
             </DrawerField>
             <DrawerField label="Category">
               <select value={category} onChange={(e) => setCategory(e.target.value as ItemCategory)} style={inputStyle}>
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}

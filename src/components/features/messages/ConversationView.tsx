@@ -638,12 +638,12 @@ export function ConversationView({
 
         <div ref={bottomRef} />
 
-        {/* Share your number — shown after deal agreed when not yet shared */}
+        {/* Share your number - shown after deal agreed when not yet shared */}
         {conversation.dealStatus === "agreed" && !conversation.phoneSharedByMe && (
           <SharePhoneCard convId={convId} otherUsername={otherUsername} />
         )}
 
-        {/* Phone reveal — shown at thread tail after deal agreed */}
+        {/* Phone reveal - shown at thread tail after deal agreed */}
         {conversation.dealStatus === "agreed" && conversation.phoneRevealAvailable && (
           <PhoneRevealCard
             phone={phone}

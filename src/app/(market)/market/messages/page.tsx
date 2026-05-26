@@ -63,7 +63,7 @@ export default function MarketMessagesPage() {
             Sign in to view messages
           </p>
           <p style={{ fontSize: 13, color: "var(--ink-400)", maxWidth: 300 }}>
-            Message sellers, ask questions, and arrange pickups — all in one place.
+            Message sellers, ask questions, and arrange pickups - all in one place.
           </p>
         </div>
         <Link

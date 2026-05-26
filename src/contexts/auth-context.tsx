@@ -81,7 +81,7 @@ const DEV_TOKEN = `dev_${DEV_USER_ID}`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Lazy initializer: in dev-bypass mode the user and loading state are known
-  // synchronously — avoids calling setState inside a useEffect body.
+  // synchronously - avoids calling setState inside a useEffect body.
   const [user, setUser] = useState<AuthUser | null>(() =>
     isFirebaseConfigured ? null : DEV_USER
   );

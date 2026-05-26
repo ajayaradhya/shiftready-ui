@@ -188,7 +188,7 @@ export function CaptureStage({ stream, onUserTap }: Props) {
         </div>
       )}
 
-      {/* Error overlay — still tappable, just no label detection */}
+      {/* Error overlay - still tappable, just no label detection */}
       {status === "error" && (
         <div
           style={{

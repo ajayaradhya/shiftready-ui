@@ -72,7 +72,7 @@ export function useWebSocket(
         setIsConnected(false);
         wsRef.current = null;
         if (!mountedRef.current) return;
-        // Exponential backoff — doubles on each failure, capped at MAX_RECONNECT_MS
+        // Exponential backoff - doubles on each failure, capped at MAX_RECONNECT_MS
         retryRef.current = setTimeout(() => {
           delayRef.current = Math.min(delayRef.current * 2, MAX_RECONNECT_MS);
           connectRef.current();

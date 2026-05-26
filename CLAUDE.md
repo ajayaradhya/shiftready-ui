@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ShiftReady UI** — Next.js 16 / React 19 seller dashboard and public marketplace for the ShiftReady relocation platform.
+**ShiftReady UI** - Next.js 16 / React 19 seller dashboard and public marketplace for the ShiftReady relocation platform.
 
 - **Frontend** (`shiftready-ui/`): This repo. Seller-facing dashboard (live capture, inventory review, pricing, publishing) + public buyer marketplace.
 - **Backend** (`../shiftready-backend/`): FastAPI service. Sibling directory. Launch with `--add-dir ../shiftready-backend` to edit both repos in one session.
@@ -36,8 +36,8 @@ Backend must be running on port 8080 for API calls to work locally.
 ```
 src/app/
 ├── page.tsx                       # Home / public browse (buyer-facing)
-├── (auth)/                        # login, register — no sidebar
-├── (sellers)/                     # Authenticated seller routes — shared sidebar + header
+├── (auth)/                        # login, register - no sidebar
+├── (sellers)/                     # Authenticated seller routes - shared sidebar + header
 │   ├── create/page.tsx            # Legacy video upload entry
 │   ├── dashboard/page.tsx         # Sales list
 │   └── seller-central/
@@ -69,51 +69,51 @@ src/components/features/
 
 ### Hooks (`src/hooks/`)
 
-- `use-auth.ts` — Firebase auth state
-- `use-sales.ts` — TanStack Query: list + status
-- `use-upload.ts` — video upload state machine
-- `use-append-upload.ts` — append video to existing sale
-- `use-websocket.ts` — WebSocket lifecycle + reconnect (reused by inventory)
-- `use-landing.ts` — public home page data
+- `use-auth.ts` - Firebase auth state
+- `use-sales.ts` - TanStack Query: list + status
+- `use-upload.ts` - video upload state machine
+- `use-append-upload.ts` - append video to existing sale
+- `use-websocket.ts` - WebSocket lifecycle + reconnect (reused by inventory)
+- `use-landing.ts` - public home page data
 
 ### Lib (`src/lib/`)
 
-- `api.ts` — ALL API calls live here. Single `apiRequest<T>()` wrapper.
-- `types.ts` — `InventoryItem`, `RoomBundle`, `SaleSummary`, `InventoryImage`
-- `firebase.ts` — Firebase client SDK init
-- `schemas.ts` — Zod schemas for forms
-- `utils.ts` — `cn()` = clsx + tailwind-merge
-- `capture/mediapipe-loader.ts` — lazy-load WASM, init ObjectDetector (~5MB, dynamic import)
-- `capture/capture-types.ts` — `CapturedItem`, `PendingDetection`, `CaptureToast`, `dataUrlToFile`, `blobToFile`
+- `api.ts` - ALL API calls live here. Single `apiRequest<T>()` wrapper.
+- `types.ts` - `InventoryItem`, `RoomBundle`, `SaleSummary`, `InventoryImage`
+- `firebase.ts` - Firebase client SDK init
+- `schemas.ts` - Zod schemas for forms
+- `utils.ts` - `cn()` = clsx + tailwind-merge
+- `capture/mediapipe-loader.ts` - lazy-load WASM, init ObjectDetector (~5MB, dynamic import)
+- `capture/capture-types.ts` - `CapturedItem`, `PendingDetection`, `CaptureToast`, `dataUrlToFile`, `blobToFile`
 
 ## Key Flows
 
-### Live Capture (Primary — `/seller-central/capture`)
+### Live Capture (Primary - `/seller-central/capture`)
 
-1. `CapturePermissionsGate` — request camera (required) + mic (optional, Phase 5)
-2. `CaptureStage` — `getUserMedia` + MediaPipe ObjectDetector on-device
+1. `CapturePermissionsGate` - request camera (required) + mic (optional, Phase 5)
+2. `CaptureStage` - `getUserMedia` + MediaPipe ObjectDetector on-device
 3. Per detected item: `ItemConfirmCard` → user confirms → `runCaptureFrame()`:
    - POST `/sales/{id}/capture/frame` with JPEG
    - Gemini single-frame identify → `{name, brand, predicted_original_price, gcs_uri}`
    - Updates `confirmedItems` state; `frameSrc` (dataUrl) kept for thumbnail display
-4. "Finish" → `ItemReviewScreen` — review/remove; shows all confirmed items
+4. "Finish" → `ItemReviewScreen` - review/remove; shows all confirmed items
 5. "Upload & Process" → `handleProcess()`:
-   - Calls `finalizeCaptureV2(eventId, analyzedItems)` — sends pre-analyzed items, not raw frames
+   - Calls `finalizeCaptureV2(eventId, analyzedItems)` - sends pre-analyzed items, not raw frames
    - Fallback to `processFrames()` if all `captureFrame` calls failed
 6. `ProcessingScreen` with `mode="live"` and `capturedItems` prop
 7. Polls `getStatus()` every 3s → redirects to `/seller-central/inventory/${eventId}`
 
-### Video Upload (Secondary/Fallback — `/seller-central/create`)
+### Video Upload (Secondary/Fallback - `/seller-central/create`)
 
-1. `UploadScreen` — drag-drop or file-pick
+1. `UploadScreen` - drag-drop or file-pick
 2. `initSale()` → signed PUT URL → XHR upload to GCS
 3. `startProcessing()` → backend extraction pipeline starts
-4. `ProcessingScreen` with `mode="batch"` — animated fake item ticker
+4. `ProcessingScreen` with `mode="batch"` - animated fake item ticker
 5. Same poll → redirect to inventory
 
 ### Inventory Cockpit (`/seller-central/inventory/[eventId]`)
 
-- `useInventory(eventId)` — WebSocket + fallback polling (1500ms during processing/pricing)
+- `useInventory(eventId)` - WebSocket + fallback polling (1500ms during processing/pricing)
 - Auto-refetch summary when status transitions from processing → ready
 - `LoadingOverlay` during processing or pricing states
 - CRUD mutations (bundle add/delete, item update/delete, publish, re-estimate) all invalidate queries
@@ -127,11 +127,11 @@ Two modes, one component:
   eventId={id}
   uploadedFile={null}
   mode="live"              // "batch" | "live"
-  capturedItems={items}    // CapturedItem[] — only for live mode
+  capturedItems={items}    // CapturedItem[] - only for live mode
 />
 ```
 
-- `batch`: animated orb + fake discovery ticker (video flow — items unknown)
+- `batch`: animated orb + fake discovery ticker (video flow - items unknown)
 - `live`: real item list with `frameSrc` thumbnails + "Pricing…" status badge
 
 Both modes share: same polling `useEffect`, same `goToDashboard`/`stayAndWatch` CTAs.
@@ -140,7 +140,7 @@ Both modes share: same polling `useEffect`, same `goToDashboard`/`stayAndWatch` 
 
 - Base URL: `NEXT_PUBLIC_API_URL` env var → fallback to Cloud Run URL
 - Auth: module-level `_idToken` set by `AuthProvider`; auto-injected via `setAuthToken()`
-- `apiRequest<T>(url, init)` — parses errors from FastAPI `detail` field, handles 204
+- `apiRequest<T>(url, init)` - parses errors from FastAPI `detail` field, handles 204
 - Key capture functions: `initCaptureSale`, `captureFrame`, `finalizeCaptureV2`, `finalizeCapture` (legacy), `processFrames` (fallback)
 
 ## TanStack Query Conventions
@@ -152,16 +152,16 @@ Both modes share: same polling `useEffect`, same `goToDashboard`/`stayAndWatch` 
 
 ## Design System
 
-- **Dark-only** — `<html className="dark">` hardcoded; no light mode planned
-- **Tailwind v4** — `@theme {}` block in `src/app/globals.css`; no `tailwind.config.js`
+- **Dark-only** - `<html className="dark">` hardcoded; no light mode planned
+- **Tailwind v4** - `@theme {}` block in `src/app/globals.css`; no `tailwind.config.js`
 - **Layout constraint**: main content always has `pl-64` (sidebar) + `pt-16` (header); don't override on new pages
 - **Key design tokens** (Tailwind classes):
   - `bg-surface`, `bg-surface-container-low/high/lowest/highest`
   - `text-on-surface`, `text-on-surface-variant`
-  - `text-primary` — #adc6ff electric blue (CTAs, links)
-  - `text-tertiary` — #4edea3 green (pricing, positive values)
+  - `text-primary` - #adc6ff electric blue (CTAs, links)
+  - `text-tertiary` - #4edea3 green (pricing, positive values)
   - `border-outline`, `border-outline-variant`
-- **Icons**: lucide-react only — never introduce other icon libraries
+- **Icons**: lucide-react only - never introduce other icon libraries
 - **Class merging**: `cn()` from `lib/utils.ts` for all conditional class strings
 
 ## Adding New Features
@@ -173,10 +173,10 @@ Both modes share: same polling `useEffect`, same `goToDashboard`/`stayAndWatch` 
 4. Data hook → `src/hooks/` with TanStack Query
 
 **New API call:**
-Follow pattern in `api.ts` — use `apiRequest<ReturnType>`, add named export, add TypeScript interface for request/response.
+Follow pattern in `api.ts` - use `apiRequest<ReturnType>`, add named export, add TypeScript interface for request/response.
 
 **New component:**
-Put in `src/components/features/<feature>/` — match existing filename casing (kebab-case for create/inventory, PascalCase for capture).
+Put in `src/components/features/<feature>/` - match existing filename casing (kebab-case for create/inventory, PascalCase for capture).
 
 ## Authentication
 

@@ -152,7 +152,7 @@ export function BundleCard({
         onMouseLeave={() => setHeaderHover(false)}
       >
         <Icon size={26} strokeWidth={1.4} style={{ color: p.icon, transition: "transform 220ms ease", transform: active ? "scale(1.1)" : undefined }} />
-        {/* Item count — top right */}
+        {/* Item count - top right */}
         <span style={{
           position: "absolute", top: 10, right: 12,
           fontFamily: "var(--sr-font-mono)", fontSize: 10.5, fontWeight: 500,
@@ -161,7 +161,7 @@ export function BundleCard({
         }}>
           {bundle.items.length}
         </span>
-        {/* Hover controls — top left (rename + delete) */}
+        {/* Hover controls - top left (rename + delete) */}
         {headerHover && (
           <div
             style={{ position: "absolute", top: 8, left: 10, display: "flex", gap: 4 }}
@@ -185,7 +185,7 @@ export function BundleCard({
 
       {/* Card body */}
       <div style={{ padding: "14px 18px 0", flex: 1 }}>
-        {/* Bundle name — inline rename on dbl-click */}
+        {/* Bundle name - inline rename on dbl-click */}
         {isRenaming ? (
           <div onClick={(e) => e.stopPropagation()} style={{ marginBottom: 4 }}>
             <input

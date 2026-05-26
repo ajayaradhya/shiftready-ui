@@ -42,7 +42,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
             <em style={{ fontStyle: "italic", color: "var(--clay-600)", fontWeight: 500 }}>minutes</em>
           </h1>
           <p style={{ margin: 0, color: "var(--sr-text-secondary)", fontSize: 16, lineHeight: 1.55 }}>
-            Point your camera at each item — AI does the rest.
+            Point your camera at each item - AI does the rest.
           </p>
         </div>
 

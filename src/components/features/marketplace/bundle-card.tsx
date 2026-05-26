@@ -38,7 +38,7 @@ function BundleItemRow({ item }: { item: PublicBundleItem }) {
         </div>
       </div>
       <span className="text-sm font-semibold text-on-surface shrink-0">
-        {item.price > 0 ? formatAUD(item.price) : "—"}
+        {item.price > 0 ? formatAUD(item.price) : "-"}
       </span>
     </div>
   );
@@ -91,7 +91,7 @@ export function BundleCard({ bundle }: { bundle: PublicBundle }) {
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-widest text-tertiary font-black mb-1">
-                  Buy the room — save {formatAUD(savings)}
+                  Buy the room - save {formatAUD(savings)}
                 </p>
                 <p className="text-xl font-black text-tertiary">
                   {formatAUD(bundle.bundlePrice)}

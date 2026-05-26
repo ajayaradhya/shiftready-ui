@@ -19,6 +19,7 @@ export interface MarketplaceItem {
   name: string;
   brand: string;
   condition: string;
+  category?: string | null;
   price: number | null;
   bundleName: string | null;
   eventId: string;

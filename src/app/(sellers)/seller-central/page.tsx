@@ -25,7 +25,7 @@ export default function SellerCentralPage() {
             My <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>Sales</em>
           </h1>
           <p style={{ color: "var(--sr-text-muted)", fontSize: 14, margin: 0 }}>
-            Point your camera, tap to capture — we handle the rest.
+            Point your camera, tap to capture - we handle the rest.
           </p>
         </div>
         <Link
@@ -130,7 +130,7 @@ export default function SellerCentralPage() {
             Ready to <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>list?</em>
           </h2>
           <p style={{ color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55, maxWidth: 380, margin: "0 0 24px" }}>
-            Point your camera at items around your home and tap to capture — AI extracts and prices everything in minutes.
+            Point your camera at items around your home and tap to capture - AI extracts and prices everything in minutes.
           </p>
           <Link
             href="/seller-central/capture"

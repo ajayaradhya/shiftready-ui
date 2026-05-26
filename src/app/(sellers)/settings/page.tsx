@@ -391,7 +391,7 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ marginBottom: 8 }}>
         <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 22, fontWeight: 500, letterSpacing: "-.02em", color: "var(--ink-800)", margin: "0 0 4px" }}>Profile</h2>
-        <p style={{ fontSize: 13, color: "var(--sr-text-muted)", lineHeight: 1.5, margin: 0 }}>Your public-facing identity on ShiftReady — shown on sale listings and in buyer conversations.</p>
+        <p style={{ fontSize: 13, color: "var(--sr-text-muted)", lineHeight: 1.5, margin: 0 }}>Your public-facing identity on ShiftReady - shown on sale listings and in buyer conversations.</p>
       </div>
 
       {/* Avatar + identity */}
@@ -413,8 +413,8 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
             {initials}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-800)" }}>{displayName || profile?.username || "—"}</span>
-            <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-mono)" }}>@{profile?.username ?? "—"}</span>
+            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-800)" }}>{displayName || profile?.username || "-"}</span>
+            <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-mono)" }}>@{profile?.username ?? "-"}</span>
             <span style={{ fontSize: 11, color: "var(--sr-text-muted)", marginTop: 4 }}>Member since January 2025</span>
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
               <button className="s-btn-secondary s-btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -493,7 +493,7 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
       <SCard>
         <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--sr-text-primary)", margin: "0 0 3px" }}>Seller bio</p>
         <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>
-          A short note shown at the top of your sale listing. Helps buyers understand context — moving circumstances, item quality, availability.
+          A short note shown at the top of your sale listing. Helps buyers understand context - moving circumstances, item quality, availability.
         </p>
         <SField label="Bio">
           <STextarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={240} placeholder="Tell buyers a bit about your sale…"/>
@@ -530,7 +530,7 @@ function AccountSection({ userEmail }: { userEmail?: string | null }) {
         <MethodRow
           icon={<IcEmail/>}
           label="Email address"
-          sub={userEmail ?? "—"}
+          sub={userEmail ?? "-"}
           right={
             <button className="s-btn-secondary s-btn-sm" onClick={() => setEmailEdit(v => !v)}>
               {emailEdit ? "Cancel" : "Change"}
@@ -753,7 +753,7 @@ const SELLING_NOTIFS = [
   { id: "msg",     label: "New message",          desc: "A buyer sends you a message in any conversation." },
   { id: "offer",   label: "Offer received",        desc: "A buyer makes an offer on one of your items or bundles." },
   { id: "counter", label: "Counter-offer",         desc: "A buyer responds to your counter with a new amount." },
-  { id: "deal",    label: "Deal agreed",           desc: "Both parties accept an offer — ready to arrange pickup." },
+  { id: "deal",    label: "Deal agreed",           desc: "Both parties accept an offer - ready to arrange pickup." },
   { id: "ready",   label: "Sale ready to review",  desc: "Your sale has finished processing and is ready to publish." },
   { id: "viewed",  label: "Sale milestones",       desc: "Your sale reaches 10, 50, and 100 views." },
 ];
@@ -863,9 +863,9 @@ function PreferencesSection() {
     cursor: "pointer", userSelect: "none" as const, transition: "all 120ms",
   });
 
-  const offerHint = minOffer >= 90 ? "Very strict — most offers will be declined."
-    : minOffer >= 75 ? "Moderate — filters out lowball offers."
-    : "Flexible — allows significant discounts.";
+  const offerHint = minOffer >= 90 ? "Very strict - most offers will be declined."
+    : minOffer >= 75 ? "Moderate - filters out lowball offers."
+    : "Flexible - allows significant discounts.";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1010,7 +1010,7 @@ function PrivacySection() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: "var(--sr-text-primary)" }}>Show profile on marketplace</div>
-            <div style={{ fontSize: 11.5, color: "var(--sr-text-muted)", marginTop: 2, lineHeight: 1.4 }}>When disabled, your name and bio won't appear on sale listings — items are still purchasable.</div>
+            <div style={{ fontSize: 11.5, color: "var(--sr-text-muted)", marginTop: 2, lineHeight: 1.4 }}>When disabled, your name and bio won't appear on sale listings - items are still purchasable.</div>
           </div>
           <Toggle on={profileVisible} onChange={setProfileVisible}/>
         </div>

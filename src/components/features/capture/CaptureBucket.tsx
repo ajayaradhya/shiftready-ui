@@ -232,7 +232,7 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
   const badge = (
     <button
       onClick={() => setOpen((v) => !v)}
-      aria-label={`Capture bucket — ${items.length} items`}
+      aria-label={`Capture bucket - ${items.length} items`}
       style={{
         position: "absolute",
         top: 12,
@@ -362,7 +362,7 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
                 }}
               >
                 {items.length === 0
-                  ? "None yet — confirm items while capturing"
+                  ? "None yet - confirm items while capturing"
                   : `${items.length} item${items.length !== 1 ? "s" : ""}${loadingCount > 0 ? ` · ${loadingCount} identifying…` : ""}`}
               </div>
             </div>

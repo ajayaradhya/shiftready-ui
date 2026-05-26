@@ -71,7 +71,7 @@ export default function PurchasesPage() {
             Track your purchases
           </p>
           <p style={{ fontSize: 13, color: "var(--ink-400)", maxWidth: 320 }}>
-            Interest expressed · Viewing scheduled · Purchase complete — all tracked here.
+            Interest expressed · Viewing scheduled · Purchase complete - all tracked here.
           </p>
         </div>
       </div>

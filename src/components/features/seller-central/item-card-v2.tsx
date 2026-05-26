@@ -237,14 +237,14 @@ export function ItemCardV2({ eventId, bundleId, item, allBundles = [] }: ItemCar
           {[
             { label: "Brand", value: item.brand },
             { label: "Condition", value: item.condition },
-            { label: "Year purchased", value: year?.toString() ?? "—" },
+            { label: "Year purchased", value: year?.toString() ?? "-" },
           ].map((attr) => (
             <div key={attr.label} style={{ display: "flex", flexDirection: "column", gap: 3, padding: "9px 12px", background: "var(--cream-50)" }}>
               <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--sr-text-muted)" }}>
                 {attr.label}
               </span>
               <span style={{ fontSize: 13, color: "var(--sr-text-primary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {attr.value || "—"}
+                {attr.value || "-"}
               </span>
             </div>
           ))}
@@ -285,7 +285,7 @@ export function ItemCardV2({ eventId, bundleId, item, allBundles = [] }: ItemCar
             <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
               <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontWeight: 500 }}>$</span>
               <span style={{ fontSize: 18, fontWeight: 600, color: "var(--sr-text-primary)" }}>
-                {retail?.toLocaleString() ?? "—"}
+                {retail?.toLocaleString() ?? "-"}
               </span>
             </div>
           </div>
@@ -308,7 +308,7 @@ export function ItemCardV2({ eventId, bundleId, item, allBundles = [] }: ItemCar
             <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
               <span style={{ fontSize: 15, color: "var(--clay-500)", fontWeight: 600 }}>$</span>
               <span style={{ fontSize: 24, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"' }}>
-                {listing?.toLocaleString() ?? "—"}
+                {listing?.toLocaleString() ?? "-"}
               </span>
             </div>
           </div>
@@ -458,7 +458,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)" }}>
-            Edit — {item.name}
+            Edit - {item.name}
           </div>
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--sr-text-muted)" }}>
             <X size={16} />
@@ -481,7 +481,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Category">
               <select value={category} onChange={(e) => setCategory(e.target.value as ItemCategory)} style={inputStyle}>
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 {CATEGORY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}

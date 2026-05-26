@@ -13,7 +13,7 @@ export function useInventory(eventId: string) {
   const queryClient = useQueryClient();
 
   // Ref tracks previous status purely for transition detection inside useEffect.
-  // Never read during render — that would violate React 19 ref rules.
+  // Never read during render - that would violate React 19 ref rules.
   const lastStatus = useRef<string | null | undefined>(null);
 
   // 1. WEBSOCKET STATUS STREAM

@@ -102,7 +102,7 @@ export default function MarketConversationPage({
 
   return (
     <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
-      {/* Conv list panel — hidden on mobile */}
+      {/* Conv list panel - hidden on mobile */}
       <div
         className="hidden md:block"
         style={{

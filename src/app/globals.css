@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ShiftReady Design Tokens — SINGLE SOURCE OF TRUTH
+   ShiftReady Design Tokens - SINGLE SOURCE OF TRUTH
    • Raw palette  →  :root  (primitive values only)
    • Tailwind utilities  →  @theme  (semantic tokens, dark app shell)
    • To change a color: edit the hex in @theme, it propagates everywhere.
 ───────────────────────────────────────────────────────────────────────────── */
 
-/* Primitive palette — do not use these directly in components */
+/* Primitive palette - do not use these directly in components */
 :root {
   --clay-50: #FBF1EC; --clay-100: #F5DDCF; --clay-200: #ECC2AB; --clay-300: #E0A285;
   --clay-400: #D58A6B; --clay-500: #CC785C; --clay-600: #B5604A; --clay-700: #944A39;
@@ -57,22 +57,22 @@
    EDIT HERE to change app-wide colors.
 ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-primary: #B5604A;                  /* Clay-600 — brand accent, active nav */
-  --color-tertiary: #557239;                 /* Moss-600 — pricing, positive indicators */
+  --color-primary: #B5604A;                  /* Clay-600 - brand accent, active nav */
+  --color-tertiary: #557239;                 /* Moss-600 - pricing, positive indicators */
   --color-surface: #FAFAF7;                  /* App background */
 
   --color-surface-container-lowest: #FFFFFF; /* Cards, purest white */
-  --color-surface-container-low: #FBF8F3;    /* Cream-50 — subtle bg */
-  --color-surface-container: #F5F0E8;        /* Cream-100 — default container */
-  --color-surface-container-high: #EDE5D6;   /* Cream-200 — elevated containers */
-  --color-surface-container-highest: #E0D5C0;/* Cream-300 — highest elevation */
+  --color-surface-container-low: #FBF8F3;    /* Cream-50 - subtle bg */
+  --color-surface-container: #F5F0E8;        /* Cream-100 - default container */
+  --color-surface-container-high: #EDE5D6;   /* Cream-200 - elevated containers */
+  --color-surface-container-highest: #E0D5C0;/* Cream-300 - highest elevation */
 
-  --color-on-surface: #1F1B17;               /* Ink-800 — primary text */
-  --color-on-surface-variant: #4F4838;       /* Ink-500 — secondary text */
+  --color-on-surface: #1F1B17;               /* Ink-800 - primary text */
+  --color-on-surface-variant: #4F4838;       /* Ink-500 - secondary text */
   --color-on-primary: #FFFFFF;               /* Text on primary-colored bg */
-  --color-outline: #A09683;                  /* Ink-300 — borders, muted icons */
-  --color-outline-variant: #E0D5C0;          /* Cream-300 — subtle dividers */
-  --color-error: #B14F3B;                    /* Rust-500 — error states */
+  --color-outline: #A09683;                  /* Ink-300 - borders, muted icons */
+  --color-outline-variant: #E0D5C0;          /* Cream-300 - subtle dividers */
+  --color-error: #B14F3B;                    /* Rust-500 - error states */
 
   --radius-xl: 12px;
 
@@ -91,7 +91,7 @@
     outline-offset: 2px;
   }
 
-  /* Remove default focus outline — components handle their own via focus-visible utilities */
+  /* Remove default focus outline - components handle their own via focus-visible utilities */
   :focus:not(:focus-visible) {
     outline: none;
   }

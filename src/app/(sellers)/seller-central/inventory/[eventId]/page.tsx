@@ -233,7 +233,7 @@ export default function SellerCentralInventoryPage() {
     ? new Date(summary.moveOutDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })
     : null;
 
-  // Title parts — prefer the real sale title once loaded, fall back to URL param (suburb, state)
+  // Title parts - prefer the real sale title once loaded, fall back to URL param (suburb, state)
   const rawTitle = summary?.title ?? titleFromUrl ?? "";
   const titleWords = rawTitle.trim().split(/\s+/);
   const titleMain = titleWords.length > 1 ? titleWords.slice(0, -1).join(" ") : rawTitle;
@@ -255,8 +255,8 @@ export default function SellerCentralInventoryPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20, borderRadius: "var(--sr-radius-sm)", background: "var(--clay-50)", border: "1px solid var(--clay-100)", color: "var(--clay-700)", fontSize: 13, fontWeight: 500 }}>
           <Sparkles size={15} style={{ flexShrink: 0, animation: "pulse 2s ease-in-out infinite" }} />
           <span>
-            {isProcessing && "AI is extracting items from your inventory — bundles will appear shortly."}
-            {isPricing && !isProcessing && "Gemini is pricing your items against Sydney market data — prices will appear shortly."}
+            {isProcessing && "AI is extracting items from your inventory - bundles will appear shortly."}
+            {isPricing && !isProcessing && "Gemini is pricing your items against Sydney market data - prices will appear shortly."}
           </span>
         </div>
       )}
@@ -343,7 +343,7 @@ export default function SellerCentralInventoryPage() {
         <div style={{ height: 1, background: "var(--sr-border-subtle)", marginTop: 16 }} />
       </div>
 
-      {/* Sale details panel — controlled by Edit details button */}
+      {/* Sale details panel - controlled by Edit details button */}
       {summary && (
         <SaleDetailsPanel
           eventId={eventId}
@@ -354,7 +354,7 @@ export default function SellerCentralInventoryPage() {
         />
       )}
 
-      {/* Bundle tray — 4-col grid */}
+      {/* Bundle tray - 4-col grid */}
       {summary?.bundles && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px] mb-8">
           {summary.bundles.map((bundle, idx) => (
@@ -439,7 +439,7 @@ export default function SellerCentralInventoryPage() {
               {isLive ? "Currently live" : "Ready to publish"}
             </div>
             <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", marginTop: 2 }}>
-              {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed — publish to the marketplace."}
+              {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed - publish to the marketplace."}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

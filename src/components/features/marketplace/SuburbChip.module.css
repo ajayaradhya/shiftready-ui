@@ -1,0 +1,48 @@
+.suburbChip {
+  gap: 8px;
+}
+
+.pin {
+  display: flex;
+  align-items: center;
+  color: var(--clay-600);
+}
+
+.suburbLabel {
+  color: var(--sr-text-muted);
+  font-weight: 400;
+}
+
+.suburbValue {
+  font-weight: 600;
+}
+
+.suburbPanel {
+  min-width: 220px;
+}
+
+.searchWrap {
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--sr-border-subtle);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 6px 10px;
+  font-family: var(--sr-font-sans);
+  font-size: 13px;
+  color: var(--sr-text-primary);
+  background: var(--cream-100, #faf5ef);
+  border: 1px solid var(--sr-border-subtle);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 120ms;
+}
+
+.searchInput:focus {
+  border-color: var(--clay-400);
+}
+
+.searchInput::placeholder {
+  color: var(--sr-text-muted);
+}

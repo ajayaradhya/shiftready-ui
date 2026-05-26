@@ -176,7 +176,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
             View my inventory
           </button>
           <div style={{ textAlign: "center", fontSize: 13, color: "var(--sr-text-muted)" }}>
-            Pricing completes in the background — or{" "}
+            Pricing completes in the background - or{" "}
             <button
               onClick={onDashboard}
               style={{
@@ -197,7 +197,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
 export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", capturedItems }: Props) {
   const router = useRouter();
 
-  /* Shared poll for completion — used by both modes */
+  /* Shared poll for completion - used by both modes */
   useEffect(() => {
     const poll = setInterval(async () => {
       try {
@@ -218,7 +218,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
   const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
   const stayAndWatch = useCallback(() => router.push(`/seller-central/inventory/${eventId}`), [router, eventId]);
 
-  /* Batch-mode animation state — hooks must be unconditional */
+  /* Batch-mode animation state - hooks must be unconditional */
   const [itemCount, setItemCount] = useState(4);
   const [visibleItems, setVisibleItems] = useState(DEMO_ITEMS.slice(0, 4));
   const [subIdx, setSubIdx] = useState(0);
@@ -239,7 +239,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
     return () => clearInterval(t);
   }, [mode]);
 
-  /* Live mode — show real captured items */
+  /* Live mode - show real captured items */
   if (mode === "live" && capturedItems && capturedItems.length > 0) {
     return (
       <LiveProcessingScreen
@@ -270,7 +270,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
             <em style={{ fontStyle: "italic", color: "var(--clay-600)", fontWeight: 500 }}>minutes</em>
           </h1>
           <p style={{ margin: 0, color: "var(--sr-text-secondary)", fontSize: 16, lineHeight: 1.55 }}>
-            Film a walkthrough of your home — AI does the rest.
+            Film a walkthrough of your home - AI does the rest.
           </p>
         </div>
 

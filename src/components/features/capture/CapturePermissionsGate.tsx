@@ -90,7 +90,7 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         }}
       >
         {[
-          "Video is processed on-device — nothing streamed yet",
+          "Video is processed on-device - nothing streamed yet",
           "Rear camera used automatically on mobile",
           "Microphone not required for this step",
         ].map((note) => (

@@ -74,7 +74,7 @@ export function PinnedFocusCard({
               whiteSpace: "nowrap",
             }}
           >
-            {EYEBROW[kind]}: {snapshot.name ?? "—"}
+            {EYEBROW[kind]}: {snapshot.name ?? "-"}
           </span>
           <button
             onClick={() => setCollapsed(false)}
@@ -138,7 +138,7 @@ export function PinnedFocusCard({
                 whiteSpace: "nowrap",
               }}
             >
-              {snapshot.name ?? "—"}
+              {snapshot.name ?? "-"}
             </div>
             <div
               style={{

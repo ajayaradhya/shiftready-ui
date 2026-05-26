@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useSaleContext } from "@/lib/sale-context";
 import { useEffect } from "react";
 
-// Lazy-load CaptureStage — pulls in heavy MediaPipe WASM, skip SSR
+// Lazy-load CaptureStage - pulls in heavy MediaPipe WASM, skip SSR
 const CaptureStage = dynamic(
   () =>
     import("@/components/features/capture/CaptureStage").then((m) => ({

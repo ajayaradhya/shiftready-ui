@@ -128,7 +128,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         </span>
       </Link>
 
-      {/* Sale context chip — hidden on mobile to prevent overflow */}
+      {/* Sale context chip - hidden on mobile to prevent overflow */}
       {sale && (
         <div className="hidden md:contents">
           <div
@@ -167,7 +167,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         </div>
       )}
 
-      {/* Global search — hidden < md */}
+      {/* Global search - hidden < md */}
       <div
         className="hidden md:flex"
         style={{

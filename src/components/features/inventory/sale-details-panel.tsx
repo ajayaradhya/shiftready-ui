@@ -104,7 +104,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenC
         overflow: "hidden",
       }}
     >
-      {/* Header row — always visible */}
+      {/* Header row - always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
