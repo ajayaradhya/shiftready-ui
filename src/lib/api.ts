@@ -41,7 +41,7 @@ export type PatchItemPayload = Partial<InventoryItem>;
 async function apiRequest<T>(url: string, options?: RequestInit, _retried = false): Promise<T> {
   const existingHeaders = (options?.headers as Record<string, string>) ?? {};
   const headers: Record<string, string> = {
-    ...(options?.body ? { "Content-Type": "application/json" } : {}),
+    ...(options?.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
     ...existingHeaders,
     ...(_idToken ? { Authorization: `Bearer ${_idToken}` } : {}),
   };
@@ -100,7 +100,7 @@ export async function initCaptureSale(): Promise<{ event_id: string }> {
 
 export interface CaptureFrameResult {
   name: string;
-  brand: string;
+  brand?: string | null;
   predicted_original_price: number;
   gcs_uri: string;
 }
