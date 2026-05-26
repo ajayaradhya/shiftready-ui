@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Package, Search as SearchIcon } from "lucide-react";
+import { Package } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
@@ -296,19 +296,6 @@ function BrowsePageContent() {
         {/* ── FILTER BAR ── */}
         <div className={s.filterBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className={s.search} style={{ width: 240 }}>
-              <SearchIcon size={15} className={s.searchIcon} />
-              <input
-                className={s.searchInput}
-                type="text"
-                placeholder="Search items, brands…"
-                value={searchInput}
-                onChange={e => handleSearchChange(e.target.value)}
-              />
-            </div>
-
-            <div style={{ width: 1, height: 20, background: "var(--sr-border-subtle)", flexShrink: 0 }} />
-
             <SuburbChip value={suburb} onChange={handleSuburbChange} />
           </div>
 
