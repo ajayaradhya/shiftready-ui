@@ -3,23 +3,25 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, Package } from "lucide-react";
 import { toast } from "sonner";
-import type { MarketplaceItem } from "@/lib/types";
 import type { ActiveSaleSummary } from "@/lib/types";
 import { useLanding } from "@/hooks/use-landing";
 import { useAuth } from "@/hooks/use-auth";
 import { useSalesList } from "@/hooks/use-sales";
+import { searchMarketplace } from "@/lib/api";
 import { FilterChip } from "@/components/features/marketplace/FilterChip";
 import { SuburbChip } from "@/components/features/marketplace/SuburbChip";
+import { ConveyorBelt, ConveyorBeltSkeleton } from "@/components/features/marketplace/displays/conveyor-belt";
+import { PolaroidPile, PolaroidPileSkeleton } from "@/components/features/marketplace/displays/polaroid-pile";
+import { ReceiptRoll, ReceiptRollSkeleton } from "@/components/features/marketplace/displays/receipt-roll";
 import {
   CATEGORY_OPTIONS,
-  CATEGORY_LABELS,
   CONDITION_OPTIONS,
   PRICE_RANGE_OPTIONS,
   SORT_OPTIONS,
-  type CategoryFilter,
 } from "@/lib/marketplace-filters";
 import s from "../../landing.module.css";
 
@@ -50,27 +52,9 @@ function MiniAvatar({ text, variant }: { text: string; variant: Variant }) {
   return <div className={cls}>{text.slice(0, 2).toUpperCase()}</div>;
 }
 
-function ConditionBadge({ condition }: { condition: string }) {
-  return <span className={s.badgeCondition}>{condition}</span>;
-}
-
 function fmt(price: number | null): string {
   if (price == null) return "POA";
   return `$${price % 1 === 0 ? price : price.toFixed(2)}`;
-}
-
-function ItemSkeleton() {
-  return (
-    <div className={s.item} style={{ cursor: "default" }}>
-      <div className={s.itemMedia}>
-        <div style={{ width: "100%", height: "100%", background: "var(--cream-200)", animation: "pulse 1.5s ease-in-out infinite" }} />
-      </div>
-      <div className={s.itemBody}>
-        <div style={{ height: 14, background: "var(--cream-200)", borderRadius: 4, width: "80%" }} />
-        <div style={{ height: 12, background: "var(--cream-200)", borderRadius: 4, width: "50%" }} />
-      </div>
-    </div>
-  );
 }
 
 function SaleSkeleton() {
@@ -84,103 +68,6 @@ function SaleSkeleton() {
         <div style={{ height: 12, background: "var(--cream-200)", borderRadius: 4, width: "90%", marginTop: 4 }} />
       </div>
     </div>
-  );
-}
-
-function ItemCard({ item, index, isFav, onToggleFav, isLoggedIn }: {
-  item: MarketplaceItem;
-  index: number;
-  isFav: boolean;
-  onToggleFav: (id: string, e: React.MouseEvent) => void;
-  isLoggedIn: boolean;
-}) {
-  const v = variantForIndex(index);
-  const router = useRouter();
-
-  const handleExpressInterest = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isLoggedIn) {
-      router.push(`/market/messages?eventId=${item.eventId}&itemId=${item.id}`);
-    } else {
-      router.push(`/login?next=${encodeURIComponent(`/market/messages?eventId=${item.eventId}&itemId=${item.id}`)}`);
-    }
-  };
-
-  return (
-    <Link href={`/market/sale/${item.eventId}`} style={{ textDecoration: "none" }}>
-      <article className={s.item}>
-        <div className={s.itemMedia}>
-          {item.image_url ? (
-            <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="220px" />
-          ) : (
-            <PhDiv variant={v} />
-          )}
-          <span className={s.itemPrice}>{fmt(item.price)}</span>
-          <button
-            className={`${s.itemFav} ${isFav ? s.itemFavActive : ""}`}
-            aria-label={isFav ? "Saved" : "Save"}
-            onClick={(e) => onToggleFav(item.id, e)}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16"
-              fill={isFav ? "currentColor" : "none"}
-              stroke={isFav ? "none" : "currentColor"}
-              strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 13.5s-5-3.2-5-7a3 3 0 0 1 5-2.2A3 3 0 0 1 13 6.5c0 3.8-5 7-5 7Z" />
-            </svg>
-          </button>
-        </div>
-        <div className={s.itemBody}>
-          <div className={s.itemName}>{item.name}</div>
-          <div className={s.itemRow}>
-            <ConditionBadge condition={item.condition} />
-            {item.brand && item.brand !== "Generic" && (
-              <span style={{ fontSize: 12, color: "var(--ink-400)" }}>{item.brand}</span>
-            )}
-          </div>
-          {item.category && (
-            <div className={s.itemCategory}>
-              {CATEGORY_LABELS[item.category as CategoryFilter] ?? item.category}
-            </div>
-          )}
-          {item.bundleName && (
-            <div className={s.itemSeller}>
-              <MiniAvatar text={item.eventId} variant={v} />
-              <span>from <span className={s.itemSellerName}>{item.bundleName}</span> moving sale</span>
-            </div>
-          )}
-          <button
-            onClick={handleExpressInterest}
-            style={{
-              marginTop: 10,
-              width: "100%",
-              padding: "7px 12px",
-              borderRadius: "var(--sr-radius-md)",
-              border: "1px solid var(--sr-border-default)",
-              background: "var(--sr-bg-app)",
-              fontSize: 12,
-              fontWeight: 600,
-              color: "var(--clay-600)",
-              fontFamily: "var(--sr-font-sans)",
-              cursor: "pointer",
-              textAlign: "center",
-              transition: "background 120ms, border-color 120ms",
-              letterSpacing: "0.01em",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--clay-50)";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-300)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--sr-bg-app)";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--sr-border-default)";
-            }}
-          >
-            Express Interest
-          </button>
-        </div>
-      </article>
-    </Link>
   );
 }
 
@@ -257,7 +144,7 @@ function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
   );
 }
 
-function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
+function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   const handleNotify = () => {
     const key = "sr_notify_subscribed";
     if (localStorage.getItem(key)) {
@@ -269,13 +156,19 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
   };
 
   return (
-    <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 24px" }}>
+    <div style={{
+      textAlign: "center",
+      padding: "72px 24px",
+      background: "var(--cream-50)",
+      border: "1px dashed var(--cream-400)",
+      borderRadius: "var(--sr-radius-lg)",
+    }}>
       <Package size={40} style={{ margin: "0 auto 16px", color: "var(--ink-300)" }} />
       <p style={{ fontSize: 14, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-400)" }}>
-        No items found
+        Belt is empty
       </p>
       <p style={{ fontSize: 13, color: "var(--ink-300)", marginTop: 8 }}>
-        {hasSearch ? "Try a different search or suburb." : "No items listed yet — new sales go live regularly."}
+        {hasSearch ? "Nothing matches those filters. Try widening the search or clearing the suburb." : "No items on the belt yet — new sales go live regularly."}
       </p>
       {!hasSearch && (
         <button
@@ -300,7 +193,7 @@ function EmptyItems({ hasSearch }: { hasSearch: boolean }) {
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sr-bg-card)"; }}
         >
           <Bell size={14} strokeWidth={1.5} />
-          Notify me when sales go live
+          Notify me when items land
         </button>
       )}
     </div>
@@ -317,7 +210,6 @@ function BrowsePageContent() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sr_seller_hero_dismissed") === "1";
   });
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const {
     searchInput, suburb, category, condition, priceRange, sort,
@@ -334,15 +226,19 @@ function BrowsePageContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorites(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+  // Polaroid pile = freshest listings (suburb-aware, ignores other filters)
+  const newestQuery = useQuery({
+    queryKey: ["market-newest", suburb],
+    queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "newest" }),
+    staleTime: 60_000,
+  });
+
+  // Receipt roll = cheapest (suburb-aware, ignores other filters)
+  const cheapestQuery = useQuery({
+    queryKey: ["market-cheapest", suburb],
+    queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "price_asc" }),
+    staleTime: 60_000,
+  });
 
   const hasSearch = !!(searchInput || suburb || category || condition || priceRange);
 
@@ -412,43 +308,79 @@ function BrowsePageContent() {
           </div>
         </div>
 
-        {/* ── ITEMS GRID ── */}
+        {/* ── 01 · CONVEYOR BELT (primary browse, respects all filters) ── */}
         <section>
           <div className={s.sectionHead}>
             <div>
               <h2 className={s.sectionTitle}>
-                {hasSearch ? "Search results" : <>Items <em>available now</em></>}
+                {hasSearch ? <>What matches <em>your filters</em></> : <>Everything <em>on the belt</em></>}
               </h2>
               <div className={s.sectionMeta}>
-                {itemsLoading ? "Loading…" : `${itemCount} item${itemCount !== 1 ? "s" : ""} available`}
+                {itemsLoading
+                  ? "Loading…"
+                  : `${itemCount} item${itemCount !== 1 ? "s" : ""} rolling past${suburb ? ` in ${suburb}` : ""}`}
               </div>
             </div>
             <span className={s.sectionView} />
           </div>
 
-          {itemsError && (
+          {itemsError ? (
             <div style={{ padding: "24px", color: "var(--rust-500)", fontSize: 14, textAlign: "center" }}>
               Failed to load items. Is the backend running?
             </div>
+          ) : itemsLoading ? (
+            <ConveyorBeltSkeleton />
+          ) : items.length === 0 ? (
+            <EmptyState hasSearch={hasSearch} />
+          ) : (
+            <ConveyorBelt items={items} />
           )}
+        </section>
 
-          <div className={s.itemsGrid}>
-            {itemsLoading
-              ? Array.from({ length: 8 }).map((_, i) => <ItemSkeleton key={i} />)
-              : items.length === 0
-              ? <EmptyItems hasSearch={hasSearch} />
-              : items.slice(0, 8).map((item, i) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    index={i}
-                    isFav={favorites.has(item.id)}
-                    onToggleFav={toggleFav}
-                    isLoggedIn={!!user}
-                  />
-                ))
-            }
+        {/* ── 02 · POLAROID PILE (newest, suburb-aware) ── */}
+        <section style={{ marginTop: 56 }}>
+          <div className={s.sectionHead}>
+            <div>
+              <h2 className={s.sectionTitle}>
+                Fresh from someone&apos;s <em>home</em>
+              </h2>
+              <div className={s.sectionMeta}>
+                {newestQuery.isLoading
+                  ? "Loading…"
+                  : `Just listed${suburb ? ` near ${suburb}` : ""} · ${newestQuery.data?.count ?? 0} total`}
+              </div>
+            </div>
+            <span className={s.sectionView} />
           </div>
+
+          {newestQuery.isLoading
+            ? <PolaroidPileSkeleton />
+            : (newestQuery.data?.items?.length ?? 0) === 0
+              ? null
+              : <PolaroidPile items={newestQuery.data!.items} />
+          }
+        </section>
+
+        {/* ── 03 · RECEIPT ROLL (cheapest, suburb-aware) ── */}
+        <section style={{ marginTop: 56 }}>
+          <div className={s.sectionHead}>
+            <div>
+              <h2 className={s.sectionTitle}>
+                Today&apos;s <em>best prices</em>
+              </h2>
+              <div className={s.sectionMeta}>
+                Cheapest 14 items{suburb ? ` in ${suburb}` : " right now"} · cash, transfer or pick-up
+              </div>
+            </div>
+            <span className={s.sectionView} />
+          </div>
+
+          {cheapestQuery.isLoading
+            ? <ReceiptRollSkeleton />
+            : (cheapestQuery.data?.items?.length ?? 0) === 0
+              ? null
+              : <ReceiptRoll items={cheapestQuery.data!.items} suburb={suburb || null} />
+          }
         </section>
 
         {/* ── ACTIVE SALES NEARBY ── */}
