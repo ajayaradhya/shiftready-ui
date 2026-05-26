@@ -54,7 +54,7 @@ export function BundleCard({
   const Icon = ICONS[index % ICONS.length];
   const conf = Math.round(avgConfidence(bundle) * 100);
   const discountPct = bundle.bundleDiscountPercent ?? 0;
-  const itemTotal = bundle.suggestedPrice;
+  const itemTotal = bundle.suggestedPrice ?? 0;
   const bundlePrice = discountPct > 0 ? Math.round(itemTotal * (1 - discountPct / 100) * 100) / 100 : itemTotal;
   const savings = Math.round((itemTotal - bundlePrice) * 100) / 100;
   const hasBundleDiscount = discountPct > 0 && itemTotal > 0;
@@ -232,7 +232,7 @@ export function BundleCard({
         ) : (
           <div style={{ fontSize: 13, color: "var(--sr-text-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
             <strong style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>
-              ${bundle.suggestedPrice.toLocaleString()}
+              ${(bundle.suggestedPrice ?? 0).toLocaleString()}
             </strong>
             listing value
           </div>

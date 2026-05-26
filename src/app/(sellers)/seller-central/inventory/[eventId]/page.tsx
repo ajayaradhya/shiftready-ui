@@ -224,7 +224,7 @@ export default function SellerCentralInventoryPage() {
 
   const allItems = summary?.bundles?.flatMap((b) => b.items) ?? [];
   const totalItems = allItems.length;
-  const totalValue = summary?.bundles?.reduce((s, b) => s + b.suggestedPrice, 0) ?? 0;
+  const totalValue = summary?.bundles?.reduce((s, b) => s + (b.suggestedPrice ?? 0), 0) ?? 0;
   const selectedBundle = summary?.bundles?.find((b) => b.id === selectedBundleId) ?? null;
   const statusInfo = status ? (STATUS_BADGE[status] ?? STATUS_BADGE.archived) : null;
 
@@ -417,7 +417,7 @@ export default function SellerCentralInventoryPage() {
                 {selectedBundle.name}
               </div>
               <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 1 }}>
-                {selectedBundle.items.length} items · ${selectedBundle.suggestedPrice.toLocaleString()} listing value
+                {selectedBundle.items.length} items · ${(selectedBundle.suggestedPrice ?? 0).toLocaleString()} listing value
               </div>
             </div>
           </div>
