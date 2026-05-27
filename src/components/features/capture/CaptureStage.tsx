@@ -16,14 +16,35 @@ function captureFrameFromVideo(video: HTMLVideoElement): string {
   return offscreen.toDataURL("image/jpeg", 0.85);
 }
 
+const HOW_IT_WORKS_STEPS = [
+  {
+    icon: "👆",
+    title: "Tap any item",
+    desc: "Point at an item and tap — it's added to your bucket instantly. AI identifies it in the background.",
+  },
+  {
+    icon: "✏️",
+    title: "Review names",
+    desc: "Check AI guesses and edit names before uploading. Low-confidence items are flagged for you.",
+  },
+  {
+    icon: "🏷️",
+    title: "Create your sale",
+    desc: "Tap \"Create Sale\" — we group and price everything. Buyers can browse in minutes.",
+  },
+];
+
 export function CaptureStage({ stream, onUserTap }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const onUserTapRef = useRef(onUserTap);
   const throttleRef = useRef(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const showHowItWorksRef = useRef(false);
 
   useEffect(() => { onUserTapRef.current = onUserTap; }, [onUserTap]);
+  useEffect(() => { showHowItWorksRef.current = showHowItWorks; }, [showHowItWorks]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -33,6 +54,7 @@ export function CaptureStage({ stream, onUserTap }: Props) {
     return () => { video.srcObject = null; };
   }, [stream]);
 
+  // Wake lock — keep screen on; re-acquire after tab returns to foreground
   useEffect(() => {
     let active = true;
     const acquire = async () => {
@@ -55,7 +77,25 @@ export function CaptureStage({ stream, onUserTap }: Props) {
     };
   }, []);
 
+  // Orientation lock — portrait during capture (best-effort; not supported on iOS Safari)
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (screen.orientation as any)?.lock?.("portrait").catch?.(() => {});
+    } catch {}
+    return () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (screen.orientation as any)?.unlock?.();
+      } catch {}
+    };
+  }, []);
+
   const handleStageClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
+    if (showHowItWorksRef.current) {
+      setShowHowItWorks(false);
+      return;
+    }
     if (throttleRef.current) return;
 
     const video = videoRef.current;
@@ -98,16 +138,11 @@ export function CaptureStage({ stream, onUserTap }: Props) {
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
 
-      {/* Idle hint */}
+      {/* Corner guides + center hint (non-interactive layer) */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 12,
           pointerEvents: "none",
         }}
       >
@@ -119,18 +154,54 @@ export function CaptureStage({ stream, onUserTap }: Props) {
         ].map((s, i) => (
           <div key={i} style={{ position: "absolute", width: 28, height: 28, ...s }} />
         ))}
-        <span
+
+        <div
           style={{
-            fontFamily: "var(--sr-font-sans)",
-            fontSize: 13,
-            fontWeight: 500,
-            color: "rgba(255,255,255,0.45)",
-            letterSpacing: "0.01em",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
           }}
         >
-          Tap an item to capture it
-        </span>
+          <span
+            style={{
+              fontFamily: "var(--sr-font-sans)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.45)",
+              letterSpacing: "0.01em",
+            }}
+          >
+            Tap an item to capture it
+          </span>
+        </div>
       </div>
+
+      {/* "How it works" link */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setShowHowItWorks(true); }}
+        style={{
+          position: "absolute",
+          bottom: 96,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "6px 14px",
+          borderRadius: 100,
+          color: "rgba(255,255,255,0.30)",
+          fontFamily: "var(--sr-font-sans)",
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: "0.01em",
+          zIndex: 5,
+          whiteSpace: "nowrap",
+        }}
+      >
+        How it works
+      </button>
 
       {/* Tap ripple */}
       {ripple && (
@@ -148,6 +219,112 @@ export function CaptureStage({ stream, onUserTap }: Props) {
             pointerEvents: "none",
           }}
         />
+      )}
+
+      {/* How it works overlay */}
+      {showHowItWorks && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            background: "rgba(0,0,0,0.72)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px 20px",
+          }}
+          onClick={(e) => { e.stopPropagation(); setShowHowItWorks(false); }}
+        >
+          <div
+            style={{
+              background: "rgba(18,14,12,0.97)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 20,
+              padding: "28px 24px 32px",
+              maxWidth: 340,
+              width: "100%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                fontFamily: "var(--sr-font-serif)",
+                fontSize: 20,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.90)",
+                marginBottom: 24,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              How it works
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {HOW_IT_WORKS_STEPS.map((step, i) => (
+                <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: "rgba(181,96,74,0.18)",
+                      border: "1px solid rgba(181,96,74,0.28)",
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {step.icon}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: "var(--sr-font-sans)",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "rgba(255,255,255,0.85)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {step.title}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--sr-font-sans)",
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.45)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {step.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowHowItWorks(false)}
+              style={{
+                marginTop: 28,
+                width: "100%",
+                height: 48,
+                borderRadius: 14,
+                border: "none",
+                background: "var(--clay-600)",
+                color: "#fff",
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: "var(--sr-font-sans)",
+                cursor: "pointer",
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
       )}
 
       <style>{`

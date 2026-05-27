@@ -26,6 +26,7 @@ function CapturePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const appendTo = searchParams.get("appendTo");
+  const isDev = searchParams.get("dev") === "1";
   const { setSale } = useSaleContext();
   useEffect(() => { document.title = "Live Capture - ShiftReady"; }, []);
 
@@ -46,6 +47,8 @@ function CapturePageContent() {
   const eventIdRef = useRef<string | null>(appendTo ?? null);
   const confirmedItemsRef = useRef<CapturedItem[]>([]);
   const itemCountRef = useRef(0);
+  const captureStartTimeRef = useRef<number | null>(null);
+  const networkErrorTotalRef = useRef(0);
 
   useEffect(() => { eventIdRef.current = eventId; }, [eventId]);
   useEffect(() => {
@@ -89,6 +92,14 @@ function CapturePageContent() {
   const handleGranted = useCallback((s: MediaStream) => {
     setStream(s);
     setPageState("capturing");
+    captureStartTimeRef.current = Date.now();
+    // Camera revoke detection — if track ends mid-session, return to gate; items preserved
+    s.getVideoTracks().forEach((track) => {
+      track.addEventListener("ended", () => {
+        setStream(null);
+        setPageState("gate");
+      });
+    });
     // Sale created on first tap, not here — avoids orphan sales if user bails
   }, []);
 
@@ -134,6 +145,7 @@ function CapturePageContent() {
       );
     } catch (err) {
       const isNetworkErr = err instanceof TypeError && err.message.includes("fetch");
+      if (isNetworkErr) networkErrorTotalRef.current += 1;
       setConfirmedItems((prev) =>
         prev.map((i) =>
           i.id === itemId
@@ -253,6 +265,26 @@ function CapturePageContent() {
         saleTitle.trim() || undefined
       );
 
+      // P6: log capture session analytics at finalize
+      if (isDev || process.env.NODE_ENV !== "production") {
+        const allItems = confirmedItemsRef.current;
+        const elapsed = captureStartTimeRef.current
+          ? Math.round((Date.now() - captureStartTimeRef.current) / 1000)
+          : 0;
+        console.table({
+          "Total items": allItems.length,
+          "Identified (name+gcs_uri)": allItems.filter((i) => i.name && i.gcs_uri).length,
+          "User-named overrides": allItems.filter((i) => i.nameSource === "user").length,
+          "Low confidence": allItems.filter((i) => i.confidence === "low").length,
+          "Needs review": allItems.filter((i) => !i.name || !i.gcs_uri).length,
+          "Network errors (cumulative)": networkErrorTotalRef.current,
+          "Identify success rate": allItems.length > 0
+            ? `${Math.round((allItems.filter((i) => i.name && i.gcs_uri).length / allItems.length) * 100)}%`
+            : "n/a",
+          "Time to finalize (s)": elapsed,
+        });
+      }
+
       setProcessingEventId(eid);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
@@ -264,7 +296,18 @@ function CapturePageContent() {
     setPageState("capturing");
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" }, audio: false })
-      .then((s) => setStream(s))
+      .then((s) => {
+        setStream(s);
+        // Resume analytics timer if not already set
+        if (!captureStartTimeRef.current) captureStartTimeRef.current = Date.now();
+        // Camera revoke detection for resumed stream
+        s.getVideoTracks().forEach((track) => {
+          track.addEventListener("ended", () => {
+            setStream(null);
+            setPageState("gate");
+          });
+        });
+      })
       .catch(() => setPageState("gate"));
   };
 
@@ -354,6 +397,51 @@ function CapturePageContent() {
               >
                 Undo
               </button>
+            </div>
+          )}
+
+          {/* Dev analytics panel — visible at ?dev=1 */}
+          {isDev && (
+            <div
+              style={{
+                position: "fixed",
+                bottom: 80,
+                left: 12,
+                zIndex: 40,
+                background: "rgba(0,0,0,0.82)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 10,
+                padding: "8px 12px",
+                fontFamily: "var(--sr-font-mono)",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.75)",
+                lineHeight: 1.8,
+                pointerEvents: "none",
+                minWidth: 160,
+              }}
+            >
+              <div style={{ color: "rgba(255,255,255,0.35)", marginBottom: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Analytics
+              </div>
+              <div>items: <b>{confirmedItems.length}</b></div>
+              <div>
+                identified:{" "}
+                <b>{confirmedItems.filter((i) => i.name && i.gcs_uri && !i.isLoading).length}</b>
+                {" / "}{confirmedItems.length}
+              </div>
+              <div>user-named: <b>{confirmedItems.filter((i) => i.nameSource === "user").length}</b></div>
+              <div>low-conf: <b>{confirmedItems.filter((i) => i.confidence === "low").length}</b></div>
+              <div>net-err live: <b>{confirmedItems.filter((i) => i.network_error).length}</b></div>
+              <div>net-err total: <b>{networkErrorTotalRef.current}</b></div>
+              <div>
+                elapsed:{" "}
+                <b>
+                  {captureStartTimeRef.current
+                    ? `${Math.round((Date.now() - captureStartTimeRef.current) / 1000)}s`
+                    : "—"}
+                </b>
+              </div>
             </div>
           )}
 
