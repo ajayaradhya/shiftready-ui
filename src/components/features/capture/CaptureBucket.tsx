@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Package, X, Trash2, RotateCcw, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Package, X, Trash2, RotateCcw, Loader2, WifiOff, ChevronLeft, Pencil } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
 
 interface Props {
   items: CapturedItem[];
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
+  onUpdateItem?: (id: string, updates: Partial<CapturedItem>) => void;
 }
 
 function formatPrice(price?: number): string | null {
@@ -15,53 +16,378 @@ function formatPrice(price?: number): string | null {
   return `~$${Math.round(price).toLocaleString()}`;
 }
 
-function ItemRow({
+// Half-sheet editor for a single item (G13)
+function ItemEditSheet({
   item,
+  onClose,
   onRemove,
   onRetry,
+  onUpdateItem,
 }: {
   item: CapturedItem;
+  onClose: () => void;
   onRemove: () => void;
   onRetry: () => void;
+  onUpdateItem?: (id: string, updates: Partial<CapturedItem>) => void;
 }) {
-  const displayName = item.name
-    ? item.name
-    : item.isLoading
-    ? "Identifying…"
-    : item.error
-    ? item.label.startsWith("unknown-")
-      ? "Unknown item"
-      : item.label
-    : item.label.startsWith("unknown-")
-    ? "Unknown item"
-    : item.label;
+  const [name, setName] = useState(item.name ?? item.label);
+  const [brand, setBrand] = useState(item.brand ?? "");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setTimeout(() => nameInputRef.current?.focus(), 120);
+  }, []);
+
+  const handleSave = useCallback(() => {
+    if (!onUpdateItem) { onClose(); return; }
+    const trimmedName = name.trim();
+    const trimmedBrand = brand.trim();
+    const updates: Partial<CapturedItem> = {};
+    if (trimmedName && trimmedName !== item.name) {
+      updates.name = trimmedName;
+      updates.nameSource = "user";
+    }
+    if (trimmedBrand !== (item.brand ?? "")) {
+      updates.brand = trimmedBrand || undefined;
+    }
+    if (Object.keys(updates).length > 0) onUpdateItem(item.id, updates);
+    onClose();
+  }, [name, brand, item, onUpdateItem, onClose]);
+
+  const handleDelete = useCallback(() => {
+    onRemove();
+    onClose();
+  }, [onRemove, onClose]);
+
+  const displayName = item.isLoading ? "Identifying…" : (item.name ?? item.label);
   const price = formatPrice(item.predicted_original_price);
 
   return (
     <div
       style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
         display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "10px 16px",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(4px)",
       }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleSave(); }}
     >
-      {/* Thumbnail */}
       <div
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 10,
-          overflow: "hidden",
-          flexShrink: 0,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.10)",
-          display: "grid",
-          placeItems: "center",
+          background: "rgba(14, 12, 10, 0.97)",
+          borderRadius: "20px 20px 0 0",
+          borderTop: "1px solid rgba(255,255,255,0.10)",
+          paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
+          animation: "slideUp 220ms cubic-bezier(0.32,0.72,0,1)",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 8 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.18)" }} />
+        </div>
+
+        {/* Top bar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 16px 12px",
+          }}
+        >
+          <button
+            onClick={handleSave}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.55)",
+              fontFamily: "var(--sr-font-sans)",
+              fontSize: 14,
+              padding: 0,
+            }}
+          >
+            <ChevronLeft size={18} strokeWidth={2} />
+            Back
+          </button>
+          <button
+            onClick={handleDelete}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#B14F3B",
+              fontFamily: "var(--sr-font-sans)",
+              fontSize: 14,
+              fontWeight: 600,
+              padding: 0,
+            }}
+          >
+            <Trash2 size={15} strokeWidth={2} />
+            Remove
+          </button>
+        </div>
+
+        {/* Frame image */}
+        <div style={{ padding: "0 16px 16px" }}>
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "4/3",
+              borderRadius: 14,
+              overflow: "hidden",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.10)",
+              display: "grid",
+              placeItems: "center",
+              position: "relative",
+            }}
+          >
+            {item.frameSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.frameSrc}
+                alt={displayName}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            ) : (
+              <Package size={40} strokeWidth={1} style={{ color: "rgba(255,255,255,0.20)" }} />
+            )}
+            {item.isLoading && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.50)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <Loader2 size={28} style={{ color: "var(--clay-400)" }} className="animate-spin" />
+              </div>
+            )}
+            {/* AI / confidence badge */}
+            {!item.isLoading && item.nameSource === "ai" && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  background: item.confidence === "low" ? "rgba(217,119,6,0.85)" : "rgba(0,0,0,0.65)",
+                  backdropFilter: "blur(6px)",
+                  borderRadius: 100,
+                  padding: "3px 8px",
+                  fontSize: 10,
+                  fontFamily: "var(--sr-font-sans)",
+                  fontWeight: 600,
+                  color: item.confidence === "low" ? "#fff" : "rgba(255,255,255,0.70)",
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {item.confidence === "low" ? "Low confidence" : "AI guess"}
+              </div>
+            )}
+            {price && !item.isLoading && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 8,
+                  right: 8,
+                  background: "rgba(107,138,78,0.85)",
+                  backdropFilter: "blur(6px)",
+                  borderRadius: 100,
+                  padding: "3px 10px",
+                  fontSize: 12,
+                  fontFamily: "var(--sr-font-mono)",
+                  fontWeight: 700,
+                  color: "#fff",
+                }}
+              >
+                {price}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fields */}
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Network error / retry */}
+          {(item.network_error || item.error) && !item.isLoading && (
+            <button
+              onClick={() => { onRetry(); onClose(); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: "100%",
+                padding: "10px 16px",
+                borderRadius: 10,
+                border: "1px solid rgba(181,96,74,0.40)",
+                background: "rgba(181,96,74,0.15)",
+                cursor: "pointer",
+                color: "#CC785C",
+                fontFamily: "var(--sr-font-sans)",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              <RotateCcw size={14} strokeWidth={2.5} />
+              {item.network_error ? "Retry upload" : "Retry identify"}
+            </button>
+          )}
+
+          {/* Name input */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontFamily: "var(--sr-font-mono)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                color: "rgba(255,255,255,0.35)",
+                marginBottom: 6,
+              }}
+            >
+              Item name
+            </label>
+            <input
+              ref={nameInputRef}
+              type="text"
+              value={item.isLoading ? "" : name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={item.isLoading}
+              placeholder={item.isLoading ? "Identifying…" : "Name this item"}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
+              style={{
+                width: "100%",
+                height: 48,
+                padding: "0 14px",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.06)",
+                fontSize: 16,
+                fontWeight: 600,
+                fontFamily: "var(--sr-font-sans)",
+                color: item.isLoading ? "rgba(255,255,255,0.30)" : "rgba(255,255,255,0.90)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Brand input */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontFamily: "var(--sr-font-mono)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                color: "rgba(255,255,255,0.35)",
+                marginBottom: 6,
+              }}
+            >
+              Brand <span style={{ textTransform: "none", letterSpacing: 0, fontFamily: "var(--sr-font-sans)" }}>(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={item.isLoading ? "" : brand}
+              onChange={(e) => setBrand(e.target.value)}
+              disabled={item.isLoading}
+              placeholder={item.isLoading ? "…" : "e.g. IKEA, Sony, Unknown"}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
+              style={{
+                width: "100%",
+                height: 44,
+                padding: "0 14px",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(255,255,255,0.04)",
+                fontSize: 14,
+                fontFamily: "var(--sr-font-sans)",
+                color: item.isLoading ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.70)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Save button */}
+          <button
+            onClick={handleSave}
+            style={{
+              width: "100%",
+              height: 50,
+              borderRadius: 14,
+              border: "none",
+              background: "var(--clay-600)",
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: 700,
+              fontFamily: "var(--sr-font-sans)",
+              cursor: "pointer",
+              marginTop: 4,
+            }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Grid cell for a single item in the bucket preview (G15)
+function GridCell({
+  item,
+  onTap,
+}: {
+  item: CapturedItem;
+  onTap: () => void;
+}) {
+  const displayName = item.name
+    ? item.name
+    : item.isLoading
+    ? "Identifying…"
+    : item.label;
+
+  return (
+    <button
+      onClick={onTap}
+      style={{
+        position: "relative",
+        borderRadius: 12,
+        overflow: "hidden",
+        border: item.network_error
+          ? "1px solid rgba(177,79,59,0.55)"
+          : item.confidence === "low"
+          ? "1px solid rgba(217,119,6,0.40)"
+          : "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.05)",
+        cursor: "pointer",
+        textAlign: "left",
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Photo */}
+      <div style={{ position: "relative", width: "100%", aspectRatio: "1" }}>
         {item.frameSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,143 +396,106 @@ function ItemRow({
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         ) : (
-          <Package size={20} style={{ color: "rgba(255,255,255,0.25)" }} />
-        )}
-      </div>
-
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: "var(--sr-font-sans)",
-            fontSize: 14,
-            fontWeight: 600,
-            color: item.isLoading ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.90)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          {item.isLoading && (
-            <Loader2 size={12} style={{ color: "var(--clay-400)", flexShrink: 0 }} className="animate-spin" />
-          )}
-          {item.error && !item.isLoading && (
-            <AlertCircle size={12} style={{ color: "#B14F3B", flexShrink: 0 }} />
-          )}
-          {displayName}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-          {item.brand && !item.isLoading && !item.error && (
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--sr-font-sans)",
-                fontWeight: 600,
-                padding: "2px 8px",
-                borderRadius: 100,
-                background: "rgba(181,96,74,0.22)",
-                color: "#E0A285",
-                letterSpacing: "0.01em",
-              }}
-            >
-              {item.brand}
-            </span>
-          )}
-          {price && !item.isLoading && !item.error && (
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--sr-font-mono)",
-                fontWeight: 700,
-                padding: "2px 8px",
-                borderRadius: 100,
-                background: "rgba(107,138,78,0.20)",
-                color: "#85A85C",
-                letterSpacing: "0.02em",
-              }}
-            >
-              {price}
-            </span>
-          )}
-          {item.error && !item.isLoading && (
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--sr-font-sans)",
-                color: "rgba(255,255,255,0.35)",
-              }}
-            >
-              Could not identify
-            </span>
-          )}
-          {item.isLoading && (
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--sr-font-sans)",
-                color: "rgba(255,255,255,0.30)",
-              }}
-            >
-              Asking Gemini…
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-        {item.error && !item.isLoading && (
-          <button
-            onClick={onRetry}
+          <div
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              border: "1px solid rgba(181,96,74,0.40)",
-              background: "rgba(181,96,74,0.15)",
+              width: "100%",
+              height: "100%",
               display: "grid",
               placeItems: "center",
-              cursor: "pointer",
-              color: "#CC785C",
+              background: "rgba(255,255,255,0.04)",
             }}
-            aria-label="Retry identification"
-            title="Retry"
           >
-            <RotateCcw size={13} strokeWidth={2.5} />
-          </button>
+            <Package size={24} strokeWidth={1} style={{ color: "rgba(255,255,255,0.20)" }} />
+          </div>
         )}
-        <button
-          onClick={onRemove}
+        {item.isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.45)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Loader2 size={18} style={{ color: "var(--clay-400)" }} className="animate-spin" />
+          </div>
+        )}
+        {/* Status dot */}
+        {item.network_error && !item.isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              top: 5,
+              right: 5,
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#B14F3B",
+              border: "1.5px solid rgba(14,12,10,0.80)",
+            }}
+          />
+        )}
+        {item.confidence === "low" && !item.isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              top: 5,
+              right: 5,
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#D97706",
+              border: "1.5px solid rgba(14,12,10,0.80)",
+            }}
+          />
+        )}
+        {/* Edit icon hint */}
+        <div
           style={{
-            width: 32,
-            height: 32,
+            position: "absolute",
+            bottom: 5,
+            right: 5,
+            width: 20,
+            height: 20,
             borderRadius: "50%",
-            border: "1px solid rgba(255,255,255,0.10)",
-            background: "rgba(177,79,59,0.12)",
+            background: "rgba(0,0,0,0.60)",
+            backdropFilter: "blur(4px)",
             display: "grid",
             placeItems: "center",
-            cursor: "pointer",
-            color: "#C97060",
           }}
-          aria-label="Remove item"
         >
-          <Trash2 size={13} strokeWidth={2} />
-        </button>
+          <Pencil size={10} strokeWidth={2.5} style={{ color: "rgba(255,255,255,0.70)" }} />
+        </div>
       </div>
-    </div>
+
+      {/* Name */}
+      <div
+        style={{
+          padding: "6px 8px 8px",
+          fontFamily: "var(--sr-font-sans)",
+          fontSize: 11,
+          fontWeight: 600,
+          color: item.isLoading ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.80)",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          lineHeight: 1.3,
+        }}
+      >
+        {displayName}
+      </div>
+    </button>
   );
 }
 
-export function CaptureBucket({ items, onRemove, onRetry }: Props) {
+export function CaptureBucket({ items, onRemove, onRetry, onUpdateItem }: Props) {
   const [open, setOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<CapturedItem | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(items.length);
   const loadingCount = items.filter((i) => i.isLoading).length;
-  const errorCount = items.filter((i) => i.error && !i.isLoading).length;
+  const networkErrorCount = items.filter((i) => i.network_error && !i.isLoading).length;
 
   // Auto-open on first item added
   useEffect(() => {
@@ -215,6 +504,15 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
     }
     prevCountRef.current = items.length;
   }, [items.length]);
+
+  // Keep editingItem in sync if the underlying item updates (e.g. Gemini returns)
+  useEffect(() => {
+    if (!editingItem) return;
+    const updated = items.find((i) => i.id === editingItem.id);
+    if (updated) setEditingItem(updated);
+    else setEditingItem(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   // Close panel on outside click
   useEffect(() => {
@@ -228,7 +526,6 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Badge pill
   const badge = (
     <button
       onClick={() => setOpen((v) => !v)}
@@ -253,6 +550,8 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
     >
       {loadingCount > 0 ? (
         <Loader2 size={14} strokeWidth={2.5} style={{ color: "#fff", flexShrink: 0 }} className="animate-spin" />
+      ) : networkErrorCount > 0 ? (
+        <WifiOff size={14} strokeWidth={2.5} style={{ color: "#fff", flexShrink: 0 }} />
       ) : (
         <Package size={14} strokeWidth={2.5} style={{ color: items.length > 0 ? "#fff" : "rgba(255,255,255,0.65)", flexShrink: 0 }} />
       )}
@@ -268,7 +567,7 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
       >
         {items.length}
       </span>
-      {errorCount > 0 && (
+      {networkErrorCount > 0 && (
         <span
           style={{
             width: 7,
@@ -282,7 +581,6 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
     </button>
   );
 
-  // Bottom sheet panel
   const panel = open && (
     <div
       style={{
@@ -362,8 +660,8 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
                 }}
               >
                 {items.length === 0
-                  ? "None yet - confirm items while capturing"
-                  : `${items.length} item${items.length !== 1 ? "s" : ""}${loadingCount > 0 ? ` · ${loadingCount} identifying…` : ""}`}
+                  ? "Tap items to add them"
+                  : `${items.length} item${items.length !== 1 ? "s" : ""}${loadingCount > 0 ? ` · ${loadingCount} identifying…` : ""}${networkErrorCount > 0 ? ` · ${networkErrorCount} need retry` : ""}`}
               </div>
             </div>
           </div>
@@ -387,8 +685,8 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
           </button>
         </div>
 
-        {/* Item list */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        {/* Photo grid (G15) */}
+        <div style={{ flex: 1, overflowY: "auto", padding: items.length === 0 ? 0 : 12 }}>
           {items.length === 0 ? (
             <div
               style={{
@@ -410,18 +708,25 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
                   lineHeight: 1.5,
                 }}
               >
-                Point at an item and tap the <strong style={{ color: "rgba(255,255,255,0.55)" }}>+</strong> button to add it here
+                Tap any item in view to add it to your sale
               </div>
             </div>
           ) : (
-            items.map((item) => (
-              <ItemRow
-                key={item.id}
-                item={item}
-                onRemove={() => onRemove(item.id)}
-                onRetry={() => onRetry(item.id)}
-              />
-            ))
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 8,
+              }}
+            >
+              {items.map((item) => (
+                <GridCell
+                  key={item.id}
+                  item={item}
+                  onTap={() => setEditingItem(item)}
+                />
+              ))}
+            </div>
           )}
         </div>
 
@@ -442,6 +747,15 @@ export function CaptureBucket({ items, onRemove, onRetry }: Props) {
     <>
       {badge}
       {panel}
+      {editingItem && (
+        <ItemEditSheet
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onRemove={() => onRemove(editingItem.id)}
+          onRetry={() => onRetry(editingItem.id)}
+          onUpdateItem={onUpdateItem}
+        />
+      )}
     </>
   );
 }

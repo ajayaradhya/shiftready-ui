@@ -1,5 +1,7 @@
 export type CapturePageState = "gate" | "capturing" | "reviewing";
 
+export type NameSource = "ai" | "user";
+
 export interface CapturedItem {
   id: string;
   label: string;
@@ -12,12 +14,16 @@ export interface CapturedItem {
   predicted_original_price?: number;
   gcs_uri?: string;
   isLoading?: boolean;
+  /** Gemini identify errored — but item stays in bucket */
   error?: string;
-}
-
-export interface PendingDetection {
-  label: string;
-  frameSrc: string;
+  /** Frame upload / network failure — user can retry */
+  network_error?: boolean;
+  /** True when name/gcs_uri missing after all retries */
+  needs_review?: boolean;
+  /** Whether name was set by AI or overridden by user */
+  nameSource?: NameSource;
+  /** Gemini identification confidence */
+  confidence?: "high" | "medium" | "low";
 }
 
 export interface CaptureToast {

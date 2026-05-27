@@ -1,7 +1,9 @@
 "use client";
 
-import { Trash2, Plus, PackageCheck, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Trash2, Plus, PackageCheck, Loader2, AlertCircle, WifiOff, Copy, Wand2 } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
+import { suggestSaleTitle } from "@/lib/api";
 
 interface Props {
   items: CapturedItem[];
@@ -10,8 +12,11 @@ interface Props {
   saleTitle: string;
   onSaleTitleChange: (v: string) => void;
   onRemove: (id: string) => void;
+  onUpdateItem: (id: string, updates: Partial<CapturedItem>) => void;
+  onDuplicate: (id: string) => void;
   onProcess: () => void;
   onBack: () => void;
+  eventId?: string | null;
 }
 
 export function ItemReviewScreen({
@@ -21,12 +26,60 @@ export function ItemReviewScreen({
   saleTitle,
   onSaleTitleChange,
   onRemove,
+  onUpdateItem,
+  onDuplicate,
   onProcess,
   onBack,
+  eventId,
 }: Props) {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+  const [showNetworkConfirm, setShowNetworkConfirm] = useState(false);
+  const [isSuggestingTitle, setIsSuggestingTitle] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   const loadingCount = items.filter((i) => i.isLoading).length;
-  const errorCount = items.filter((i) => i.error && !i.isLoading).length;
-  const readyCount = items.filter((i) => i.gcs_uri && i.name && !i.isLoading).length;
+  const networkErrorCount = items.filter((i) => i.network_error && !i.isLoading).length;
+  const identifiedCount = items.filter((i) => !i.isLoading && i.name).length;
+
+  const canProcess = items.length > 0 && isOnline && !isUploading;
+
+  const handleCreateSale = useCallback(() => {
+    if (networkErrorCount > 0 && !showNetworkConfirm) {
+      setShowNetworkConfirm(true);
+      return;
+    }
+    setShowNetworkConfirm(false);
+    onProcess();
+  }, [networkErrorCount, showNetworkConfirm, onProcess]);
+
+  const handleSuggestTitle = useCallback(async () => {
+    if (!eventId || isSuggestingTitle) return;
+    const names = items
+      .filter((i) => i.name && i.name !== i.label)
+      .map((i) => i.name as string);
+    if (names.length === 0) return;
+    setIsSuggestingTitle(true);
+    try {
+      const { title } = await suggestSaleTitle(eventId, names);
+      if (title) onSaleTitleChange(title);
+    } catch {
+      // best-effort
+    } finally {
+      setIsSuggestingTitle(false);
+    }
+  }, [eventId, items, isSuggestingTitle, onSaleTitleChange]);
 
   return (
     <div
@@ -83,10 +136,10 @@ export function ItemReviewScreen({
               }}
             >
               {items.length === 0
-                ? "No items added yet"
-                : loadingCount > 0 && readyCount === 0
-                ? "Identifying items…"
-                : `${readyCount} item${readyCount !== 1 ? "s" : ""} ready${loadingCount > 0 ? ` · ${loadingCount} still identifying…` : ""}`}
+                ? "No items captured"
+                : loadingCount > 0
+                ? `${identifiedCount} identified · ${loadingCount} still identifying…`
+                : `${items.length} item${items.length !== 1 ? "s" : ""} captured`}
             </div>
           </div>
         </div>
@@ -121,7 +174,7 @@ export function ItemReviewScreen({
               <Plus size={24} strokeWidth={1.5} />
             </div>
             <div style={{ fontFamily: "var(--sr-font-sans)", fontSize: 14, color: "var(--sr-text-muted)" }}>
-              Go back and point at items to add them
+              Go back and tap items to add them
             </div>
           </div>
         ) : (
@@ -135,8 +188,6 @@ export function ItemReviewScreen({
             {items.map((item) => {
               const displayName = item.name
                 ? item.name
-                : item.label.startsWith("unknown-")
-                ? "Unknown item"
                 : item.label;
               const price =
                 item.predicted_original_price && item.predicted_original_price > 0
@@ -150,7 +201,9 @@ export function ItemReviewScreen({
                     position: "relative",
                     borderRadius: 14,
                     overflow: "hidden",
-                    border: "1px solid var(--sr-border-subtle)",
+                    border: item.network_error
+                      ? "1px solid var(--rust-200)"
+                      : "1px solid var(--sr-border-subtle)",
                     background: "var(--sr-bg-card)",
                   }}
                 >
@@ -197,25 +250,60 @@ export function ItemReviewScreen({
                   )}
 
                   <div style={{ padding: "8px 10px 10px" }}>
-                    <div
+                    {/* Low-confidence amber dot */}
+                    {item.confidence === "low" && !item.isLoading && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#D97706", flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontFamily: "var(--sr-font-sans)", color: "#D97706" }}>
+                          Confirm name
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Editable name */}
+                    <input
+                      type="text"
+                      value={item.name ?? item.label}
+                      onChange={(e) =>
+                        onUpdateItem(item.id, { name: e.target.value, nameSource: "user" })
+                      }
+                      disabled={isUploading || item.isLoading}
+                      placeholder="Name this item"
                       style={{
+                        width: "100%",
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
                         fontFamily: "var(--sr-font-sans)",
                         fontSize: 13,
                         fontWeight: 600,
                         color: item.isLoading ? "var(--sr-text-muted)" : "var(--ink-800)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
+                        padding: 0,
+                        cursor: isUploading || item.isLoading ? "not-allowed" : "text",
+                        boxSizing: "border-box",
                       }}
-                    >
-                      {item.error && <AlertCircle size={11} style={{ color: "var(--rust-500)", flexShrink: 0 }} />}
-                      {displayName}
-                    </div>
+                    />
 
-                    {(item.brand || price) && !item.isLoading && (
+                    {/* Status badges */}
+                    {item.network_error && !item.isLoading && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                        <WifiOff size={10} style={{ color: "var(--rust-500)", flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontFamily: "var(--sr-font-sans)", color: "var(--rust-500)" }}>
+                          Network error
+                        </span>
+                      </div>
+                    )}
+
+                    {item.error && !item.isLoading && !item.network_error && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                        <AlertCircle size={10} style={{ color: "var(--rust-500)", flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontFamily: "var(--sr-font-sans)", color: "var(--rust-500)" }}>
+                          Could not identify
+                        </span>
+                      </div>
+                    )}
+
+                    {(item.brand || price) && !item.isLoading && !item.error && !item.network_error && (
                       <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
                         {item.brand && item.brand !== "Unknown" && (
                           <span
@@ -253,30 +341,58 @@ export function ItemReviewScreen({
                     )}
                   </div>
 
-                  {/* Remove button */}
-                  <button
-                    onClick={() => onRemove(item.id)}
-                    disabled={isUploading}
+                  {/* Actions overlay */}
+                  <div
                     style={{
                       position: "absolute",
                       top: 6,
                       right: 6,
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      border: "none",
-                      background: "rgba(0,0,0,0.55)",
-                      backdropFilter: "blur(4px)",
-                      display: "grid",
-                      placeItems: "center",
-                      cursor: isUploading ? "not-allowed" : "pointer",
-                      color: "#fff",
-                      opacity: isUploading ? 0.5 : 1,
+                      display: "flex",
+                      gap: 4,
                     }}
-                    aria-label={`Remove ${displayName}`}
                   >
-                    <Trash2 size={13} strokeWidth={2} />
-                  </button>
+                    <button
+                      onClick={() => onDuplicate(item.id)}
+                      disabled={isUploading}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        border: "none",
+                        background: "rgba(0,0,0,0.55)",
+                        backdropFilter: "blur(4px)",
+                        display: "grid",
+                        placeItems: "center",
+                        cursor: isUploading ? "not-allowed" : "pointer",
+                        color: "rgba(255,255,255,0.80)",
+                        opacity: isUploading ? 0.5 : 1,
+                      }}
+                      aria-label={`Duplicate ${displayName}`}
+                      title="Duplicate"
+                    >
+                      <Copy size={12} strokeWidth={2} />
+                    </button>
+                    <button
+                      onClick={() => onRemove(item.id)}
+                      disabled={isUploading}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        border: "none",
+                        background: "rgba(0,0,0,0.55)",
+                        backdropFilter: "blur(4px)",
+                        display: "grid",
+                        placeItems: "center",
+                        cursor: isUploading ? "not-allowed" : "pointer",
+                        color: "#fff",
+                        opacity: isUploading ? 0.5 : 1,
+                      }}
+                      aria-label={`Remove ${displayName}`}
+                    >
+                      <Trash2 size={13} strokeWidth={2} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -298,20 +414,46 @@ export function ItemReviewScreen({
       >
         {/* Optional sale title */}
         <div>
-          <label
-            htmlFor="sale-title-input"
-            style={{
-              display: "block",
-              fontSize: 11,
-              fontFamily: "var(--sr-font-mono)",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              color: "var(--sr-text-muted)",
-              marginBottom: 6,
-            }}
-          >
-            Sale name <span style={{ color: "var(--cream-400)", textTransform: "none", letterSpacing: 0, fontFamily: "var(--sr-font-sans)" }}>(optional)</span>
-          </label>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <label
+              htmlFor="sale-title-input"
+              style={{
+                fontSize: 11,
+                fontFamily: "var(--sr-font-mono)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                color: "var(--sr-text-muted)",
+              }}
+            >
+              Sale name <span style={{ color: "var(--cream-400)", textTransform: "none", letterSpacing: 0, fontFamily: "var(--sr-font-sans)" }}>(optional)</span>
+            </label>
+            {eventId && identifiedCount > 0 && (
+              <button
+                onClick={handleSuggestTitle}
+                disabled={isSuggestingTitle || isUploading}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontFamily: "var(--sr-font-sans)",
+                  fontWeight: 600,
+                  color: isSuggestingTitle ? "var(--sr-text-muted)" : "var(--clay-600)",
+                  background: "none",
+                  border: "none",
+                  cursor: isSuggestingTitle || isUploading ? "not-allowed" : "pointer",
+                  padding: 0,
+                }}
+              >
+                {isSuggestingTitle ? (
+                  <Loader2 size={10} strokeWidth={2} className="animate-spin" />
+                ) : (
+                  <Wand2 size={10} strokeWidth={2} />
+                )}
+                Suggest
+              </button>
+            )}
+          </div>
           <input
             id="sale-title-input"
             type="text"
@@ -354,6 +496,26 @@ export function ItemReviewScreen({
           </div>
         )}
 
+        {!isOnline && (
+          <div
+            style={{
+              padding: "10px 14px",
+              background: "var(--rust-50)",
+              border: "1px solid var(--rust-100)",
+              borderRadius: "var(--sr-radius-md)",
+              fontSize: 13,
+              color: "var(--rust-600)",
+              lineHeight: 1.45,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <WifiOff size={14} strokeWidth={2} style={{ flexShrink: 0 }} />
+            Connect to network to upload your sale.
+          </div>
+        )}
+
         {loadingCount > 0 && !isUploading && (
           <div
             style={{
@@ -374,7 +536,7 @@ export function ItemReviewScreen({
           </div>
         )}
 
-        {errorCount > 0 && !isUploading && (
+        {networkErrorCount > 0 && !isUploading && !showNetworkConfirm && (
           <div
             style={{
               padding: "10px 14px",
@@ -389,14 +551,71 @@ export function ItemReviewScreen({
               gap: 8,
             }}
           >
-            <AlertCircle size={14} strokeWidth={2} style={{ flexShrink: 0 }} />
-            {errorCount} item{errorCount !== 1 ? "s" : ""} couldn&apos;t be identified and will be skipped. Retry or remove {errorCount !== 1 ? "them" : "it"}.
+            <WifiOff size={14} strokeWidth={2} style={{ flexShrink: 0 }} />
+            {networkErrorCount} item{networkErrorCount !== 1 ? "s" : ""} had network errors — they&apos;ll upload on create.
+          </div>
+        )}
+
+        {showNetworkConfirm && (
+          <div
+            style={{
+              padding: "14px",
+              background: "var(--rust-50)",
+              border: "1px solid var(--rust-200)",
+              borderRadius: "var(--sr-radius-md)",
+              fontSize: 13,
+              color: "var(--rust-700)",
+              lineHeight: 1.5,
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>
+              {networkErrorCount} item{networkErrorCount !== 1 ? "s" : ""} couldn&apos;t upload
+            </div>
+            <div style={{ marginBottom: 12, color: "var(--rust-600)" }}>
+              Create sale without them, or go back to retry the upload.
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => { setShowNetworkConfirm(false); onProcess(); }}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  borderRadius: "var(--sr-radius-md)",
+                  border: "none",
+                  background: "var(--rust-600)",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  fontFamily: "var(--sr-font-sans)",
+                  cursor: "pointer",
+                }}
+              >
+                Create anyway
+              </button>
+              <button
+                onClick={() => setShowNetworkConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  borderRadius: "var(--sr-radius-md)",
+                  border: "1px solid var(--rust-200)",
+                  background: "transparent",
+                  color: "var(--rust-600)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: "var(--sr-font-sans)",
+                  cursor: "pointer",
+                }}
+              >
+                Go back
+              </button>
+            </div>
           </div>
         )}
 
         <button
-          onClick={onProcess}
-          disabled={readyCount === 0 || isUploading}
+          onClick={handleCreateSale}
+          disabled={!canProcess}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -407,12 +626,12 @@ export function ItemReviewScreen({
             padding: "14px 24px",
             borderRadius: "var(--sr-radius-lg)",
             border: "none",
-            background: readyCount === 0 || isUploading ? "var(--clay-200)" : "var(--clay-600)",
-            color: readyCount === 0 || isUploading ? "var(--clay-400)" : "#fff",
+            background: !canProcess ? "var(--clay-200)" : "var(--clay-600)",
+            color: !canProcess ? "var(--clay-400)" : "#fff",
             fontSize: 16,
             fontWeight: 700,
             fontFamily: "var(--sr-font-sans)",
-            cursor: readyCount === 0 || isUploading ? "not-allowed" : "pointer",
+            cursor: !canProcess ? "not-allowed" : "pointer",
             letterSpacing: "-0.01em",
             transition: "background 120ms",
           }}
@@ -420,12 +639,12 @@ export function ItemReviewScreen({
           {isUploading ? (
             <>
               <Loader2 size={18} strokeWidth={2} className="animate-spin" />
-              Processing…
+              Creating sale…
             </>
           ) : (
             <>
               <PackageCheck size={18} strokeWidth={2} />
-              Process {readyCount} item{readyCount !== 1 ? "s" : ""}
+              Create Sale{items.length > 0 ? ` — ${items.length} item${items.length !== 1 ? "s" : ""}` : ""}
             </>
           )}
         </button>

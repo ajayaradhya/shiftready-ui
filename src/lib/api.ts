@@ -106,6 +106,7 @@ export interface CaptureFrameResult {
   brand?: string | null;
   predicted_original_price: number;
   gcs_uri: string;
+  confidence?: "high" | "medium" | "low";
 }
 
 export async function captureFrame(eventId: string, file: File): Promise<CaptureFrameResult> {
@@ -123,18 +124,21 @@ export interface CapturedItemForFinalize {
   brand?: string;
   predicted_original_price?: number;
   gcs_uri: string;
+  needs_review?: boolean;
+  name_source?: "ai" | "user";
 }
 
 export async function finalizeCaptureV2(
   eventId: string,
-  items: CapturedItemForFinalize[]
+  items: CapturedItemForFinalize[],
+  saleTitle?: string
 ): Promise<{ event_id: string; status: string; item_count: number }> {
   return apiRequest<{ event_id: string; status: string; item_count: number }>(
     `${API_BASE}/sales/${eventId}/capture/finalize-v2`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, sale_title: saleTitle || null }),
     }
   );
 }
@@ -143,6 +147,26 @@ export async function startProcessing(eventId: string): Promise<{ message: strin
   return apiRequest<{ message: string }>(`${API_BASE}/sales/${eventId}/process`, {
     method: "POST",
   });
+}
+
+export async function suggestSaleTitle(
+  eventId: string,
+  itemNames: string[]
+): Promise<{ title: string }> {
+  return apiRequest<{ title: string }>(`${API_BASE}/sales/${eventId}/suggest-title`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item_names: itemNames }),
+  });
+}
+
+export async function retryFinalize(
+  eventId: string
+): Promise<{ event_id: string; status: string; item_count: number }> {
+  return apiRequest<{ event_id: string; status: string; item_count: number }>(
+    `${API_BASE}/sales/${eventId}/retry-finalize`,
+    { method: "POST" }
+  );
 }
 
 

@@ -60,7 +60,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
             </em>
           </h1>
           <p style={{ margin: 0, color: "var(--sr-text-secondary)", fontSize: 15, lineHeight: 1.55 }}>
-            Grouping into room bundles and pricing against Sydney market data.
+            Grouping into bundles and pricing against Sydney market data.
           </p>
         </div>
 
@@ -119,43 +119,66 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
                     ~${item.predicted_original_price.toLocaleString()} orig.
                   </div>
                 ) : null}
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  fontSize: 11.5, color: "var(--clay-600)",
-                  fontFamily: "var(--sr-font-mono)", letterSpacing: "0.06em",
-                  textTransform: "uppercase", marginTop: 2,
-                }}>
-                  <span style={{
-                    width: 5, height: 5, borderRadius: "50%",
-                    background: "var(--clay-500)", display: "inline-block",
-                    animation: "badge-pulse 1.6s infinite",
-                  }} />
-                  Pricing…
-                </div>
+                {item.needs_review ? (
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 11.5, color: "#D97706",
+                    fontFamily: "var(--sr-font-mono)", letterSpacing: "0.06em",
+                    textTransform: "uppercase", marginTop: 2,
+                  }}>
+                    <span style={{
+                      width: 5, height: 5, borderRadius: "50%",
+                      background: "#D97706", display: "inline-block",
+                    }} />
+                    Needs review
+                  </div>
+                ) : (
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 11.5, color: "var(--clay-600)",
+                    fontFamily: "var(--sr-font-mono)", letterSpacing: "0.06em",
+                    textTransform: "uppercase", marginTop: 2,
+                  }}>
+                    <span style={{
+                      width: 5, height: 5, borderRadius: "50%",
+                      background: "var(--clay-500)", display: "inline-block",
+                      animation: "badge-pulse 1.6s infinite",
+                    }} />
+                    Pricing…
+                  </div>
+                )}
               </div>
             </div>
           ))}
 
-          {/* Unanalyzed items (captureFrame failed) */}
-          {capturedItems.filter((i) => !i.name).map((item, i) => (
+          {/* Items without names — preserved but need review */}
+          {capturedItems.filter((i) => !i.name).map((item) => (
             <div
               key={item.id}
               style={{
                 display: "flex", alignItems: "center", gap: 14,
                 padding: "14px 20px",
                 borderBottom: "1px solid var(--sr-border-subtle)",
-                opacity: 0.5,
               }}
             >
               <div style={{
                 width: 48, height: 48, borderRadius: "var(--sr-radius-md)",
-                background: "var(--cream-100)", flexShrink: 0,
+                overflow: "hidden", flexShrink: 0,
+                background: "var(--cream-100)",
                 border: "1px solid var(--sr-border-subtle)",
-              }} />
+              }}>
+                {item.frameSrc && (
+                  <img src={item.frameSrc} alt={item.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                )}
+              </div>
               <div style={{ flex: 1, fontSize: 14, color: "var(--sr-text-muted)" }}>
                 {item.label}
               </div>
-              <div style={{ fontSize: 12, color: "var(--sr-text-muted)" }}>Skipped</div>
+              <div style={{
+                fontSize: 11.5, color: "#D97706",
+                fontFamily: "var(--sr-font-mono)", letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}>Needs review</div>
             </div>
           ))}
         </div>
