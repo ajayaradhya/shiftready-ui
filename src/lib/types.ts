@@ -55,6 +55,12 @@ export interface MarketplaceSearchResult {
   is_authenticated: boolean;
 }
 
+export interface LandingData {
+  items: MarketplaceItem[];
+  cheapest: MarketplaceItem[];
+  active_sales: ActiveSaleSummary[];
+}
+
 export interface PublicBundleItem {
   id: string;
   name: string | null;

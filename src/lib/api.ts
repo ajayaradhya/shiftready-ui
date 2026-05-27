@@ -3,6 +3,7 @@ import type {
   InventoryItem,
   SaleListing,
   MarketplaceSearchResult,
+  LandingData,
   PublicSaleDetail,
   PublicItemDetail,
   ActiveSaleSummary,
@@ -430,6 +431,11 @@ export async function getPublicItem(eventId: string, bundleId: string, itemId: s
 
 export async function getActiveSales(): Promise<ActiveSaleSummary[]> {
   return apiRequest<ActiveSaleSummary[]>(`${API_BASE}/marketplace/sales`);
+}
+
+export async function getLandingData(suburb?: string): Promise<LandingData> {
+  const qs = suburb ? `?suburb=${encodeURIComponent(suburb)}` : "";
+  return apiRequest<LandingData>(`${API_BASE}/marketplace/landing${qs}`);
 }
 
 // --- Item Image Management ---

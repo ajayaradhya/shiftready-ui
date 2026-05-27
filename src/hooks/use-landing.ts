@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { searchMarketplace, getActiveSales } from "@/lib/api";
+import { searchMarketplace } from "@/lib/api";
+import type { MarketplaceSearchResult } from "@/lib/types";
 import type { CategoryFilter, ConditionFilter, PriceRangeKey, SortKey } from "@/lib/marketplace-filters";
 import { priceRangeToParams } from "@/lib/marketplace-filters";
 
@@ -15,7 +16,7 @@ interface CommittedFilters {
   sort: SortKey;
 }
 
-export function useLanding() {
+export function useLanding(initialItems?: MarketplaceSearchResult, initialFetchedAt?: number) {
   const [searchInput, setSearchInput] = useState("");
   const [suburb, setSuburb] = useState("");
   const [category, setCategory] = useState<CategoryFilter | null>(null);
@@ -68,6 +69,10 @@ export function useLanding() {
     ? priceRangeToParams(committed.priceRange)
     : {};
 
+  const isDefaultState =
+    !committed.q && !committed.category && !committed.condition &&
+    !committed.priceRange && committed.sort === "newest";
+
   const itemsQuery = useQuery({
     queryKey: [
       "landing-items",
@@ -84,12 +89,8 @@ export function useLanding() {
       sort: committed.sort,
     }),
     staleTime: 60_000,
-  });
-
-  const salesQuery = useQuery({
-    queryKey: ["landing-sales"],
-    queryFn: getActiveSales,
-    staleTime: 60_000,
+    initialData: isDefaultState && !committed.suburb && initialItems ? initialItems : undefined,
+    initialDataUpdatedAt: isDefaultState && !committed.suburb && initialItems ? initialFetchedAt : undefined,
   });
 
   return {
@@ -99,6 +100,8 @@ export function useLanding() {
     condition,
     priceRange,
     sort,
+    committed,
+    isDefaultState,
     handleSearchChange,
     handleSuburbChange,
     handleCategoryChange,
@@ -109,7 +112,5 @@ export function useLanding() {
     itemCount: itemsQuery.data?.count ?? 0,
     itemsLoading: itemsQuery.isLoading,
     itemsError: itemsQuery.isError,
-    sales: salesQuery.data ?? [],
-    salesLoading: salesQuery.isLoading,
   };
 }
