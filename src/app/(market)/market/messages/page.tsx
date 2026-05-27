@@ -8,7 +8,7 @@ import { ConversationList } from "@/components/features/messages/ConversationLis
 
 export default function MarketMessagesPage() {
   const { user, loading } = useAuth();
-  useEffect(() => { document.title = "Messages — ShiftReady"; }, []);
+  useEffect(() => { document.title = "Messages - ShiftReady"; }, []);
 
   if (loading) {
     return (

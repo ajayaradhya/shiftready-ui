@@ -120,7 +120,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
           </Link>
         )}
 
-        {/* Public logo (no sidebar pages — full-width header always shows logo) */}
+        {/* Public logo (no sidebar pages - full-width header always shows logo) */}
         {!hasSidebar && (
           <Link
             href="/"

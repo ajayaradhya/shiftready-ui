@@ -146,7 +146,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   const handleNotify = () => {
     const key = "sr_notify_subscribed";
     if (localStorage.getItem(key)) {
-      toast("You're already on the list — we'll let you know when new sales go live.");
+      toast("You're already on the list - we'll let you know when new sales go live.");
     } else {
       localStorage.setItem(key, "1");
       toast.success("You're in! We'll notify you when new sales go live in your area.");
@@ -166,7 +166,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
         Belt is empty
       </p>
       <p style={{ fontSize: 13, color: "var(--ink-300)", marginTop: 8 }}>
-        {hasSearch ? "Nothing matches those filters. Try widening the search or clearing the suburb." : "No items on the belt yet — new sales go live regularly."}
+        {hasSearch ? "Nothing matches those filters. Try widening the search or clearing the suburb." : "No items on the belt yet - new sales go live regularly."}
       </p>
       {!hasSearch && (
         <button
@@ -217,7 +217,7 @@ function useInViewOnce(rootMargin = "200px") {
 }
 
 function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: LandingData | null; fetchedAt: number }) {
-  useEffect(() => { document.title = "Browse — ShiftReady"; }, []);
+  useEffect(() => { document.title = "Browse - ShiftReady"; }, []);
   const searchParams = useSearchParams();
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;

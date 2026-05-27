@@ -513,7 +513,7 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
           A short note shown at the top of your sale listing. Helps buyers understand context - moving circumstances, item quality, availability.
         </p>
         <SField label="Bio">
-          <STextarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={240} placeholder="E.g. Moving from Newtown — quality furniture, appliances, books. Available for pickup from June 5."/>
+          <STextarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={240} placeholder="E.g. Moving from Newtown - quality furniture, appliances, books. Available for pickup from June 5."/>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
             <span style={{ fontSize: 11.5, color: "var(--sr-text-muted)" }}>Optional · shown publicly on your sale page.</span>
             <span style={{ fontSize: 11.5, color: "var(--sr-text-muted)", flexShrink: 0 }}>{bio.length}/240</span>
@@ -1109,7 +1109,7 @@ type SectionId = typeof NAV_SECTIONS[number]["id"];
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeId, setActiveId] = useState<SectionId>("profile");
-  useEffect(() => { document.title = "Settings — ShiftReady"; }, []);
+  useEffect(() => { document.title = "Settings - ShiftReady"; }, []);
 
   const sections: Record<SectionId, React.ReactNode> = {
     profile:       <ProfileSection userEmail={user?.email}/>,

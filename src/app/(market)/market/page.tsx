@@ -11,7 +11,7 @@ export default async function BrowsePage() {
     });
     if (res.ok) initialLanding = await res.json();
   } catch {
-    // fall through — client will fetch on mount
+    // fall through - client will fetch on mount
   }
 
   // eslint-disable-next-line react-hooks/purity

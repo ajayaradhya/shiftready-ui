@@ -125,7 +125,7 @@ export function ShellSidebar({ variant }: ShellSidebarProps) {
       className="hidden md:flex fixed left-0 top-0 bottom-0 w-[224px] flex-col z-40"
       style={{ background: "var(--sr-bg-card)", borderRight: "1px solid var(--sr-border-subtle)" }}
     >
-      {/* Logo — sits in the header-height zone at top */}
+      {/* Logo - sits in the header-height zone at top */}
       <Link
         href={logoHref}
         className="flex items-center gap-2.5 px-4 no-underline shrink-0"

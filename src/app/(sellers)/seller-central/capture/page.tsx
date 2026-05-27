@@ -28,7 +28,7 @@ function CapturePageContent() {
   const searchParams = useSearchParams();
   const appendTo = searchParams.get("appendTo");
   const { setSale } = useSaleContext();
-  useEffect(() => { document.title = "Live Capture — ShiftReady"; }, []);
+  useEffect(() => { document.title = "Live Capture - ShiftReady"; }, []);
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
   const [stream, setStream] = useState<MediaStream | null>(null);

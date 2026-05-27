@@ -319,7 +319,7 @@ export default function SavedPage() {
   const { data, isLoading, refetch } = useSaved();
   const invalidateSaved = useInvalidateSaved();
   const [removing, setRemoving] = useState<Set<string>>(new Set());
-  useEffect(() => { document.title = "Saved — ShiftReady"; }, []);
+  useEffect(() => { document.title = "Saved - ShiftReady"; }, []);
 
   const handleRemoveSale = async (eventId: string) => {
     setRemoving((s) => new Set(s).add(eventId));

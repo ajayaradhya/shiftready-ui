@@ -146,13 +146,13 @@ export default function DevShellPage() {
           Quick test
         </h2>
         <p className="text-[12px] mb-3" style={{ color: "var(--sr-text-muted)" }}>
-          Use the header controls above — bell, search, avatar, ? — to test each panel. Or trigger via keyboard shortcuts listed above.
+          Use the header controls above - bell, search, avatar, ? - to test each panel. Or trigger via keyboard shortcuts listed above.
         </p>
         <div className="flex flex-wrap gap-2">
           {[
-            { label: "⌘K — Command palette", action: () => { const e = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }); window.dispatchEvent(e); } },
-            { label: "? — Shortcuts", action: () => { const e = new KeyboardEvent("keydown", { key: "?", bubbles: true }); window.dispatchEvent(e); } },
-            { label: "Bell — Notifications", action: () => { document.querySelector<HTMLButtonElement>('[aria-label^="Notifications"]')?.click(); } },
+            { label: "⌘K - Command palette", action: () => { const e = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }); window.dispatchEvent(e); } },
+            { label: "? - Shortcuts", action: () => { const e = new KeyboardEvent("keydown", { key: "?", bubbles: true }); window.dispatchEvent(e); } },
+            { label: "Bell - Notifications", action: () => { document.querySelector<HTMLButtonElement>('[aria-label^="Notifications"]')?.click(); } },
           ].map((btn) => (
             <button
               key={btn.label}
