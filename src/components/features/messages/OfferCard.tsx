@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X, RotateCcw, Percent } from "lucide-react";
 import type { OfferPayload } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 
 interface OfferCardProps {
   offer: OfferPayload;
@@ -100,7 +101,7 @@ export function OfferCard({ offer, isOwn, onAccept, onCounter, onWithdraw, disab
             letterSpacing: "-0.02em",
           }}
         >
-          ${offer.amount.toLocaleString("en-AU", { maximumFractionDigits: 0 })}
+          {formatAUD(offer.amount)}
         </span>
         {saves && (
           <div
@@ -111,7 +112,7 @@ export function OfferCard({ offer, isOwn, onAccept, onCounter, onWithdraw, disab
               color: "var(--moss-600, #16a34a)",
             }}
           >
-            Saves ${saves.toLocaleString("en-AU", { maximumFractionDigits: 0 })} off listing price
+            Saves {formatAUD(saves)} off listing price
           </div>
         )}
       </div>

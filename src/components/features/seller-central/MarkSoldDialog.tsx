@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X, DollarSign } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatAUD } from "@/lib/format";
 import { markItemSold } from "@/lib/api";
 import type { InventoryItem } from "@/lib/types";
 import { toast } from "sonner";
@@ -46,8 +47,7 @@ export function MarkSoldDialog({ eventId, bundleId, item, onClose }: MarkSoldDia
     onError: (err: Error) => toast.error(err.message || "Failed to mark sold"),
   });
 
-  const fmt = (v: number) =>
-    v.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
+  const fmt = (v: number) => formatAUD(v);
 
   const parsed = parseFloat(finalPrice);
   const diff = !isNaN(parsed) ? parsed - defaultPrice : 0;

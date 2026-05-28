@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Package, X, Trash2, RotateCcw, Loader2, WifiOff, ChevronLeft, Pencil } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
+import { formatAUD } from "@/lib/format";
 
 interface Props {
   items: CapturedItem[];
@@ -13,7 +14,7 @@ interface Props {
 
 function formatPrice(price?: number): string | null {
   if (!price || price <= 0) return null;
-  return `~$${Math.round(price).toLocaleString()}`;
+  return `~${formatAUD(Math.round(price))}`;
 }
 
 // Half-sheet editor for a single item (G13)

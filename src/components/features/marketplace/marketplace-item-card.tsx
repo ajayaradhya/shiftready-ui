@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Tag } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 
 export function MarketplaceItemCard({ item }: { item: MarketplaceItem }) {
   const router = useRouter();
@@ -29,7 +30,7 @@ export function MarketplaceItemCard({ item }: { item: MarketplaceItem }) {
           </div>
           {item.price != null && (
             <span className="shrink-0 text-sm font-black text-tertiary">
-              ${item.price.toFixed(0)}
+              {formatAUD(item.price)}
             </span>
           )}
         </div>

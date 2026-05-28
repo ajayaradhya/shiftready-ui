@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { MapPin } from "lucide-react";
-import { SYDNEY_SUBURBS_UNIQUE } from "@/lib/marketplace-filters";
+import { NSW_SUBURBS_UNIQUE } from "@/lib/marketplace-filters";
 import s from "./FilterChip.module.css";
 import ls from "./SuburbChip.module.css";
 
@@ -55,11 +55,11 @@ export function SuburbChip({ value, onChange }: Props) {
   }, [open]);
 
   const filtered = search
-    ? SYDNEY_SUBURBS_UNIQUE.filter(sub => sub.toLowerCase().includes(search.toLowerCase()))
-    : SYDNEY_SUBURBS_UNIQUE;
+    ? NSW_SUBURBS_UNIQUE.filter(sub => sub.toLowerCase().includes(search.toLowerCase()))
+    : NSW_SUBURBS_UNIQUE;
 
   const searchTrimmed = search.trim();
-  const exactMatch = SYDNEY_SUBURBS_UNIQUE.some(
+  const exactMatch = NSW_SUBURBS_UNIQUE.some(
     sub => sub.toLowerCase() === searchTrimmed.toLowerCase()
   );
   const showCustomOption = searchTrimmed.length >= 2 && !exactMatch;

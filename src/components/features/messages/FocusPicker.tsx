@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X, Package, Search } from "lucide-react";
+import { formatAUD } from "@/lib/format";
 import { getPublicSale } from "@/lib/api";
 import type { PinRef } from "@/lib/types";
 
@@ -12,9 +13,7 @@ interface FocusPickerProps {
   onClose: () => void;
 }
 
-function fmt(n: number) {
-  return n.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
-}
+const fmt = (n: number) => formatAUD(n);
 
 export function FocusPicker({ saleEventId, onSelect, onClose }: FocusPickerProps) {
   const [query, setQuery] = useState("");

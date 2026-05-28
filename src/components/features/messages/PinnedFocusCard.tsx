@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ExternalLink, Package, ChevronDown, ChevronUp, X, Pin } from "lucide-react";
 import type { PinSnapshot, PinKind } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 
 interface PinnedFocusCardProps {
   snapshot: PinSnapshot;
@@ -15,9 +16,7 @@ interface PinnedFocusCardProps {
   onClearPin?: () => void;
 }
 
-function fmt(n: number) {
-  return n.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
-}
+const fmt = (n: number) => formatAUD(n);
 
 const EYEBROW: Record<PinKind, string> = {
   item: "Item in discussion",

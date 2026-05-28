@@ -7,6 +7,7 @@ import { StepHeader } from "./step-header";
 import { getStatus } from "@/lib/api";
 import type { UploadedFile } from "@/hooks/use-upload";
 import type { CapturedItem } from "@/lib/capture/capture-types";
+import { formatAUD } from "@/lib/format";
 
 const DEMO_ITEMS = [
   "Linen sofa", "Oak dining table", "Bosch washer", "Fiddle leaf fig",
@@ -116,7 +117,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
               <div style={{ flexShrink: 0, textAlign: "right" }}>
                 {item.predicted_original_price ? (
                   <div style={{ fontSize: 13, color: "var(--sr-text-secondary)" }}>
-                    ~${item.predicted_original_price.toLocaleString()} orig.
+                    ~{formatAUD(item.predicted_original_price)} orig.
                   </div>
                 ) : null}
                 {item.needs_review ? (

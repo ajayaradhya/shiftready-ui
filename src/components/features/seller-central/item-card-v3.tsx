@@ -7,6 +7,7 @@ import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus }
 import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation } from "@/lib/api";
 import { MarkSoldDialog } from "./MarkSoldDialog";
 import { ItemPhotoStrip } from "./item-photo-strip";
+import { formatAUD } from "@/lib/format";
 import { toast } from "sonner";
 
 interface ItemCardV3Props {
@@ -698,7 +699,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               <Check size={11} style={{ color: "var(--moss-600)", flexShrink: 0 }} />
               <span style={{ fontSize: 11.5, color: "var(--moss-700)" }}>
                 Sold
-                {item.final_price != null && ` · $${item.final_price.toLocaleString()}`}
+                {item.final_price != null && ` · ${formatAUD(item.final_price)}`}
                 {item.buyer_label && ` to ${item.buyer_label}`}
                 {item.sold_payment_method && ` · ${item.sold_payment_method}`}
               </span>
@@ -1121,8 +1122,7 @@ function RepriceSuggestDialog({
   onAccept: () => void;
   onReject: () => void;
 }) {
-  const fmt = (v: number) =>
-    v.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
+  const fmt = (v: number) => formatAUD(v);
 
   const diff = newPrice - oldPrice;
   const diffSign = diff >= 0 ? "+" : "";

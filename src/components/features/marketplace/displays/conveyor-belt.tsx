@@ -3,12 +3,8 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { MarketplaceItem } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
-
-function fmt(price: number | null): string {
-  if (price == null) return "POA";
-  return `$${price % 1 === 0 ? price : price.toFixed(2)}`;
-}
 
 function BeltItem({ item }: { item: MarketplaceItem }) {
   return (
@@ -18,7 +14,7 @@ function BeltItem({ item }: { item: MarketplaceItem }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.image_url} alt={item.name} loading="lazy" />
         ) : null}
-        <span className={s.beltPrice}>{fmt(item.price)}</span>
+        <span className={s.beltPrice}>{formatAUD(item.price)}</span>
       </div>
       <div className={s.beltName}>{item.name}</div>
       <div className={s.beltMeta}>

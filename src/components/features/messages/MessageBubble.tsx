@@ -1,17 +1,12 @@
 import type { Message } from "@/lib/types";
 import { SaleContextChip } from "./SaleContextChip";
+import { formatTimeAU } from "@/lib/format";
 
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   showSender?: boolean;
   senderUsername?: string | null;
-}
-
-function formatTime(ts: string | null) {
-  if (!ts) return "";
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function avatarInitial(username: string | null | undefined) {
@@ -92,7 +87,7 @@ export function MessageBubble({ message, isOwn, showSender, senderUsername }: Me
           alignSelf: isOwn ? "flex-end" : "flex-start",
         }}
       >
-        {formatTime(message.createdAt)}
+        {formatTimeAU(message.createdAt)}
       </span>
     </div>
   );

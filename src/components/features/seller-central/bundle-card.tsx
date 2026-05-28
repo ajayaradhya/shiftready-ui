@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Percent, Trash2, Plus } from "lucide-react";
 import type { RoomBundle } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter,
@@ -218,21 +219,21 @@ export function BundleCard({
         {hasBundleDiscount ? (
           <div style={{ marginBottom: 8 }}>
             <div style={{ fontSize: 11, color: "var(--sr-text-muted)", textDecoration: "line-through", lineHeight: 1.3 }}>
-              ${itemTotal.toLocaleString()} individually
+              {formatAUD(itemTotal)} individually
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2 }}>
               <strong style={{ fontSize: 16, fontWeight: 700, color: "var(--moss-700)" }}>
-                ${bundlePrice.toLocaleString()}
+                {formatAUD(bundlePrice)}
               </strong>
               <span style={{ fontSize: 11, color: "var(--moss-600)", fontWeight: 600 }}>
-                save ${savings.toLocaleString()}
+                save {formatAUD(savings)}
               </span>
             </div>
           </div>
         ) : (
           <div style={{ fontSize: 13, color: "var(--sr-text-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
             <strong style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>
-              ${(bundle.suggestedPrice ?? 0).toLocaleString()}
+              {formatAUD(bundle.suggestedPrice ?? 0)}
             </strong>
             listing value
           </div>

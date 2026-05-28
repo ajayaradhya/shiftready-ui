@@ -18,6 +18,8 @@ const createSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  ageConfirm: z.literal(true, { message: "You must be 18 or older to use ShiftReady." }),
+  termsAccept: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
 });
 
 type SignInFields = z.infer<typeof signInSchema>;
@@ -543,6 +545,43 @@ export default function LoginPage() {
                   </Field>
                 </div>
 
+                {/* Age gate */}
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 10 }}>
+                  <input
+                    type="checkbox"
+                    style={{ marginTop: 2, accentColor: "#CC785C", flexShrink: 0 }}
+                    {...createForm.register("ageConfirm")}
+                  />
+                  <span style={{ fontSize: 12.5, color: "#756B5A", lineHeight: 1.5 }}>
+                    I confirm I am 18 years of age or older.
+                  </span>
+                </label>
+                {createForm.formState.errors.ageConfirm && (
+                  <p role="alert" style={{ fontSize: 12, color: "#B14F3B", margin: "0 0 10px" }}>
+                    {createForm.formState.errors.ageConfirm.message}
+                  </p>
+                )}
+
+                {/* ToS + Privacy */}
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 18 }}>
+                  <input
+                    type="checkbox"
+                    style={{ marginTop: 2, accentColor: "#CC785C", flexShrink: 0 }}
+                    {...createForm.register("termsAccept")}
+                  />
+                  <span style={{ fontSize: 12.5, color: "#756B5A", lineHeight: 1.5 }}>
+                    I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#B5604A", textDecoration: "none" }}>Terms of Service</a>
+                    {" "}and{" "}
+                    <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#B5604A", textDecoration: "none" }}>Privacy Policy</a>.
+                  </span>
+                </label>
+                {createForm.formState.errors.termsAccept && (
+                  <p role="alert" style={{ fontSize: 12, color: "#B14F3B", margin: "-10px 0 12px" }}>
+                    {createForm.formState.errors.termsAccept.message}
+                  </p>
+                )}
+
                 <button type="submit" disabled={createForm.formState.isSubmitting} style={{ ...primaryBtnStyle(createForm.formState.isSubmitting), marginBottom: 16 }}>
                   {createForm.formState.isSubmitting && <Loader2 size={15} className="animate-spin" aria-hidden />}
                   {createForm.formState.isSubmitting ? "Creating account…" : "Create account"}
@@ -553,13 +592,6 @@ export default function LoginPage() {
                   <button type="button" onClick={() => switchTab("signin")} style={{ background: "none", border: "none", cursor: "pointer", color: "#B5604A", fontWeight: 500, padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>
                     Sign in →
                   </button>
-                </p>
-
-                <p style={{ fontSize: 12, color: "#C9C0AF", textAlign: "center", lineHeight: 1.55, marginTop: 22 }}>
-                  By creating an account you agree to our{" "}
-                  <a href="#" style={{ color: "#CC785C", textDecoration: "none" }}>Terms of Service</a>{" "}
-                  and{" "}
-                  <a href="#" style={{ color: "#CC785C", textDecoration: "none" }}>Privacy Policy</a>.
                 </p>
               </form>
             )}

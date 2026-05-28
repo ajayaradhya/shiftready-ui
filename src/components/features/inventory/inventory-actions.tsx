@@ -144,6 +144,9 @@ export function InventoryActions({
               </div>
             </div>
           </div>
+          <p className="text-[10px] text-on-surface-variant/60 leading-relaxed -mt-1">
+            Peer-to-peer sales are typically GST-free. Sellers are responsible for any applicable tax obligations.
+          </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPublishDialogOpen(false)}>
               Cancel

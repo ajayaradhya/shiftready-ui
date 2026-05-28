@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Trash2, Plus, PackageCheck, Loader2, AlertCircle, WifiOff, Copy, Wand2 } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
 import { suggestSaleTitle } from "@/lib/api";
+import { formatAUD } from "@/lib/format";
 
 interface Props {
   items: CapturedItem[];
@@ -191,7 +192,7 @@ export function ItemReviewScreen({
                 : item.label;
               const price =
                 item.predicted_original_price && item.predicted_original_price > 0
-                  ? `~$${Math.round(item.predicted_original_price).toLocaleString()}`
+                  ? `~${formatAUD(Math.round(item.predicted_original_price))}`
                   : null;
 
               return (

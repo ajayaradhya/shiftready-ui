@@ -19,6 +19,7 @@ import { PhoneRevealCard } from "./PhoneRevealCard";
 import { SharePhoneCard } from "./SharePhoneCard";
 import { FocusPicker } from "./FocusPicker";
 import type { ConversationSummary, PinRef } from "@/lib/types";
+import { formatDateAU } from "@/lib/format";
 
 interface ConversationViewProps {
   convId: string;
@@ -39,15 +40,20 @@ function formatPresence(lastSeenAt: string | null | undefined): { online: boolea
   return { online: false, label: `Last seen ${Math.floor(hours / 24)}d ago` };
 }
 
+const _sydTZ = "Australia/Sydney";
+function syDateKey(d: Date) {
+  return new Intl.DateTimeFormat("en-AU", { timeZone: _sydTZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
 function formatDate(ts: string | null) {
   if (!ts) return "";
   const d = new Date(ts);
   const today = new Date();
+  if (syDateKey(d) === syDateKey(today)) return "Today";
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Today";
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+  if (syDateKey(d) === syDateKey(yesterday)) return "Yesterday";
+  return formatDateAU(d);
 }
 
 function DateDivider({ dateStr }: { dateStr: string | null }) {
@@ -539,8 +545,8 @@ export function ConversationView({
 
         {allMessages.map((msg, i) => {
           const prev = allMessages[i - 1];
-          const msgDateKey = msg.createdAt?.split("T")[0] ?? "";
-          const prevDateKey = prev?.createdAt?.split("T")[0] ?? "";
+          const msgDateKey = msg.createdAt ? syDateKey(new Date(msg.createdAt)) : "";
+          const prevDateKey = prev?.createdAt ? syDateKey(new Date(prev.createdAt)) : "";
           const showDivider = msgDateKey !== prevDateKey;
 
           const isOwn = msg.senderId === currentUserId;

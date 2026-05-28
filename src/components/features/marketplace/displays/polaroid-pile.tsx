@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import type { MarketplaceItem } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
-
-function fmt(price: number | null): string {
-  if (price == null) return "POA";
-  return `$${price % 1 === 0 ? price : price.toFixed(2)}`;
-}
 
 function pseudoRandom(seed: string, salt = 0): number {
   let h = salt;
@@ -34,7 +30,7 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.image_url} alt={item.name} loading="lazy" />
         ) : null}
-        <span className={s.polaroidPrice}>{fmt(item.price)}</span>
+        <span className={s.polaroidPrice}>{formatAUD(item.price)}</span>
       </div>
       <div className={s.polaroidCaption}>{item.name}</div>
     </Link>

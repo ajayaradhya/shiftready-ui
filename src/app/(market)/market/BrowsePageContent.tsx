@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bell, Package } from "lucide-react";
 import { toast } from "sonner";
 import type { ActiveSaleSummary, LandingData } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 import { useLanding } from "@/hooks/use-landing";
 import { searchMarketplace, getActiveSales } from "@/lib/api";
 import { FilterChip } from "@/components/features/marketplace/FilterChip";
@@ -51,8 +52,7 @@ function MiniAvatar({ text, variant }: { text: string; variant: Variant }) {
 }
 
 function fmt(price: number | null): string {
-  if (price == null) return "POA";
-  return `$${price % 1 === 0 ? price : price.toFixed(2)}`;
+  return formatAUD(price);
 }
 
 function SaleSkeleton() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { formatAUD } from "@/lib/format";
 
 interface DealAgreedBannerProps {
   amount: number;
@@ -48,7 +49,7 @@ export function DealAgreedBanner({ amount, otherUsername, phoneRevealAvailable }
             lineHeight: 1.2,
           }}
         >
-          Deal agreed - ${amount.toLocaleString("en-AU", { maximumFractionDigits: 0 })}
+          Deal agreed - {formatAUD(amount)}
         </div>
         <div
           style={{

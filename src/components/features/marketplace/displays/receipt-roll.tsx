@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import type { MarketplaceItem } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
-
-function fmt(price: number | null): string {
-  if (price == null) return "POA";
-  return `$${price % 1 === 0 ? price : price.toFixed(2)}`;
-}
 
 function pseudoRandom(seed: string, salt = 0): number {
   let h = salt;
@@ -66,13 +62,13 @@ export function ReceiptRoll({
                 {it.condition}
               </div>
             </div>
-            <div className={s.receiptPrice}>{fmt(it.price)}</div>
+            <div className={s.receiptPrice}>{formatAUD(it.price)}</div>
           </Link>
         ))}
 
         <div className={s.receiptTotal}>
           <span>Cheapest {slice.length} total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>{formatAUD(total, true)}</span>
         </div>
 
         <div className={s.receiptBarcode} aria-hidden />

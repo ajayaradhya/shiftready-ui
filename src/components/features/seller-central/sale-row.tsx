@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal, Archive, Pencil } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import type { SaleListing, SaleStatus } from "@/lib/types";
+import { formatAUD } from "@/lib/format";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {
   pending_upload: "Pending Upload",
@@ -187,7 +188,7 @@ export function SaleRow({ sale }: SaleRowProps) {
           {sale.totalValue > 0 && (
             <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <DollarSign size={11} />
-              {sale.totalValue.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 })}
+              {formatAUD(sale.totalValue)}
             </span>
           )}
         </div>

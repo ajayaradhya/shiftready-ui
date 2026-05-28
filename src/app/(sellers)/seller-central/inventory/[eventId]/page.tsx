@@ -13,6 +13,7 @@ import {
   MousePointerClick, Plus, Sparkles,
   Pencil, Eye, Box, DollarSign, MapPin, Calendar,
 } from "lucide-react";
+import { formatAUD } from "@/lib/format";
 import {
   publishSale, unpublishSale,
   createBundle, deleteBundle, renameBundle, patchBundle,
@@ -345,7 +346,7 @@ export default function SellerCentralInventoryPage() {
           <span style={{ color: "var(--cream-400)" }}>·</span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
             <DollarSign size={12} style={{ color: "var(--ink-400)" }} />
-            <span style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>${totalValue.toLocaleString()}</span>
+            <span style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>{formatAUD(totalValue)}</span>
             {" "}listing value
           </span>
           <span style={{ color: "var(--cream-400)" }}>·</span>
@@ -417,7 +418,7 @@ export default function SellerCentralInventoryPage() {
                 {selectedBundle.name}
               </div>
               <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 1 }}>
-                {selectedBundle.items.length} items · ${(selectedBundle.suggestedPrice ?? 0).toLocaleString()} listing value
+                {selectedBundle.items.length} items · {formatAUD(selectedBundle.suggestedPrice ?? 0)} listing value
               </div>
             </div>
           </div>
@@ -465,7 +466,7 @@ export default function SellerCentralInventoryPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
               <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic" }}>
-                ${totalValue.toLocaleString()}
+                {formatAUD(totalValue)}
               </em>
               <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
             </div>
