@@ -26,7 +26,7 @@ import type {
   TransactionRecord,
 } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 const API_BASE = `${API_URL}/api/v1`;
 
 // Module-level token store. AuthProvider calls _setIdToken on every token change

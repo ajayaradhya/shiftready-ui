@@ -59,4 +59,5 @@ substitutions:
   _LOCATION: australia-southeast1
   _REPO_NAME: shiftready-repo
   _SERVICE_NAME: shiftready-ui
+  _NEXT_PUBLIC_API_URL: 'https://shiftready-api-12644234558.australia-southeast1.run.app'
   _NEXT_PUBLIC_SENTRY_DSN: ''  # Override in trigger once Sentry project is created
