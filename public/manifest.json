@@ -1,0 +1,19 @@
+{
+  "name": "ShiftReady",
+  "short_name": "ShiftReady",
+  "description": "AI-powered moving sale marketplace. Sell your stuff before you move.",
+  "start_url": "/market",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#C87755",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logo-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

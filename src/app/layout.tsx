@@ -1,11 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Shift Ready",
+  title: "ShiftReady",
   description:
-    "AI-powered residential relocation marketplace. Record a walkthrough, let Gemini identify and price your items, then sell as a bundle.",
+    "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ShiftReady",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#C87755",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

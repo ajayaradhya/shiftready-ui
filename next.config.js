@@ -5,11 +5,16 @@ const { withSentryConfig } = require("@sentry/nextjs");
 const nextConfig = {
   output: "standalone",
   images: {
-    unoptimized: true,
+    minimumCacheTTL: 3600,
     remotePatterns: [
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
         pathname: "/**",
       },
     ],
