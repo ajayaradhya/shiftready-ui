@@ -33,7 +33,7 @@ export default function ProfileImage({ src, name }: ProfileImageProps) {
         try {
           const response = await fetch(src);
           if (!response.ok) throw new Error('Failed to fetch');
-          
+
           const blob = await response.blob();
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -41,7 +41,7 @@ export default function ProfileImage({ src, name }: ProfileImageProps) {
             try {
               localStorage.setItem(cacheKey, base64data);
               setCachedSrc(base64data);
-            } catch (e) {
+            } catch {
               // Handle localStorage quota limits gracefully
               console.warn('LocalStorage quota exceeded, skipping cache');
             }

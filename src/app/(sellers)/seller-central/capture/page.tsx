@@ -12,6 +12,7 @@ import { ProcessingScreen } from "@/components/features/create/processing-screen
 import { useSaleContext } from "@/lib/sale-context";
 import { dataUrlToFile } from "@/lib/capture/capture-types";
 import { initCaptureSale, captureFrame, finalizeCaptureV2 } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import type { CapturePageState, CapturedItem } from "@/lib/capture/capture-types";
 
 const CaptureStage = dynamic(
@@ -22,8 +23,47 @@ const CaptureStage = dynamic(
   { ssr: false }
 );
 
+function EmailVerificationRequired({ onResend }: { onResend: () => Promise<void> }) {
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleResend = async () => {
+    setSending(true);
+    try {
+      await onResend();
+      setSent(true);
+    } catch {
+      // ignore
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "2rem", textAlign: "center", gap: "1rem" }}>
+      <span style={{ fontSize: 48 }}>✉️</span>
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--clay-700)" }}>Verify your email first</h2>
+      <p style={{ color: "var(--sr-text-muted)", maxWidth: 320, fontSize: 14, lineHeight: 1.6 }}>
+        You need to verify your email address before you can start a capture session or create listings.
+      </p>
+      {sent ? (
+        <p style={{ fontWeight: 600, color: "var(--moss-700)", fontSize: 14 }}>Verification email sent — check your inbox.</p>
+      ) : (
+        <button
+          onClick={handleResend}
+          disabled={sending}
+          style={{ padding: "0.5rem 1.5rem", borderRadius: 8, background: "var(--clay-600)", color: "#fff", fontWeight: 700, fontSize: 14, border: "none", cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.6 : 1 }}
+        >
+          {sending ? "Sending…" : "Resend verification email"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CapturePageContent() {
   const router = useRouter();
+  const { user, sendVerificationEmail } = useAuth();
   const searchParams = useSearchParams();
   const appendTo = searchParams.get("appendTo");
   const isDev = searchParams.get("dev") === "1";
@@ -156,6 +196,15 @@ function CapturePageContent() {
     }
   }, [initSaleOnce]);
 
+  const handleRetry = useCallback((id: string) => {
+    const item = confirmedItemsRef.current.find((i) => i.id === id);
+    if (!item) return;
+    setConfirmedItems((prev) =>
+      prev.map((i) => i.id === id ? { ...i, isLoading: true, error: undefined, network_error: false } : i)
+    );
+    runCaptureFrame(id, item.frameSrc);
+  }, [runCaptureFrame]);
+
   // Tap → immediately add item to bucket, Gemini runs in background
   const handleUserTap = useCallback((frameSrc: string) => {
     // Init sale on first tap (not at permission grant) to avoid orphan sales
@@ -206,16 +255,7 @@ function CapturePageContent() {
       next.splice(idx + 1, 0, clone);
       return next;
     });
-  }, []);
-
-  const handleRetry = useCallback((id: string) => {
-    const item = confirmedItemsRef.current.find((i) => i.id === id);
-    if (!item) return;
-    setConfirmedItems((prev) =>
-      prev.map((i) => i.id === id ? { ...i, isLoading: true, error: undefined, network_error: false } : i)
-    );
-    runCaptureFrame(id, item.frameSrc);
-  }, [runCaptureFrame]);
+  }, [handleRetry]);
 
   const handleUpdateItem = useCallback((id: string, updates: Partial<CapturedItem>) => {
     setConfirmedItems((prev) => prev.map((i) => i.id === id ? { ...i, ...updates } : i));
@@ -320,6 +360,10 @@ function CapturePageContent() {
         capturedItems={confirmedItems}
       />
     );
+  }
+
+  if (user && !user.emailVerified) {
+    return <EmailVerificationRequired onResend={sendVerificationEmail} />;
   }
 
   return (

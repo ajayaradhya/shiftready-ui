@@ -20,6 +20,7 @@ interface InventoryActionsProps {
   isPublishing: boolean;
   isUnpublishing: boolean;
   isArchiving: boolean;
+  emailVerified?: boolean;
   onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
   onArchive: () => void;
@@ -41,6 +42,7 @@ export function InventoryActions({
   isPublishing,
   isUnpublishing,
   isArchiving,
+  emailVerified = true,
   onPublish,
   onUnpublish,
   onArchive,
@@ -267,8 +269,9 @@ export function InventoryActions({
             variant="primary"
             size="md"
             onClick={() => setIsPublishDialogOpen(true)}
-            disabled={isPublishing}
+            disabled={isPublishing || !emailVerified}
             aria-busy={isPublishing}
+            title={!emailVerified ? "Verify your email to publish" : undefined}
           >
             {isPublishing ? (
               <Loader2 className="animate-spin" size={14} aria-hidden />

@@ -12,6 +12,7 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onIdTokenChanged,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -28,6 +29,7 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
+  emailVerified: boolean;
 }
 
 interface AuthContextValue {
@@ -38,6 +40,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   register: (displayName: string, email: string, password: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -48,6 +51,7 @@ function toAuthUser(firebaseUser: FirebaseUser): AuthUser {
     email: firebaseUser.email,
     displayName: firebaseUser.displayName,
     photoURL: firebaseUser.photoURL,
+    emailVerified: firebaseUser.emailVerified,
   };
 }
 
@@ -75,6 +79,7 @@ const DEV_USER: AuthUser = {
   email: `${DEV_USER_ID}@dev.local`,
   displayName: "Dev User",
   photoURL: null,
+  emailVerified: true,
 };
 
 const DEV_TOKEN = `dev_${DEV_USER_ID}`;
@@ -148,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const credential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(credential.user, { displayName });
+        await sendEmailVerification(credential.user);
       } catch (err) {
         throw new Error(parseFirebaseError(err));
       }
@@ -155,8 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const sendVerificationEmail = useCallback(async () => {
+    if (!auth?.currentUser) throw new Error("No authenticated user.");
+    await sendEmailVerification(auth.currentUser);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, idToken, loading, signIn, signInWithGoogle, signOut, register }}>
+    <AuthContext.Provider value={{ user, idToken, loading, signIn, signInWithGoogle, signOut, register, sendVerificationEmail }}>
       {children}
     </AuthContext.Provider>
   );

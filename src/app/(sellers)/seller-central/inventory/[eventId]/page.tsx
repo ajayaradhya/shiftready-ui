@@ -22,6 +22,7 @@ import {
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SaleLifecycleMenu } from "@/components/features/inventory/SaleLifecycleMenu";
+import { useAuth } from "@/hooks/use-auth";
 
 const STATUS_BADGE: Record<string, { bg: string; color: string; border: string; label: string }> = {
   live:                { bg: "var(--moss-50)",   color: "var(--moss-700)",  border: "var(--moss-100)",  label: "Live" },
@@ -109,6 +110,7 @@ export default function SellerCentralInventoryPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setSale, setProcessing } = useSaleContext();
+  const { user } = useAuth();
 
   const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -477,6 +479,7 @@ export default function SellerCentralInventoryPage() {
               isPublishing={publishMutation.isPending}
               isUnpublishing={unpublishMutation.isPending}
               isArchiving={archiveMutation.isPending}
+              emailVerified={user?.emailVerified ?? true}
               onPublish={(payload) => publishMutation.mutate(payload)}
               onUnpublish={() => unpublishMutation.mutate()}
               onArchive={() => archiveMutation.mutate()}
