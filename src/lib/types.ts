@@ -68,6 +68,7 @@ export interface PublicBundleItem {
   condition: string | null;
   price: number;
   image_url?: string | null;
+  sale_status?: ItemSaleStatus;
 }
 
 export interface PublicBundle {

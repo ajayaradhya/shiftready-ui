@@ -385,6 +385,7 @@ export default function SellerCentralInventoryPage() {
               index={idx}
               active={selectedBundleId === bundle.id}
               isLive={isLive}
+              eventId={eventId}
               onClick={() => setSelectedBundleId(selectedBundleId === bundle.id ? null : bundle.id)}
               onAddItem={() => {
                 setSelectedBundleId(bundle.id);

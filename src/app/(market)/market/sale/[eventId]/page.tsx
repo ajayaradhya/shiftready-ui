@@ -94,10 +94,38 @@ function StatBox({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ItemStatusPill({ status }: { status: "reserved" | "sold" }) {
+  return (
+    <span
+      style={{
+        position: "absolute",
+        top: 4,
+        left: 4,
+        fontFamily: "var(--sr-font-mono)",
+        fontSize: 8,
+        textTransform: "uppercase",
+        letterSpacing: "0.12em",
+        fontWeight: 700,
+        padding: "2px 6px",
+        borderRadius: "var(--sr-radius-sm)",
+        background: status === "sold" ? "var(--ink-800)" : "var(--clay-600)",
+        color: "#fff",
+        pointerEvents: "none",
+      }}
+    >
+      {status === "sold" ? "Sold" : "Reserved"}
+    </span>
+  );
+}
+
 function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string }) {
   const [expanded, setExpanded] = useState(true);
   const savings = bundle.itemTotal - bundle.bundlePrice;
   const hasDeal = savings > 0 && bundle.itemTotal > 0;
+  const soldCount = bundle.items.filter((i) => i.sale_status === "sold").length;
+  const availableCount = bundle.items.filter(
+    (i) => !i.sale_status || i.sale_status === "available"
+  ).length;
 
   return (
     <div
@@ -137,17 +165,32 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
         >
           {bundle.name ?? "Bundle"}
         </span>
-        <span
-          style={{
-            fontFamily: "var(--sr-font-mono)",
-            fontSize: 9,
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-            color: "var(--ink-400)",
-          }}
-        >
-          {bundle.items.length} {bundle.items.length === 1 ? "item" : "items"}
-        </span>
+        {soldCount > 0 && (
+          <span
+            style={{
+              fontFamily: "var(--sr-font-mono)",
+              fontSize: 9,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--ink-400)",
+            }}
+          >
+            {availableCount} of {bundle.items.length} available
+          </span>
+        )}
+        {soldCount === 0 && (
+          <span
+            style={{
+              fontFamily: "var(--sr-font-mono)",
+              fontSize: 9,
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "var(--ink-400)",
+            }}
+          >
+            {bundle.items.length} {bundle.items.length === 1 ? "item" : "items"}
+          </span>
+        )}
         {hasDeal && (
           <span
             style={{
@@ -178,27 +221,33 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
 
       {expanded && (
         <div>
-          {bundle.items.map((item) => (
-            <Link
-              key={item.id}
-              href={`/market/sale/${eventId}/item/${item.id}?bundle=${bundle.id}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "12px 20px",
-                borderBottom: "1px solid var(--sr-border-subtle)",
-                textDecoration: "none",
-                background: "transparent",
-                transition: "background 120ms",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "var(--cream-50)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "transparent")
-              }
-            >
+          {bundle.items.map((item) => {
+            const itemStatus = item.sale_status;
+            const isUnavailable = itemStatus === "sold" || itemStatus === "reserved";
+
+            return (
+              <Link
+                key={item.id}
+                href={isUnavailable ? "#" : `/market/sale/${eventId}/item/${item.id}?bundle=${bundle.id}`}
+                onClick={isUnavailable ? (e) => e.preventDefault() : undefined}
+                onMouseEnter={isUnavailable ? undefined : (e) =>
+                  (e.currentTarget.style.background = "var(--cream-50)")}
+                onMouseLeave={isUnavailable ? undefined : (e) =>
+                  (e.currentTarget.style.background = "transparent")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "12px 20px",
+                  borderBottom: "1px solid var(--sr-border-subtle)",
+                  textDecoration: "none",
+                  background: "transparent",
+                  transition: "background 120ms",
+                  opacity: isUnavailable ? 0.5 : 1,
+                  filter: isUnavailable ? "saturate(0.3)" : "none",
+                  cursor: isUnavailable ? "default" : "pointer",
+                }}
+              >
               {item.image_url ? (
                 <div
                   style={{
@@ -218,6 +267,9 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                     style={{ objectFit: "cover" }}
                     sizes="44px"
                   />
+                  {isUnavailable && itemStatus && (
+                    <ItemStatusPill status={itemStatus} />
+                  )}
                 </div>
               ) : (
                 <div
@@ -227,8 +279,13 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                     borderRadius: "var(--sr-radius-md)",
                     background: "var(--cream-100)",
                     flexShrink: 0,
+                    position: "relative",
                   }}
-                />
+                >
+                  {isUnavailable && itemStatus && (
+                    <ItemStatusPill status={itemStatus} />
+                  )}
+                </div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
@@ -240,6 +297,7 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
+                    textDecoration: itemStatus === "sold" ? "line-through" : "none",
                   }}
                 >
                   {item.name ?? "Item"}
@@ -292,12 +350,14 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                   fontWeight: 600,
                   color: "var(--sr-text-primary)",
                   flexShrink: 0,
+                  textDecoration: itemStatus === "sold" ? "line-through" : "none",
                 }}
               >
                 {item.price > 0 ? fmt(item.price) : "POA"}
               </span>
             </Link>
-          ))}
+            );
+          })}
 
           <div
             style={{

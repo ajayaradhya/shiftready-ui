@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Percent, Trash2, Plus } from "lucide-react";
+import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Percent, Trash2, Plus, ShoppingBag } from "lucide-react";
 import type { RoomBundle } from "@/lib/types";
+import { MarkBundleSoldDialog } from "./MarkBundleSoldDialog";
 import { formatAUD } from "@/lib/format";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -40,6 +41,7 @@ interface BundleCardProps {
   index: number;
   active: boolean;
   isLive?: boolean;
+  eventId?: string;
   onClick: () => void;
   onAddItem: () => void;
   onDelete: () => void;
@@ -48,7 +50,7 @@ interface BundleCardProps {
 }
 
 export function BundleCard({
-  bundle, index, active, isLive,
+  bundle, index, active, isLive, eventId,
   onClick, onAddItem, onDelete, onRenameSubmit, onDiscountChange,
 }: BundleCardProps) {
   const p = PALETTES[index % PALETTES.length];
@@ -69,6 +71,15 @@ export function BundleCard({
   const [discountVal, setDiscountVal] = useState(
     String(bundle.bundleDiscountPercent ?? "")
   );
+  const [showMarkBundleSold, setShowMarkBundleSold] = useState(false);
+
+  const bundleSaleStatus = bundle.sale_status ?? "available";
+  const soldCount = bundle.sold_count ?? 0;
+  const totalCount = bundle.items.length;
+  const hasAvailableItems = bundle.items.some(
+    (i) => !i.sale_status || i.sale_status === "available" || i.sale_status === "reserved"
+  );
+  const canMarkBundleSold = isLive && !!eventId && hasAvailableItems && bundleSaleStatus !== "sold" && bundleSaleStatus !== "withdrawn";
 
   function submitRename() {
     const trimmed = renameVal.trim();
@@ -95,6 +106,13 @@ export function BundleCard({
 
   return (
     <>
+    {showMarkBundleSold && eventId && (
+      <MarkBundleSoldDialog
+        eventId={eventId}
+        bundle={bundle}
+        onClose={() => setShowMarkBundleSold(false)}
+      />
+    )}
     <Dialog open={confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(false)}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
@@ -153,15 +171,26 @@ export function BundleCard({
         onMouseLeave={() => setHeaderHover(false)}
       >
         <Icon size={26} strokeWidth={1.4} style={{ color: p.icon, transition: "transform 220ms ease", transform: active ? "scale(1.1)" : undefined }} />
-        {/* Item count - top right */}
-        <span style={{
-          position: "absolute", top: 10, right: 12,
-          fontFamily: "var(--sr-font-mono)", fontSize: 10.5, fontWeight: 500,
-          color: p.icon, background: "rgba(255,255,255,0.72)", padding: "2px 7px",
-          borderRadius: "var(--sr-radius-full)", backdropFilter: "blur(6px)", letterSpacing: "0.04em",
-        }}>
-          {bundle.items.length}
-        </span>
+        {/* Item count / sold chip - top right */}
+        {soldCount > 0 && totalCount > 0 ? (
+          <span style={{
+            position: "absolute", top: 10, right: 12,
+            fontFamily: "var(--sr-font-mono)", fontSize: 10.5, fontWeight: 500,
+            color: "var(--moss-700)", background: "rgba(255,255,255,0.85)", padding: "2px 7px",
+            borderRadius: "var(--sr-radius-full)", backdropFilter: "blur(6px)", letterSpacing: "0.04em",
+          }}>
+            {soldCount}/{totalCount} sold
+          </span>
+        ) : (
+          <span style={{
+            position: "absolute", top: 10, right: 12,
+            fontFamily: "var(--sr-font-mono)", fontSize: 10.5, fontWeight: 500,
+            color: p.icon, background: "rgba(255,255,255,0.72)", padding: "2px 7px",
+            borderRadius: "var(--sr-radius-full)", backdropFilter: "blur(6px)", letterSpacing: "0.04em",
+          }}>
+            {bundle.items.length}
+          </span>
+        )}
         {/* Hover controls - top left (rename + delete) */}
         {headerHover && (
           <div
@@ -337,12 +366,28 @@ export function BundleCard({
           <Plus size={12} />
           Add item
         </button>
-        {active && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "var(--sr-font-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: p.dotColor }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.bar, flexShrink: 0, animation: "badge-pulse 1.6s infinite" }} />
-            Viewing
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {canMarkBundleSold && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowMarkBundleSold(true); }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 500,
+                color: "var(--moss-600)", background: "none", border: "none", cursor: "pointer", padding: 0,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--moss-700)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--moss-600)"; }}
+            >
+              <ShoppingBag size={12} />
+              Mark bundle sold
+            </button>
+          )}
+          {active && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "var(--sr-font-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: p.dotColor }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.bar, flexShrink: 0, animation: "badge-pulse 1.6s infinite" }} />
+              Viewing
+            </div>
+          )}
+        </div>
       </div>
     </div>
     </>
