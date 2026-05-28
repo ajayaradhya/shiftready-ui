@@ -10,22 +10,29 @@ import { priceRangeToParams } from "@/lib/marketplace-filters";
 interface CommittedFilters {
   q: string;
   suburb: string;
+  postcode: string;
   category: CategoryFilter | null;
   condition: ConditionFilter | null;
   priceRange: PriceRangeKey | null;
   sort: SortKey;
 }
 
+export interface LocationValue {
+  suburb: string;
+  postcode: string;
+}
+
 export function useLanding(initialItems?: MarketplaceSearchResult, initialFetchedAt?: number) {
   const [searchInput, setSearchInput] = useState("");
   const [suburb, setSuburb] = useState("");
+  const [postcode, setPostcode] = useState("");
   const [category, setCategory] = useState<CategoryFilter | null>(null);
   const [condition, setCondition] = useState<ConditionFilter | null>(null);
   const [priceRange, setPriceRange] = useState<PriceRangeKey | null>(null);
   const [sort, setSort] = useState<SortKey>("newest");
 
   const [committed, setCommitted] = useState<CommittedFilters>({
-    q: "", suburb: "", category: null, condition: null, priceRange: null, sort: "newest",
+    q: "", suburb: "", postcode: "", category: null, condition: null, priceRange: null, sort: "newest",
   });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,34 +43,35 @@ export function useLanding(initialItems?: MarketplaceSearchResult, initialFetche
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value);
-    commit({ q: value, suburb, category, condition, priceRange, sort });
-  }, [suburb, category, condition, priceRange, sort, commit]);
+    commit({ q: value, suburb, postcode, category, condition, priceRange, sort });
+  }, [suburb, postcode, category, condition, priceRange, sort, commit]);
 
-  const handleSuburbChange = useCallback((value: string) => {
-    setSuburb(value);
-    commit({ q: searchInput, suburb: value, category, condition, priceRange, sort });
+  const handleLocationChange = useCallback((loc: LocationValue) => {
+    setSuburb(loc.suburb);
+    setPostcode(loc.postcode);
+    commit({ q: searchInput, suburb: loc.suburb, postcode: loc.postcode, category, condition, priceRange, sort });
   }, [searchInput, category, condition, priceRange, sort, commit]);
 
   const handleCategoryChange = useCallback((value: CategoryFilter | null) => {
     setCategory(value);
-    commit({ q: searchInput, suburb, category: value, condition, priceRange, sort });
-  }, [searchInput, suburb, condition, priceRange, sort, commit]);
+    commit({ q: searchInput, suburb, postcode, category: value, condition, priceRange, sort });
+  }, [searchInput, suburb, postcode, condition, priceRange, sort, commit]);
 
   const handleConditionChange = useCallback((value: ConditionFilter | null) => {
     setCondition(value);
-    commit({ q: searchInput, suburb, category, condition: value, priceRange, sort });
-  }, [searchInput, suburb, category, priceRange, sort, commit]);
+    commit({ q: searchInput, suburb, postcode, category, condition: value, priceRange, sort });
+  }, [searchInput, suburb, postcode, category, priceRange, sort, commit]);
 
   const handlePriceRangeChange = useCallback((value: PriceRangeKey | null) => {
     setPriceRange(value);
-    commit({ q: searchInput, suburb, category, condition, priceRange: value, sort });
-  }, [searchInput, suburb, category, condition, sort, commit]);
+    commit({ q: searchInput, suburb, postcode, category, condition, priceRange: value, sort });
+  }, [searchInput, suburb, postcode, category, condition, sort, commit]);
 
   const handleSortChange = useCallback((value: SortKey | null) => {
     const next = value ?? "newest";
     setSort(next);
-    commit({ q: searchInput, suburb, category, condition, priceRange, sort: next });
-  }, [searchInput, suburb, category, condition, priceRange, commit]);
+    commit({ q: searchInput, suburb, postcode, category, condition, priceRange, sort: next });
+  }, [searchInput, suburb, postcode, category, condition, priceRange, commit]);
 
   const { min: minPrice, max: maxPrice } = committed.priceRange
     ? priceRangeToParams(committed.priceRange)
@@ -76,12 +84,12 @@ export function useLanding(initialItems?: MarketplaceSearchResult, initialFetche
   const itemsQuery = useQuery({
     queryKey: [
       "landing-items",
-      committed.q, committed.suburb, committed.category,
+      committed.q, committed.postcode, committed.category,
       committed.condition, committed.priceRange, committed.sort,
     ],
     queryFn: () => searchMarketplace({
       q: committed.q || undefined,
-      suburb: committed.suburb || undefined,
+      postcode: committed.postcode || undefined,
       category: committed.category || undefined,
       condition: committed.condition || undefined,
       min_price: minPrice,
@@ -89,13 +97,14 @@ export function useLanding(initialItems?: MarketplaceSearchResult, initialFetche
       sort: committed.sort,
     }),
     staleTime: 60_000,
-    initialData: isDefaultState && !committed.suburb && initialItems ? initialItems : undefined,
-    initialDataUpdatedAt: isDefaultState && !committed.suburb && initialItems ? initialFetchedAt : undefined,
+    initialData: isDefaultState && !committed.postcode && initialItems ? initialItems : undefined,
+    initialDataUpdatedAt: isDefaultState && !committed.postcode && initialItems ? initialFetchedAt : undefined,
   });
 
   return {
     searchInput,
     suburb,
+    postcode,
     category,
     condition,
     priceRange,
@@ -103,7 +112,7 @@ export function useLanding(initialItems?: MarketplaceSearchResult, initialFetche
     committed,
     isDefaultState,
     handleSearchChange,
-    handleSuburbChange,
+    handleLocationChange,
     handleCategoryChange,
     handleConditionChange,
     handlePriceRangeChange,

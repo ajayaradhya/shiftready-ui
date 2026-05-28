@@ -1,14 +1,26 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { MapPin } from "lucide-react";
-import { NSW_SUBURBS_UNIQUE } from "@/lib/marketplace-filters";
+import { MapPin, LocateFixed, Loader2 } from "lucide-react";
+import {
+  SYDNEY_SUBURBS,
+  suburbByName,
+  suburbsForPostcode,
+  isValidPostcode,
+  nearestSuburb,
+  type Suburb,
+} from "@/lib/locations";
 import s from "./FilterChip.module.css";
 import ls from "./SuburbChip.module.css";
 
+export interface LocationValue {
+  suburb: string;
+  postcode: string;
+}
+
 interface Props {
-  value: string;
-  onChange: (v: string) => void;
+  value: LocationValue;
+  onChange: (v: LocationValue) => void;
 }
 
 function ChevronDown() {
@@ -29,19 +41,21 @@ function CheckIcon() {
   );
 }
 
+const MAX_RESULTS = 60;
+
 export function SuburbChip({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [geoErr, setGeoErr] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) { setSearch(""); return; }
+    if (!open) { setSearch(""); setGeoErr(null); return; }
     setTimeout(() => inputRef.current?.focus(), 50);
     function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -54,28 +68,79 @@ export function SuburbChip({ value, onChange }: Props) {
     };
   }, [open]);
 
-  const filtered = search
-    ? NSW_SUBURBS_UNIQUE.filter(sub => sub.toLowerCase().includes(search.toLowerCase()))
-    : NSW_SUBURBS_UNIQUE;
+  function select(sub: Suburb) {
+    onChange({ suburb: sub.name, postcode: sub.postcode });
+    setOpen(false);
+  }
 
-  const searchTrimmed = search.trim();
-  const exactMatch = NSW_SUBURBS_UNIQUE.some(
-    sub => sub.toLowerCase() === searchTrimmed.toLowerCase()
-  );
-  const showCustomOption = searchTrimmed.length >= 2 && !exactMatch;
+  function selectPostcode(postcode: string) {
+    const subs = suburbsForPostcode(postcode);
+    onChange({
+      suburb: subs.length === 1 ? subs[0].name : "",
+      postcode,
+    });
+    setOpen(false);
+  }
 
-  const isActive = !!value;
+  function clear() {
+    onChange({ suburb: "", postcode: "" });
+    setOpen(false);
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      setGeoErr("Location not supported on this device.");
+      return;
+    }
+    setLocating(true);
+    setGeoErr(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const sub = nearestSuburb(pos.coords.latitude, pos.coords.longitude);
+        setLocating(false);
+        select(sub);
+      },
+      err => {
+        setLocating(false);
+        setGeoErr(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission denied."
+            : "Couldn't get your location."
+        );
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 }
+    );
+  }
+
+  const trimmed = search.trim();
+  const isPostcodeSearch = isValidPostcode(trimmed);
+
+  let results: Suburb[];
+  if (isPostcodeSearch) {
+    results = suburbsForPostcode(trimmed);
+  } else if (trimmed) {
+    const low = trimmed.toLowerCase();
+    results = SYDNEY_SUBURBS.filter(
+      sub => sub.name.toLowerCase().includes(low) || sub.postcode.includes(trimmed)
+    ).slice(0, MAX_RESULTS);
+  } else {
+    results = SYDNEY_SUBURBS.slice(0, MAX_RESULTS);
+  }
+
+  const selectedName = value.suburb;
+  const selectedPostcode = value.postcode;
+  const isActive = !!(value.suburb || value.postcode);
+  const chipDisplay = value.suburb || (value.postcode ? `Postcode ${value.postcode}` : "Anywhere");
+
   const chipClass = [s.chip, ls.suburbChip, isActive ? s.chipActive : "", open ? s.chipOpen : ""]
     .filter(Boolean).join(" ");
 
   return (
     <div className={s.wrap} ref={wrapRef}>
       <button className={chipClass} onClick={() => setOpen(v => !v)} type="button">
-        <span className={ls.pin}>
-          <MapPin size={13} />
-        </span>
-        <span className={ls.suburbLabel}>Suburb:</span>
-        <span className={ls.suburbValue}>{value || "Anywhere"}</span>
+        <span className={ls.pin}><MapPin size={13} /></span>
+        <span className={ls.suburbLabel}>Location:</span>
+        <span className={ls.suburbValue}>{chipDisplay}</span>
         <span className={s.caret}><ChevronDown /></span>
       </button>
 
@@ -85,48 +150,73 @@ export function SuburbChip({ value, onChange }: Props) {
             <input
               ref={inputRef}
               className={ls.searchInput}
-              placeholder="Search suburb…"
+              placeholder="Suburb or postcode…"
               value={search}
               onChange={e => setSearch(e.target.value)}
+              inputMode="text"
             />
           </div>
 
-          <ul className={s.list} role="listbox" style={{ maxHeight: 220, overflowY: "auto" }}>
+          <button
+            type="button"
+            className={ls.gpsBtn}
+            onClick={useMyLocation}
+            disabled={locating}
+          >
+            {locating
+              ? <Loader2 size={14} className={ls.spin} />
+              : <LocateFixed size={14} />}
+            {locating ? "Locating…" : "Use my location"}
+          </button>
+
+          {geoErr && <div className={ls.gpsErr}>{geoErr}</div>}
+
+          <ul className={s.list} role="listbox" style={{ maxHeight: 240, overflowY: "auto" }}>
             <li
               role="option"
-              aria-selected={!value}
-              className={`${s.option} ${!value ? s.optionSelected : ""}`}
-              onClick={() => { onChange(""); setOpen(false); }}
+              aria-selected={!isActive}
+              className={`${s.option} ${!isActive ? s.optionSelected : ""}`}
+              onClick={clear}
             >
               <span>Anywhere</span>
-              {!value && <span className={s.check}><CheckIcon /></span>}
+              {!isActive && <span className={s.check}><CheckIcon /></span>}
             </li>
-            {showCustomOption && (
+
+            {isPostcodeSearch && results.length > 1 && (
               <li
                 role="option"
-                aria-selected={value === searchTrimmed}
-                className={`${s.option} ${value === searchTrimmed ? s.optionSelected : ""}`}
-                onClick={() => { onChange(searchTrimmed); setOpen(false); }}
+                aria-selected={selectedPostcode === trimmed && !selectedName}
+                className={`${s.option} ${selectedPostcode === trimmed && !selectedName ? s.optionSelected : ""}`}
+                onClick={() => selectPostcode(trimmed)}
               >
-                <span>Use &ldquo;{searchTrimmed}&rdquo;</span>
-                {value === searchTrimmed && <span className={s.check}><CheckIcon /></span>}
+                <span>All of {trimmed}</span>
+                <span className={ls.optMeta}>{results.length} suburbs</span>
               </li>
             )}
-            {filtered.map(sub => {
-              const selected = value === sub;
+
+            {results.map(sub => {
+              const selected = selectedName === sub.name;
               return (
                 <li
-                  key={sub}
+                  key={`${sub.name}-${sub.postcode}`}
                   role="option"
                   aria-selected={selected}
                   className={`${s.option} ${selected ? s.optionSelected : ""}`}
-                  onClick={() => { onChange(sub); setOpen(false); }}
+                  onClick={() => select(sub)}
                 >
-                  <span>{sub}</span>
-                  {selected && <span className={s.check}><CheckIcon /></span>}
+                  <span>{sub.name}</span>
+                  {selected
+                    ? <span className={s.check}><CheckIcon /></span>
+                    : <span className={ls.optMeta}>{sub.postcode}</span>}
                 </li>
               );
             })}
+
+            {results.length === 0 && (
+              <li className={s.option} style={{ cursor: "default", opacity: 0.6 }}>
+                <span>No matches</span>
+              </li>
+            )}
           </ul>
         </div>
       )}

@@ -229,9 +229,9 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
     : undefined;
 
   const {
-    searchInput, suburb, category, condition, priceRange, sort,
+    searchInput, suburb, postcode, category, condition, priceRange, sort,
     isDefaultState,
-    handleSearchChange, handleSuburbChange,
+    handleSearchChange, handleLocationChange,
     handleCategoryChange, handleConditionChange,
     handlePriceRangeChange, handleSortChange,
     items, itemCount, itemsLoading, itemsError,
@@ -247,11 +247,11 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
   const { setRef: setReceiptRef, visible: receiptVisible } = useInViewOnce("400px");
   const { setRef: setSalesRef, visible: salesVisible } = useInViewOnce("400px");
 
-  // Reuse belt data for polaroid when default state + no suburb. Otherwise fetch.
-  const useItemsForNewest = isDefaultState && !suburb;
+  // Reuse belt data for polaroid when default state + no location. Otherwise fetch.
+  const useItemsForNewest = isDefaultState && !postcode;
   const newestQuery = useQuery({
-    queryKey: ["market-newest", suburb],
-    queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "newest" }),
+    queryKey: ["market-newest", postcode],
+    queryFn: () => searchMarketplace({ postcode: postcode || undefined, sort: "newest" }),
     staleTime: 60_000,
     enabled: !useItemsForNewest && polaroidVisible,
     initialData: !useItemsForNewest && initialLanding
@@ -265,8 +265,8 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
   const newestLoading = useItemsForNewest ? itemsLoading : newestQuery.isLoading;
 
   const cheapestQuery = useQuery({
-    queryKey: ["market-cheapest", suburb],
-    queryFn: () => searchMarketplace({ suburb: suburb || undefined, sort: "price_asc" }),
+    queryKey: ["market-cheapest", postcode],
+    queryFn: () => searchMarketplace({ postcode: postcode || undefined, sort: "price_asc" }),
     staleTime: 60_000,
     enabled: receiptVisible,
     initialData: initialLanding
@@ -284,7 +284,8 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
     initialDataUpdatedAt: initialLanding ? fetchedAt : undefined,
   });
 
-  const hasSearch = !!(searchInput || suburb || category || condition || priceRange);
+  const hasSearch = !!(searchInput || postcode || category || condition || priceRange);
+  const locationLabel = suburb || (postcode ? postcode : "");
 
   return (
     <div className={s.landing}>
@@ -320,7 +321,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
         {/* ── FILTER BAR ── */}
         <div className={s.filterBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <SuburbChip value={suburb} onChange={handleSuburbChange} />
+            <SuburbChip value={{ suburb, postcode }} onChange={handleLocationChange} />
           </div>
 
           <div className={s.chips}>
@@ -362,7 +363,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
               <div className={s.sectionMeta}>
                 {itemsLoading
                   ? "Loading…"
-                  : `${itemCount} item${itemCount !== 1 ? "s" : ""} rolling past${suburb ? ` in ${suburb}` : ""}`}
+                  : `${itemCount} item${itemCount !== 1 ? "s" : ""} rolling past${locationLabel ? ` in ${locationLabel}` : ""}`}
               </div>
             </div>
             <span className={s.sectionView} />
@@ -391,7 +392,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
               <div className={s.sectionMeta}>
                 {newestLoading
                   ? "Loading…"
-                  : `Just listed${suburb ? ` near ${suburb}` : ""} · ${newestItems.length} total`}
+                  : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
               </div>
             </div>
             <span className={s.sectionView} />
@@ -413,7 +414,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
                 Today&apos;s <em>best prices</em>
               </h2>
               <div className={s.sectionMeta}>
-                Cheapest 14 items{suburb ? ` in ${suburb}` : " right now"} · cash, transfer or pick-up
+                Cheapest 14 items{locationLabel ? ` in ${locationLabel}` : " right now"} · cash, transfer or pick-up
               </div>
             </div>
             <span className={s.sectionView} />
@@ -423,7 +424,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
             ? <ReceiptRollSkeleton />
             : (cheapestQuery.data?.items?.length ?? 0) === 0
               ? null
-              : <ReceiptRoll items={cheapestQuery.data!.items} suburb={suburb || null} />
+              : <ReceiptRoll items={cheapestQuery.data!.items} suburb={locationLabel || null} />
           }
         </section>
 

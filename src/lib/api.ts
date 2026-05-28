@@ -421,6 +421,7 @@ export async function listSales(): Promise<SaleListing[]> {
 export interface MarketplaceSearchParams {
   q?: string;
   suburb?: string;
+  postcode?: string;
   category?: string;
   condition?: string;
   min_price?: number;
@@ -434,6 +435,7 @@ export async function searchMarketplace(
   const p = new URLSearchParams();
   if (params.q)           p.set("q", params.q);
   if (params.suburb)      p.set("suburb", params.suburb);
+  if (params.postcode)    p.set("postcode", params.postcode);
   if (params.category)    p.set("category", params.category);
   if (params.condition)   p.set("condition", params.condition);
   if (params.min_price != null) p.set("min_price", String(params.min_price));

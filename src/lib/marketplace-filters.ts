@@ -1,74 +1,9 @@
-// ── NSW suburbs ───────────────────────────────────────────────────────────────
+// ── Suburbs ─────────────────────────────────────────────────────────────────
+// Full Greater Sydney suburb list now lives in src/lib/locations.ts (dataset-backed).
 
-export const NSW_SUBURBS = [
-  // Inner City / East Sydney
-  "Darlinghurst", "Surry Hills", "Paddington", "Potts Point", "Elizabeth Bay",
-  "Woolloomooloo", "Redfern", "Waterloo", "Zetland", "Erskineville", "Alexandria",
-  "Chippendale", "Ultimo", "Pyrmont",
-  // Eastern Suburbs
-  "Bondi", "Bondi Beach", "Bondi Junction", "Bronte", "Clovelly", "Coogee",
-  "Randwick", "Kingsford", "Maroubra", "Matraville", "Little Bay",
-  "Kensington", "Rosebery",
-  // Inner West
-  "Glebe", "Newtown", "Leichhardt", "Annandale", "Balmain", "Balmain East",
-  "Rozelle", "Marrickville", "Stanmore", "Petersham", "Enmore", "Forest Lodge",
-  "Camperdown", "Tempe", "St Peters", "Sydenham",
-  // Lower North Shore
-  "Kirribilli", "Milsons Point", "Neutral Bay", "Cremorne", "Mosman",
-  "Waverton", "Wollstonecraft", "Cammeray", "Crows Nest", "St Leonards",
-  "Naremburn",
-  // Upper North Shore
-  "Chatswood", "Willoughby", "Artarmon", "Lane Cove", "Longueville",
-  "Northbridge", "Roseville", "Lindfield", "Killara", "Gordon", "Pymble",
-  "Turramurra", "Wahroonga", "Hornsby",
-  // Hills District
-  "Castle Hill", "Baulkham Hills", "Kellyville", "Rouse Hill", "Bella Vista",
-  "Cherrybrook", "West Pennant Hills", "Dural",
-  // Inner South
-  "Mascot", "Botany", "Eastlakes", "Beaconsfield", "Green Square",
-  // South
-  "Kogarah", "Hurstville", "Rockdale", "Brighton-Le-Sands", "Cronulla",
-  "Miranda", "Sutherland", "Caringbah", "Gymea", "Engadine",
-  // Western Suburbs
-  "Parramatta", "Westmead", "Merrylands", "Auburn", "Granville",
-  "Blacktown", "Seven Hills", "Penrith", "St Marys", "Campbelltown",
-  "Liverpool", "Fairfield", "Cabramatta", "Bankstown", "Lakemba",
-  // Inner Northwest
-  "Drummoyne", "Five Dock", "Concord", "Strathfield", "Burwood", "Croydon",
-  "Ashfield", "Homebush",
-  // Northern Beaches
-  "Manly", "Dee Why", "Brookvale", "Mona Vale", "Avalon", "Freshwater",
-  "Curl Curl", "Narrabeen", "Palm Beach",
-  // Sutherland Shire
-  "Menai", "Heathcote", "Loftus", "Illawong",
-  // Central Coast
-  "Gosford", "Wyong", "Erina", "Terrigal", "The Entrance", "Tuggerah",
-  "Woy Woy", "Umina Beach", "Bateau Bay",
-  // Hunter / Newcastle
-  "Newcastle", "Newcastle West", "Hamilton", "Merewether", "Cooks Hill",
-  "The Hill", "Broadmeadow", "Wallsend", "Charlestown", "Kotara",
-  "Maitland", "Cessnock", "Singleton",
-  // Wollongong / Illawarra
-  "Wollongong", "Wollongong Central", "North Wollongong", "Fairy Meadow",
-  "Thirroul", "Corrimal", "Dapto", "Shellharbour", "Kiama",
-  // Blue Mountains
-  "Katoomba", "Leura", "Springwood", "Penrith",
-  // ACT (often browsed alongside NSW)
-  "Canberra", "Belconnen", "Tuggeranong", "Woden", "Gungahlin",
-];
+import { SYDNEY_SUBURB_NAMES } from "@/lib/locations";
 
-// Dedupe and sort
-const _seen = new Set<string>();
-const _deduped: string[] = [];
-for (const s of NSW_SUBURBS) {
-  if (!_seen.has(s)) { _seen.add(s); _deduped.push(s); }
-}
-export const NSW_SUBURBS_UNIQUE = _deduped.sort();
-
-/** @deprecated Use NSW_SUBURBS_UNIQUE */
-export const SYDNEY_SUBURBS = NSW_SUBURBS;
-/** @deprecated Use NSW_SUBURBS_UNIQUE */
-export const SYDNEY_SUBURBS_UNIQUE = NSW_SUBURBS_UNIQUE;
+export const NSW_SUBURBS_UNIQUE = SYDNEY_SUBURB_NAMES;
 
 // ── Filter types ──────────────────────────────────────────────────────────────
 

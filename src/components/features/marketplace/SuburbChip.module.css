@@ -46,3 +46,53 @@
 .searchInput::placeholder {
   color: var(--sr-text-muted);
 }
+
+.gpsBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--sr-font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--clay-600);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--sr-border-subtle);
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms;
+}
+
+.gpsBtn:hover:not(:disabled) {
+  background: var(--cream-100, #faf5ef);
+}
+
+.gpsBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.optMeta {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sr-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.spin {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.gpsErr {
+  padding: 7px 12px;
+  font-size: 11.5px;
+  color: var(--rust-500, #b4513a);
+  border-bottom: 1px solid var(--sr-border-subtle);
+}
