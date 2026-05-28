@@ -59,12 +59,4 @@ substitutions:
   _LOCATION: australia-southeast1
   _REPO_NAME: shiftready-repo
   _SERVICE_NAME: shiftready-ui
-  _NEXT_PUBLIC_API_URL: https://shiftready-api-7nkqrak2ta-ts.a.run.app
-  _FIREBASE_API_KEY: AIzaSyB92vy6nPaF3nU7Uujvz7i2jdgat3Xc4Jk
-  _FIREBASE_AUTH_DOMAIN: shiftready-493812.firebaseapp.com
-  _FIREBASE_PROJECT_ID: shiftready-493812
-  _FIREBASE_STORAGE_BUCKET: shiftready-493812.firebasestorage.app
-  _FIREBASE_MESSAGING_SENDER_ID: '12644234558'
-  _FIREBASE_APP_ID: 1:12644234558:web:e9b9f25d5812f79c56e86f
-  _FIREBASE_MEASUREMENT_ID: G-79X79CC6VY
   _NEXT_PUBLIC_SENTRY_DSN: ''  # Override in trigger once Sentry project is created
