@@ -1,13 +1,26 @@
 steps:
-  # 1. Pull cache
+  # 1. Lint + typecheck (gates the build — fail fast on type errors)
+  - name: 'node:20-slim'
+    id: 'lint-typecheck'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        npm ci
+        npm run lint
+        npm run type-check
+
+  # 2. Pull cache
   - name: 'gcr.io/cloud-builders/docker'
     id: 'pull-cache'
+    waitFor: ['lint-typecheck']
     entrypoint: 'bash'
     args: ['-c', 'docker pull ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:latest || exit 0']
 
-  # 2. Build the container image
+  # 3. Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-image'
+    waitFor: ['pull-cache']
     args: [
       'build',
       '--cache-from', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}:latest',
