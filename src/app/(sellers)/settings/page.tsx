@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { SYDNEY_SUBURBS, suburbsForPostcode, isValidPostcode, type Suburb } from "@/lib/locations";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsername, useUsernameAvailability } from "@/hooks/use-username";
 import { useUpdateMyPhone } from "@/hooks/use-phone";
@@ -629,6 +630,89 @@ function AccountSection({ userEmail }: { userEmail?: string | null }) {
   );
 }
 
+// ── SuburbCombobox ──────────────────────────────────────────────────────────
+function SuburbCombobox({ value, onChange, onStateChange }: {
+  value: string;
+  onChange: (suburb: string) => void;
+  onStateChange: (state: string) => void;
+}) {
+  const [input, setInput] = useState(value);
+  const [open, setOpen] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState(-1);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setInput(value); }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const trimmed = input.trim();
+  const results: Suburb[] = trimmed.length >= 2
+    ? (isValidPostcode(trimmed)
+        ? suburbsForPostcode(trimmed).slice(0, 8)
+        : SYDNEY_SUBURBS.filter(s => s.name.toLowerCase().startsWith(trimmed.toLowerCase())).slice(0, 8)
+      )
+    : [];
+
+  function select(sub: Suburb) {
+    setInput(sub.name);
+    onChange(sub.name);
+    onStateChange("NSW");
+    setOpen(false);
+    setHoveredIdx(-1);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--sr-text-muted)", pointerEvents: "none", zIndex: 1 }}>
+        <IcMap />
+      </span>
+      <SInput
+        value={input}
+        onChange={e => { setInput(e.target.value); onChange(e.target.value); setOpen(true); setHoveredIdx(-1); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Suburb or postcode"
+        style={{ paddingLeft: 30 }}
+        autoComplete="off"
+      />
+      {open && results.length > 0 && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 50,
+          background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-default)",
+          borderRadius: "var(--sr-radius-md)", boxShadow: "0 4px 16px rgba(0,0,0,.10)",
+          overflow: "hidden",
+        }}>
+          {results.map((sub, i) => (
+            <button
+              key={`${sub.name}-${sub.postcode}`}
+              type="button"
+              onMouseDown={e => { e.preventDefault(); select(sub); }}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(-1)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                width: "100%", padding: "9px 14px", textAlign: "left",
+                background: hoveredIdx === i ? "var(--cream-50)" : "transparent",
+                border: "none", borderBottom: i < results.length - 1 ? "1px solid var(--sr-border-subtle)" : "none",
+                cursor: "pointer", fontSize: 13.5, color: "var(--sr-text-primary)",
+              }}
+            >
+              <span>{sub.name}</span>
+              <span style={{ fontSize: 11, fontFamily: "var(--sr-font-mono)", color: "var(--sr-text-muted)" }}>{sub.postcode} NSW</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Section: Contact & Pickup ───────────────────────────────────────────────
 function formatAULocal(e164: string): string {
   if (e164.startsWith("+61") && e164.length === 12) return "0" + e164.slice(3);
@@ -743,10 +827,7 @@ function ContactSection() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <SField label="Suburb">
-            <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--sr-text-muted)", pointerEvents: "none" }}><IcMap/></span>
-              <SInput value={suburb} onChange={e => setSuburb(e.target.value)} placeholder="Suburb" style={{ paddingLeft: 30 }}/>
-            </div>
+            <SuburbCombobox value={suburb} onChange={setSuburb} onStateChange={setState} />
           </SField>
           <SField label="State">
             <SSelect value={state} onChange={e => setState(e.target.value)}>
