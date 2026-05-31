@@ -3,8 +3,10 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { getMessages } from "@/lib/api";
 import type { Message } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useMessages(convId: string) {
+  const { idToken } = useAuth();
   return useInfiniteQuery({
     queryKey: ["messages", convId],
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
@@ -16,7 +18,7 @@ export function useMessages(convId: string) {
       return msgs[0]?.id;
     },
     staleTime: 0,
-    enabled: !!convId,
+    enabled: !!convId && !!idToken,
   });
 }
 

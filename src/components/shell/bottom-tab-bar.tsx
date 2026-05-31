@@ -22,7 +22,7 @@ function isActive(href: string, pathname: string): boolean {
 
 const SELLER_TABS: TabItemDef[] = [
   { icon: LayoutDashboard, label: "Sales",    href: "/seller-central" },
-  { icon: Store,           label: "Market",   href: "/" },
+  { icon: Store,           label: "Market",   href: "/market" },
   null,
   { icon: MessageSquare,   label: "Messages", href: "/messages", showUnread: true },
   { icon: User,            label: "Profile",  href: "/settings" },

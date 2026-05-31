@@ -11,6 +11,7 @@ import { FALLBACK_POLLING_MS } from "@/lib/constants";
 export function useInventory(eventId: string) {
   const { idToken } = useAuth();
   const queryClient = useQueryClient();
+  const authReady = !!idToken;
 
   // Ref tracks previous status purely for transition detection inside useEffect.
   // Never read during render - that would violate React 19 ref rules.
@@ -37,7 +38,7 @@ export function useInventory(eventId: string) {
   const { data: statusData, error: statusError } = useQuery({
     queryKey: ["status", eventId],
     queryFn: () => getStatus(eventId),
-    enabled: !!eventId,
+    enabled: !!eventId && authReady,
     refetchInterval: (query) => {
       if (isConnected) return false; // WS delivers updates; no polling needed
       const s = query.state.data?.status ?? "idle";
@@ -62,7 +63,7 @@ export function useInventory(eventId: string) {
   } = useQuery<SaleSummary>({
     queryKey: ["summary", eventId],
     queryFn: () => getSummary(eventId),
-    enabled: !!eventId,
+    enabled: !!eventId && authReady,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
     // Poll summary while pipeline is active so prices appear as soon as the

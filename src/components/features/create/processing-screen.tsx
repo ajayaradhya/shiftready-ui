@@ -239,7 +239,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
     return () => clearInterval(poll);
   }, [eventId, router]);
 
-  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+  const goToDashboard = useCallback(() => router.push("/seller-central"), [router]);
   const stayAndWatch = useCallback(() => router.push(`/seller-central/inventory/${eventId}`), [router, eventId]);
 
   /* Batch-mode animation state - hooks must be unconditional */

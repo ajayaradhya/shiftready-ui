@@ -23,7 +23,7 @@ type NavItemDef = {
 const SELLER_NAV: NavItemDef[] = [
   { icon: LayoutDashboard, label: "Sales",     href: "/seller-central" },
   { icon: Package,         label: "Inventory", href: "#",    disabled: true },
-  { icon: Store,           label: "Market",    href: "/" },
+  { icon: Store,           label: "Market",    href: "/market" },
   { icon: MessageSquare,   label: "Messages",  href: "/messages", showUnread: true },
   { icon: CreditCard,      label: "Finances",  href: "#",    disabled: true },
   { icon: Settings,        label: "Settings",  href: "/settings" },

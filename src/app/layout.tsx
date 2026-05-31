@@ -3,7 +3,10 @@ import "./globals.css";
 import Providers from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "ShiftReady",
+  title: {
+    default: "ShiftReady",
+    template: "%s | ShiftReady",
+  },
   description:
     "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
   manifest: "/manifest.json",

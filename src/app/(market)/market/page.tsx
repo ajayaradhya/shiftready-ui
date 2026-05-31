@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import type { LandingData } from "@/lib/types";
 import { BrowsePageContent } from "./BrowsePageContent";
+
+export const metadata: Metadata = { title: "The Marketplace" };
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
 
