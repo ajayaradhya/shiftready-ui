@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { setPin, clearPin } from "@/lib/api";
 import type { PinKind } from "@/lib/types";
+import { toast } from "sonner";
 
 interface SetPinVars {
   kind: PinKind;
@@ -19,6 +20,7 @@ export function useSetPin(convId: string) {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", convId] });
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to pin item"),
   });
 }
 
@@ -30,5 +32,6 @@ export function useClearPin(convId: string) {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", convId] });
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to clear pin"),
   });
 }

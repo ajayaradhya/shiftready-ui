@@ -128,6 +128,7 @@ export default function SellerCentralInventoryPage() {
   const addBundleMutation = useMutation({
     mutationFn: (name: string) => createBundle(eventId, name),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
+    onError: (err: Error) => toast.error(err.message || "Failed to create bundle"),
   });
 
   const delBundleMutation = useMutation({
@@ -136,18 +137,21 @@ export default function SellerCentralInventoryPage() {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       setSelectedBundleId(null);
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to delete bundle"),
   });
 
   const renameBundleMutation = useMutation({
     mutationFn: ({ bundleId, name }: { bundleId: string; name: string }) =>
       renameBundle(eventId, bundleId, name),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
+    onError: (err: Error) => toast.error(err.message || "Failed to rename bundle"),
   });
 
   const patchBundleMutation = useMutation({
     mutationFn: ({ bundleId, updates }: { bundleId: string; updates: { bundle_discount_percent?: number | null } }) =>
       patchBundle(eventId, bundleId, updates),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["summary", eventId] }),
+    onError: (err: Error) => toast.error(err.message || "Failed to update bundle"),
   });
 
   const publishMutation = useMutation({
@@ -157,6 +161,7 @@ export default function SellerCentralInventoryPage() {
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });
       toast.success("Sale is now live!");
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to publish sale"),
   });
 
   const unpublishMutation = useMutation({
@@ -166,6 +171,7 @@ export default function SellerCentralInventoryPage() {
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });
       toast.success("Sale unpublished.");
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to unpublish sale"),
   });
 
   const archiveMutation = useMutation({
@@ -446,12 +452,25 @@ export default function SellerCentralInventoryPage() {
           <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--cream-200)", color: "var(--ink-400)", display: "grid", placeItems: "center", marginBottom: 14 }}>
             <MousePointerClick size={22} strokeWidth={1.5} />
           </div>
-          <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-700)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
-            Select a bundle to browse
-          </div>
-          <p style={{ fontSize: 13, color: "var(--sr-text-muted)", maxWidth: 280, lineHeight: 1.5, margin: 0 }}>
-            Tap any room card above to review and edit its items.
-          </p>
+          {(summary?.bundles?.length ?? 0) === 0 ? (
+            <>
+              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-700)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
+                No bundles yet
+              </div>
+              <p style={{ fontSize: 13, color: "var(--sr-text-muted)", maxWidth: 280, lineHeight: 1.5, margin: 0 }}>
+                Create your first bundle above to start adding items.
+              </p>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-700)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
+                Select a bundle to browse
+              </div>
+              <p style={{ fontSize: 13, color: "var(--sr-text-muted)", maxWidth: 280, lineHeight: 1.5, margin: 0 }}>
+                Tap any room card above to review and edit its items.
+              </p>
+            </>
+          )}
         </div>
       )}
 

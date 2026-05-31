@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 const SETTINGS_KEY = ["settings", "me"];
 
@@ -28,6 +29,7 @@ export function useUpdateProfile() {
     mutationFn: ({ displayName, bio }: { displayName: string | null; bio: string | null }) =>
       updateProfile(displayName, bio),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to save profile"),
   });
 }
 
@@ -37,6 +39,7 @@ export function useUpdateLocation() {
     mutationFn: ({ suburb, state }: { suburb: string | null; state: string | null }) =>
       updateLocation(suburb, state),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to save location"),
   });
 }
 
@@ -45,6 +48,7 @@ export function useUpdateNotifications() {
   return useMutation({
     mutationFn: (prefs: NotifPrefs) => updateNotifications(prefs),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to save notification preferences"),
   });
 }
 
@@ -53,6 +57,7 @@ export function useUpdatePreferences() {
   return useMutation({
     mutationFn: (prefs: SellerPrefs) => updatePreferences(prefs),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to save preferences"),
   });
 }
 
@@ -61,5 +66,6 @@ export function useUpdatePrivacy() {
   return useMutation({
     mutationFn: (prefs: PrivacyPrefs) => updatePrivacy(prefs),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to save privacy settings"),
   });
 }

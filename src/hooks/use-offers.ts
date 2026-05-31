@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendOffer, acceptOffer, counterOffer, withdrawOffer } from "@/lib/api";
 import type { Message } from "@/lib/types";
+import { toast } from "sonner";
 
 function appendMessage(qc: ReturnType<typeof useQueryClient>, convId: string, msg: Message) {
   qc.setQueryData(
@@ -30,6 +31,7 @@ export function useSendOffer(convId: string) {
     mutationFn: ({ amount, parentOfferId }: { amount: number; parentOfferId?: string | null }) =>
       sendOffer(convId, amount, parentOfferId),
     onSuccess: (msg) => appendMessage(qc, convId, msg),
+    onError: (err: Error) => toast.error(err.message || "Failed to send offer"),
   });
 }
 
@@ -38,6 +40,7 @@ export function useAcceptOffer(convId: string) {
   return useMutation({
     mutationFn: ({ offerId }: { offerId: string }) => acceptOffer(convId, offerId),
     onSuccess: (msg) => appendMessage(qc, convId, msg),
+    onError: (err: Error) => toast.error(err.message || "Failed to accept offer"),
   });
 }
 
@@ -47,6 +50,7 @@ export function useCounterOffer(convId: string) {
     mutationFn: ({ offerId, amount }: { offerId: string; amount: number }) =>
       counterOffer(convId, offerId, amount),
     onSuccess: (msg) => appendMessage(qc, convId, msg),
+    onError: (err: Error) => toast.error(err.message || "Failed to send counter offer"),
   });
 }
 
@@ -55,5 +59,6 @@ export function useWithdrawOffer(convId: string) {
   return useMutation({
     mutationFn: ({ offerId }: { offerId: string }) => withdrawOffer(convId, offerId),
     onSuccess: (msg) => appendMessage(qc, convId, msg),
+    onError: (err: Error) => toast.error(err.message || "Failed to withdraw offer"),
   });
 }

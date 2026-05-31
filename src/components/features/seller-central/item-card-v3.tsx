@@ -85,6 +85,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         setPricingStale(true);
       }
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to save changes"),
   });
 
   const [showMarkSold, setShowMarkSold] = useState(false);
@@ -169,11 +170,13 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   const deleteMutation = useMutation({
     mutationFn: () => deleteItem(eventId, bundleId, item.id),
     onSuccess: invalidate,
+    onError: (err: Error) => toast.error(err.message || "Failed to delete item"),
   });
 
   const moveMutation = useMutation({
     mutationFn: (toBundleId: string) => moveItem(eventId, bundleId, item.id, toBundleId),
     onSuccess: () => { invalidate(); setMovePanelOpen(false); },
+    onError: (err: Error) => toast.error(err.message || "Failed to move item"),
   });
 
   const duplicateMutation = useMutation({

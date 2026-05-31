@@ -383,50 +383,47 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
         </section>
 
         {/* ── 02 · POLAROID PILE (newest, suburb-aware) ── */}
-        <section style={{ marginTop: 56 }} ref={setPolaroidRef as React.RefCallback<HTMLElement>}>
-          <div className={s.sectionHead}>
-            <div>
-              <h2 className={s.sectionTitle}>
-                Fresh from someone&apos;s <em>home</em>
-              </h2>
-              <div className={s.sectionMeta}>
-                {newestLoading
-                  ? "Loading…"
-                  : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
+        {(newestLoading || newestItems.length > 0) && (
+          <section style={{ marginTop: 56 }} ref={setPolaroidRef as React.RefCallback<HTMLElement>}>
+            <div className={s.sectionHead}>
+              <div>
+                <h2 className={s.sectionTitle}>
+                  Fresh from someone&apos;s <em>home</em>
+                </h2>
+                <div className={s.sectionMeta}>
+                  {newestLoading
+                    ? "Loading…"
+                    : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
+                </div>
               </div>
+              <span className={s.sectionView} />
             </div>
-            <span className={s.sectionView} />
-          </div>
 
-          {newestLoading
-            ? <PolaroidPileSkeleton />
-            : newestItems.length === 0
-              ? null
-              : <PolaroidPile items={newestItems} />
-          }
-        </section>
+            {newestLoading ? <PolaroidPileSkeleton /> : <PolaroidPile items={newestItems} />}
+          </section>
+        )}
 
         {/* ── 03 · RECEIPT ROLL (cheapest, suburb-aware) ── */}
-        <section style={{ marginTop: 56 }} ref={setReceiptRef as React.RefCallback<HTMLElement>}>
-          <div className={s.sectionHead}>
-            <div>
-              <h2 className={s.sectionTitle}>
-                Today&apos;s <em>best prices</em>
-              </h2>
-              <div className={s.sectionMeta}>
-                Cheapest 14 items{locationLabel ? ` in ${locationLabel}` : " right now"} · cash, transfer or pick-up
+        {(cheapestQuery.isLoading || (cheapestQuery.data?.items?.length ?? 0) > 0) && (
+          <section style={{ marginTop: 56 }} ref={setReceiptRef as React.RefCallback<HTMLElement>}>
+            <div className={s.sectionHead}>
+              <div>
+                <h2 className={s.sectionTitle}>
+                  Today&apos;s <em>best prices</em>
+                </h2>
+                <div className={s.sectionMeta}>
+                  Cheapest 14 items{locationLabel ? ` in ${locationLabel}` : " right now"} · cash, transfer or pick-up
+                </div>
               </div>
+              <span className={s.sectionView} />
             </div>
-            <span className={s.sectionView} />
-          </div>
 
-          {cheapestQuery.isLoading
-            ? <ReceiptRollSkeleton />
-            : (cheapestQuery.data?.items?.length ?? 0) === 0
-              ? null
+            {cheapestQuery.isLoading
+              ? <ReceiptRollSkeleton />
               : <ReceiptRoll items={cheapestQuery.data!.items} suburb={locationLabel || null} />
-          }
-        </section>
+            }
+          </section>
+        )}
 
         {/* ── ACTIVE SALES NEARBY ── */}
         <section className={s.salesScrollWrap} ref={setSalesRef as React.RefCallback<HTMLElement>}>

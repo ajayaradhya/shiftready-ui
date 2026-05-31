@@ -543,6 +543,26 @@ export function ConversationView({
           </div>
         )}
 
+        {!isLoading && allMessages.length === 0 && (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--sr-text-muted)",
+              fontSize: 13,
+              fontFamily: "var(--sr-font-sans)",
+              gap: 6,
+              padding: "40px 0",
+            }}
+          >
+            <span style={{ fontSize: 28 }}>💬</span>
+            <span>No messages yet — say hello!</span>
+          </div>
+        )}
+
         {allMessages.map((msg, i) => {
           const prev = allMessages[i - 1];
           const msgDateKey = msg.createdAt ? syDateKey(new Date(msg.createdAt)) : "";

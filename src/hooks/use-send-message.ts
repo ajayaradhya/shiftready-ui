@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessage } from "@/lib/api";
 import type { Message, MessageContext } from "@/lib/types";
+import { toast } from "sonner";
 
 export function useSendMessage(convId: string) {
   const qc = useQueryClient();
@@ -28,5 +29,6 @@ export function useSendMessage(convId: string) {
       );
       qc.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to send message"),
   });
 }
