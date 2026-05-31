@@ -21,7 +21,7 @@ export default function SellerCentralPage() {
   const activeValue = sales?.filter((s) => LIVE_STATUSES.includes(s.status)).reduce((s, a) => s + a.totalValue, 0) ?? 0;
 
   return (
-    <div style={{ maxWidth: 920, margin: "0 auto", padding: "40px 40px 60px", fontFamily: "var(--sr-font-sans)" }}>
+    <div className="px-5 pt-8 pb-14 md:px-10 md:pt-10" style={{ maxWidth: 920, margin: "0 auto", fontFamily: "var(--sr-font-sans)" }}>
       {/* Page head */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
@@ -59,9 +59,8 @@ export default function SellerCentralPage() {
       {/* Stats cards */}
       {sales && sales.length > 0 && (
         <div
+          className="grid grid-cols-2 md:grid-cols-4"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
             gap: 14,
             marginBottom: 36,
           }}

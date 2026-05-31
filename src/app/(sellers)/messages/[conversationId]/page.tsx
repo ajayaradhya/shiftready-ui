@@ -38,14 +38,12 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
     <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
       {/* Sidebar */}
       <div
-        className="hidden md:block"
+        className="hidden md:flex flex-col"
         style={{
           width: 320,
           borderRight: "1px solid var(--sr-border-subtle)",
           flexShrink: 0,
           overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
           background: "var(--sr-bg-app)",
         }}
       >

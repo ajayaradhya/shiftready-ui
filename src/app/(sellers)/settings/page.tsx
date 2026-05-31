@@ -1263,10 +1263,10 @@ export default function SettingsPage() {
         .sec-anim { animation: secIn 200ms ease both; }
       `}</style>
 
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "40px 40px 80px", display: "flex", gap: 44, alignItems: "flex-start" }}>
+      <div className="flex flex-col md:flex-row px-5 pt-8 pb-20 md:px-10 md:pt-10 md:gap-11" style={{ maxWidth: 920, margin: "0 auto", gap: 24, alignItems: "flex-start" }}>
 
         {/* Left nav */}
-        <nav style={{ width: 172, flexShrink: 0, position: "sticky", top: 40 }}>
+        <nav className="w-full md:w-44 md:shrink-0 md:sticky md:top-10" style={{ flexShrink: 0 }}>
           <h1 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-.02em", color: "var(--ink-800)", margin: "0 0 22px", lineHeight: 1.1 }}>
             Settings
           </h1>

@@ -61,13 +61,13 @@ export function ProfileMenu() {
         <button
           aria-label={`User menu for ${displayName}`}
           className={cn(
-            "w-8 h-8 rounded-full overflow-hidden flex-shrink-0 cursor-pointer",
+            "w-11 h-11 rounded-full overflow-hidden flex-shrink-0 cursor-pointer",
             "grid place-items-center border border-[var(--sr-border-subtle)]",
             "bg-[var(--clay-100)] hover:ring-2 hover:ring-[var(--clay-200)]",
             "transition-all duration-150 outline-none",
           )}
         >
-          <AvatarInner size={32} />
+          <AvatarInner size={36} />
         </button>
       </DropdownMenuTrigger>
 

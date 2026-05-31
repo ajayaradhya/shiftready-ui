@@ -225,7 +225,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
         <button
           onClick={() => setNotifOpen(true)}
           aria-label={`Notifications${unreadNotifs > 0 ? ` (${unreadNotifs} unread)` : ""}`}
-          className="relative w-8 h-8 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
+          className="relative w-11 h-11 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
           style={{ color: "var(--ink-400)" }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.color = "var(--ink-700)";

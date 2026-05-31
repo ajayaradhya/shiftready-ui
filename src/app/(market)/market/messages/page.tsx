@@ -93,10 +93,12 @@ export default function MarketMessagesPage() {
 
   return (
     <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
-      {/* Conv list panel */}
+      {/* Conv list panel — full width on mobile, 320px sidebar on desktop */}
       <div
+        className="flex-1 md:flex-none"
         style={{
-          width: 320,
+          width: "100%",
+          maxWidth: "100%",
           flexShrink: 0,
           borderRight: "1px solid var(--sr-border-subtle)",
           overflow: "hidden",
@@ -108,11 +110,11 @@ export default function MarketMessagesPage() {
         <ConversationList basePath="/market/messages" />
       </div>
 
-      {/* Empty right pane */}
+      {/* Empty right pane — desktop only */}
       <div
+        className="hidden md:flex"
         style={{
           flex: 1,
-          display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",

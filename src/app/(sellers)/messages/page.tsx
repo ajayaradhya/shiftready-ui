@@ -8,10 +8,12 @@ export default function InboxPage() {
   useEffect(() => { document.title = "Messages - ShiftReady"; }, []);
   return (
     <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
-      {/* Sidebar */}
+      {/* Sidebar — full width on mobile, 320px on desktop */}
       <div
+        className="flex-1 md:flex-none"
         style={{
-          width: 320,
+          width: "100%",
+          maxWidth: "100%",
           borderRight: "1px solid var(--sr-border-subtle)",
           flexShrink: 0,
           overflow: "hidden",
@@ -23,11 +25,11 @@ export default function InboxPage() {
         <ConversationList basePath="/messages" />
       </div>
 
-      {/* Empty state when no conversation selected */}
+      {/* Empty state — desktop only */}
       <div
+        className="hidden md:flex"
         style={{
           flex: 1,
-          display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
