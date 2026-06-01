@@ -42,6 +42,7 @@ export interface MarketplaceItem {
   bundleName: string | null;
   eventId: string;
   image_url?: string | null;
+  thumb_url?: string | null;
   metadata: {
     year: number | null;
     originalPrice: number | null;
@@ -150,6 +151,8 @@ export interface InventoryImage {
   id: string;
   gcs_path: string;
   url?: string;
+  thumb_url?: string;
+  medium_url?: string;
   is_cover: boolean;
   source: "user_upload" | "frame_extract";
   uploaded_at: string;
@@ -159,6 +162,7 @@ export interface CoverImage {
   id: string;
   gcs_path: string;
   url?: string;
+  thumb_url?: string;
   source: "user_upload" | "frame_extract";
 }
 

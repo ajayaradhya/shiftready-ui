@@ -28,7 +28,7 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
       {decor === 1 && <span className={s.tape} aria-hidden />}
       <div className={s.polaroidMedia}>
         {item.image_url ? (
-          <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" />
+          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" />
         ) : null}
         <span className={s.polaroidPrice}>{formatAUD(item.price)}</span>
       </div>

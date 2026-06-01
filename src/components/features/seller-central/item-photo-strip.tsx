@@ -366,7 +366,7 @@ function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCoverin
       onDrop={(e) => { e.preventDefault(); onDrop(); }}
     >
       <Image
-        src={image.url ?? "/item-placeholder.svg"}
+        src={image.thumb_url ?? image.url ?? "/item-placeholder.svg"}
         alt=""
         fill
         onClick={busy ? undefined : onClick}

@@ -12,7 +12,7 @@ function BeltItem({ item }: { item: MarketplaceItem }) {
     <Link href={`/market/sale/${item.eventId}`} className={s.beltItem}>
       <div className={s.beltMedia}>
         {item.image_url ? (
-          <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="160px" />
+          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="160px" />
         ) : null}
         <span className={s.beltPrice}>{formatAUD(item.price)}</span>
       </div>

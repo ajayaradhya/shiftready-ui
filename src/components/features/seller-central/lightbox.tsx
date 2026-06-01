@@ -171,7 +171,7 @@ export function Lightbox({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={current.id}
-          src={current.url ?? "/item-placeholder.svg"}
+          src={current.medium_url ?? current.url ?? "/item-placeholder.svg"}
           alt=""
           style={{
             maxWidth: "100%", maxHeight: "calc(100dvh - 180px)", objectFit: "contain",
@@ -215,7 +215,7 @@ export function Lightbox({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={img.url ?? "/item-placeholder.svg"}
+              src={img.thumb_url ?? img.url ?? "/item-placeholder.svg"}
               alt=""
               style={{
                 width: 64, height: 64, objectFit: "cover",

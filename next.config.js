@@ -5,7 +5,7 @@ const { withSentryConfig } = require("@sentry/nextjs");
 const nextConfig = {
   output: "standalone",
   images: {
-    minimumCacheTTL: 3600,
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",
