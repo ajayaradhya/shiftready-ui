@@ -138,15 +138,42 @@
   to   { transform: translateX(0); opacity: 1; }
 }
 
-/* Custom Stitch scrollbar */
+/* ── Global scrollbar — clay/cream theme ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cream-100);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--clay-300);
+  border-radius: 999px;
+  border: 2px solid var(--cream-100);
+  transition: background 0.15s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--clay-500);
+}
+::-webkit-scrollbar-corner {
+  background: var(--cream-100);
+}
+
+/* Custom Stitch scrollbar (slim variant for sidebars/panels) */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-surface-container-highest rounded-full;
+  background: var(--clay-200);
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--clay-400);
 }
 /* cmdk command palette headings */
 [cmdk-group-heading] {
