@@ -92,7 +92,7 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
               className={cn(
                 "flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 no-underline relative",
                 "text-[10px] font-medium transition-colors duration-150",
-                active ? "text-[var(--clay-600)]" : "text-[var(--ink-400)]"
+                active ? "text-[var(--clay-700)]" : "text-[var(--ink-500)]"
               )}
             >
               <div className="relative">

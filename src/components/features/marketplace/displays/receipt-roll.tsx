@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { MarketplaceItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
@@ -49,10 +50,9 @@ export function ReceiptRoll({
 
         {slice.map((it) => (
           <Link key={it.id} href={`/market/sale/${it.eventId}`} className={s.receiptLine}>
-            <div className={s.receiptThumb}>
+            <div className={s.receiptThumb} style={{ position: "relative" }}>
               {it.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.image_url} alt="" loading="lazy" />
+                <Image src={it.image_url} alt="" fill style={{ objectFit: "cover" }} sizes="36px" />
               ) : null}
             </div>
             <div className={s.receiptBody}>

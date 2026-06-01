@@ -9,10 +9,12 @@ import { useRouter } from "next/navigation";
 import { useNotifUnreadCount } from "@/hooks/use-notifications";
 import { useSaleContext } from "@/lib/sale-context";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { ProfileMenu } from "./profile-menu";
-import { NotificationsPanel } from "./notifications-panel";
-import { CommandPalette } from "./command-palette";
 import { ShortcutsCheatsheet } from "./shortcuts-cheatsheet";
+
+const CommandPalette = dynamic(() => import("./command-palette").then(m => ({ default: m.CommandPalette })));
+const NotificationsPanel = dynamic(() => import("./notifications-panel").then(m => ({ default: m.NotificationsPanel })));
 
 interface ShellHeaderProps {
   /** When true, desktop header is offset left by sidebar width (224px) */
@@ -110,7 +112,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
             className="md:hidden flex items-center gap-2 no-underline shrink-0"
             style={{ color: "var(--sr-text-primary)" }}
           >
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={20} height={20} priority />
+            <Image src="/logo-mark.svg" alt="" width={20} height={20} priority />
             <span
               className="text-[16px] font-semibold leading-none"
               style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}
@@ -127,7 +129,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
             className="flex items-center gap-2 no-underline shrink-0"
             style={{ color: "var(--sr-text-primary)" }}
           >
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={20} height={20} priority />
+            <Image src="/logo-mark.svg" alt="" width={20} height={20} priority />
             <span
               className="hidden sm:inline text-[16px] font-semibold leading-none"
               style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}
@@ -262,9 +264,9 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
             <Link
               href="/login?tab=create"
               className="no-underline text-[13px] font-semibold text-white px-3.5 py-1.5 rounded-[10px] transition-colors"
-              style={{ background: "var(--clay-500)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-600)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-500)"; }}
+              style={{ background: "var(--clay-700)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-800)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-700)"; }}
             >
               Sign up free
             </Link>

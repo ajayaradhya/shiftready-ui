@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { MarketplaceItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
@@ -27,8 +28,7 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
       {decor === 1 && <span className={s.tape} aria-hidden />}
       <div className={s.polaroidMedia}>
         {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image_url} alt={item.name} loading="lazy" />
+          <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" />
         ) : null}
         <span className={s.polaroidPrice}>{formatAUD(item.price)}</span>
       </div>

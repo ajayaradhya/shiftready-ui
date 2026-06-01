@@ -135,7 +135,7 @@ export function ShellSidebar({ variant }: ShellSidebarProps) {
           color: "var(--sr-text-primary)",
         }}
       >
-        <Image src="/logo-mark.svg" alt="ShiftReady" width={22} height={22} priority />
+        <Image src="/logo-mark.svg" alt="" width={22} height={22} priority />
         <span
           className="text-[17px] font-semibold leading-none"
           style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}

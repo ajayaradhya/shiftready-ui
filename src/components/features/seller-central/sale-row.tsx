@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal, Archive, Pencil } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -114,6 +115,7 @@ export function SaleRow({ sale }: SaleRowProps) {
             <div
               key={i}
               style={{
+                position: "relative",
                 width: 52,
                 height: 52,
                 borderRadius: "var(--sr-radius-sm)",
@@ -123,12 +125,7 @@ export function SaleRow({ sale }: SaleRowProps) {
                 flexShrink: 0,
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt=""
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
+              <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="52px" />
             </div>
           ))
         ) : (

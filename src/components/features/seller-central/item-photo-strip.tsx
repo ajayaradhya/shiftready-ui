@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Camera, Plus, X, Star } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { InventoryImage } from "@/lib/types";
@@ -11,7 +12,8 @@ import {
   setItemImageCover,
   reorderItemImages,
 } from "@/lib/api";
-import { Lightbox } from "./lightbox";
+import dynamic from "next/dynamic";
+const Lightbox = dynamic(() => import("./lightbox").then(m => ({ default: m.Lightbox })));
 
 const MAX_TOTAL = 8;
 const THUMB_COUNT = 3;
@@ -363,12 +365,13 @@ function PhotoTile({ image, width, height, showCoverBadge, isDeleting, isCoverin
       onDragLeave={onDragLeave}
       onDrop={(e) => { e.preventDefault(); onDrop(); }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={image.url ?? "/item-placeholder.svg"}
         alt=""
+        fill
         onClick={busy ? undefined : onClick}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: busy ? 0.5 : 1, transition: "opacity 150ms" }}
+        style={{ objectFit: "cover", opacity: busy ? 0.5 : 1, transition: "opacity 150ms" }}
+        sizes="120px"
       />
 
       {/* Cover badge */}

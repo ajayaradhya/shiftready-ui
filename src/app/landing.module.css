@@ -704,14 +704,14 @@
   gap: 7px;
 }
 .saleCta {
-  color: var(--clay-600);
+  color: var(--clay-700);
   font-weight: 500;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
-.saleCta:hover { color: var(--clay-700); }
+.saleCta:hover { color: var(--clay-800); }
 
 /* ── Footer ── */
 .footerBand {

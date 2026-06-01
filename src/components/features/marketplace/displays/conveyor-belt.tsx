@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { MarketplaceItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
@@ -11,8 +12,7 @@ function BeltItem({ item }: { item: MarketplaceItem }) {
     <Link href={`/market/sale/${item.eventId}`} className={s.beltItem}>
       <div className={s.beltMedia}>
         {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image_url} alt={item.name} loading="lazy" />
+          <Image src={item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="160px" />
         ) : null}
         <span className={s.beltPrice}>{formatAUD(item.price)}</span>
       </div>

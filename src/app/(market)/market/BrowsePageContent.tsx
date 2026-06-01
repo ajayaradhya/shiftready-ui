@@ -73,18 +73,16 @@ function SaleImageCollage({ images, variant }: { images: string[]; variant: Vari
   if (images.length === 0) return <PhDiv variant={variant} />;
 
   if (images.length === 1) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-    );
+    return <Image src={images[0]} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />;
   }
 
   if (images.length === 2) {
     return (
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, width: "100%", height: "100%" }}>
         {images.slice(0, 2).map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div key={i} style={{ position: "relative", overflow: "hidden" }}>
+            <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 640px) 50vw, 16vw" />
+          </div>
         ))}
       </div>
     );
@@ -92,12 +90,14 @@ function SaleImageCollage({ images, variant }: { images: string[]; variant: Vari
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, width: "100%", height: "100%" }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", gridRow: "1 / 3" }} />
+      <div style={{ position: "relative", overflow: "hidden", gridRow: "1 / 3" }}>
+        <Image src={images[0]} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 640px) 50vw, 16vw" />
+      </div>
       <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 2, height: "100%" }}>
         {images.slice(1, 3).map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div key={i} style={{ position: "relative", overflow: "hidden" }}>
+            <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="(max-width: 640px) 25vw, 8vw" />
+          </div>
         ))}
       </div>
     </div>

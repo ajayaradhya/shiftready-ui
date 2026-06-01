@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { ChevronDown, ImagePlus, X, Upload } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -174,7 +175,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenC
               >
                 {coverUrl ? (
                   <>
-                    <img src={coverUrl} alt="cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <Image src={coverUrl} alt="cover" fill style={{ objectFit: "cover" }} sizes="80px" />
                     {isEditable && (
                       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 150ms" }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
