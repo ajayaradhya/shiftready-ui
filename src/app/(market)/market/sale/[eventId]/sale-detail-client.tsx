@@ -28,6 +28,10 @@ function fmt(n: number) {
   });
 }
 
+function toTitleCase(s: string): string {
+  return s.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 function daysAgo(dateStr: string | null): string | null {
   if (!dateStr) return null;
   const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
@@ -282,8 +286,12 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
                     background: "var(--cream-100)",
                     flexShrink: 0,
                     position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
+                  <Package size={16} style={{ color: "var(--ink-200)" }} />
                   {isUnavailable && itemStatus && (
                     <ItemStatusPill status={itemStatus} />
                   )}
@@ -731,7 +739,7 @@ export default function SaleDetailClient({
                 margin: "0 0 10px",
               }}
             >
-              {sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale")}
+              {sale.title || (sale.suburb ? `${toTitleCase(sale.suburb)} Moving Sale` : "Moving Sale")}
             </h1>
             {sale.description && (
               <p
@@ -1015,9 +1023,7 @@ export default function SaleDetailClient({
                       }}
                     >
                       <MessageSquare size={15} strokeWidth={1.5} />
-                      {messaging
-                        ? "Opening…"
-                        : `Message @${sale.sellerUsername ?? "seller"}`}
+                      {messaging ? "Opening…" : "Express Interest"}
                     </button>
                   )}
                   {!user && (
@@ -1067,65 +1073,6 @@ export default function SaleDetailClient({
                 >
                   Sale overview
                 </p>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 8,
-                    marginBottom: 16,
-                  }}
-                >
-                  {[
-                    { label: "Items", value: String(totalItems) },
-                    {
-                      label: "Value",
-                      value: totalValue > 0 ? fmt(totalValue) : "-",
-                    },
-                    { label: "Rooms", value: String(rooms) },
-                    {
-                      label: "Days left",
-                      value:
-                        daysLeft != null
-                          ? daysLeft <= 0
-                            ? "Today"
-                            : `${daysLeft}d`
-                          : "-",
-                    },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      style={{
-                        padding: "10px 12px",
-                        background: "var(--sr-bg-paper)",
-                        borderRadius: "var(--sr-radius-md)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontFamily: "var(--sr-font-serif)",
-                          fontSize: 18,
-                          fontWeight: 500,
-                          color: "var(--sr-text-primary)",
-                        }}
-                      >
-                        {value}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "var(--sr-font-mono)",
-                          fontSize: 9,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.12em",
-                          color: "var(--ink-400)",
-                          marginTop: 2,
-                        }}
-                      >
-                        {label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
                 {daysLeft != null && (
                   <div>
                     <div

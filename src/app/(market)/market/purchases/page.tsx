@@ -59,7 +59,7 @@ export default function PurchasesPage() {
               marginBottom: 8,
             }}
           >
-            Coming soon
+            No purchases yet
           </p>
           <p
             style={{

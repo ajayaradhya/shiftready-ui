@@ -446,7 +446,7 @@ function ItemDetailContent({
                   }}
                 >
                   <MapPin size={11} />
-                  Pickup in {item.suburb}
+                  Pickup in {item.suburb.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())}
                 </span>
               )}
             </div>

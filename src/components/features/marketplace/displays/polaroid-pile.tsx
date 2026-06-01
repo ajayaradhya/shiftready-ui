@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Package } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
@@ -29,7 +30,11 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
       <div className={s.polaroidMedia}>
         {item.image_url ? (
           <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" />
-        ) : null}
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--cream-100)" }}>
+            <Package size={24} style={{ color: "var(--ink-200)" }} />
+          </div>
+        )}
         <span className={s.polaroidPrice}>{formatAUD(item.price)}</span>
       </div>
       <div className={s.polaroidCaption}>{item.name}</div>

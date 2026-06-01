@@ -106,9 +106,8 @@ function SaleImageCollage({ images, variant }: { images: string[]; variant: Vari
 
 function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
   const v = variantForIndex(index);
-  const title = sale.title || (sale.suburb
-    ? `${sale.suburb} moving sale`
-    : "Moving sale");
+  const suburb = sale.suburb ? sale.suburb.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) : null;
+  const title = sale.title || (suburb ? `${suburb} moving sale` : "Moving sale");
   const images = sale.cover_image_url
     ? [sale.cover_image_url]
     : (sale.preview_images ?? []);
@@ -393,7 +392,9 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
                 <div className={s.sectionMeta}>
                   {newestLoading
                     ? "Loading…"
-                    : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
+                    : useItemsForNewest
+                      ? `Just listed${locationLabel ? ` near ${locationLabel}` : ""}`
+                      : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
                 </div>
               </div>
               <span className={s.sectionView} />

@@ -65,11 +65,12 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     String(item.actual_year_of_purchase ?? item.predicted_year_of_purchase ?? "")
   );
   const [category, setCategory] = useState<string>(item.category ?? "");
+  const fmtPriceVal = (v: number | null | undefined) => v != null ? v.toFixed(2) : "";
   const [retailVal, setRetailVal] = useState(
-    String(item.actual_original_price ?? item.predicted_original_price ?? "")
+    fmtPriceVal(item.actual_original_price ?? item.predicted_original_price)
   );
   const [listingVal, setListingVal] = useState(
-    String(item.actual_listing_price ?? item.predicted_listing_price ?? "")
+    fmtPriceVal(item.actual_listing_price ?? item.predicted_listing_price)
   );
 
   const [pricingStale, setPricingStale] = useState(false);
@@ -141,7 +142,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         pricing_reasoning: data.pricing_reasoning,
       }),
     onSuccess: (_res, data) => {
-      setListingVal(String(data.actual_listing_price));
+      setListingVal(fmtPriceVal(data.actual_listing_price));
       qc.setQueryData<SaleSummary>(["summary", eventId], (old) => {
         if (!old) return old;
         return {
@@ -539,24 +540,26 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 ))}
               </select>
             </AttrCell>
-            <AttrCell label="Year">
-              <input
-                type="number"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                onBlur={() => {
-                  const y = parseInt(year, 10);
-                  const original = item.actual_year_of_purchase ?? item.predicted_year_of_purchase;
-                  if (!isNaN(y) && y !== original) {
-                    patchMutation.mutate({ actual_year_of_purchase: y });
-                  }
-                }}
-                placeholder="Year"
-                min={1900}
-                max={new Date().getFullYear()}
-                style={attrInputStyle}
-              />
-            </AttrCell>
+            {(!category || ["furniture", "appliance", "electronics"].includes(category)) && (
+              <AttrCell label="Year">
+                <input
+                  type="number"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  onBlur={() => {
+                    const y = parseInt(year, 10);
+                    const original = item.actual_year_of_purchase ?? item.predicted_year_of_purchase;
+                    if (!isNaN(y) && y !== original) {
+                      patchMutation.mutate({ actual_year_of_purchase: y });
+                    }
+                  }}
+                  placeholder="Year"
+                  min={1900}
+                  max={new Date().getFullYear()}
+                  style={attrInputStyle}
+                />
+              </AttrCell>
+            )}
             <AttrCell label="Category">
               <select
                 value={category}
