@@ -97,12 +97,16 @@ export function NotificationsPanel({ open, onOpenChange }: NotificationsPanelPro
 
         {/* Tabs */}
         <div
+          role="tablist"
+          aria-label="Filter notifications"
           className="flex gap-0.5 px-3 py-2 shrink-0"
           style={{ borderBottom: "1px solid var(--sr-border-subtle)" }}
         >
           {TABS.map((t) => (
             <button
               key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
               onClick={() => setTab(t.key)}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors cursor-pointer border-none",

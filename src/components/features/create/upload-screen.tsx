@@ -26,7 +26,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
   };
 
   return (
-    <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
+    <div style={{ background: "var(--sr-bg-app)", minHeight: "100dvh", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={0} stepLabel="Add items" />
 
       <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "56px 16px 64px", display: "flex", flexDirection: "column", gap: 32 }}>

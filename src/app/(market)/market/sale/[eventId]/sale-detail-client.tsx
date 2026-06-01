@@ -138,6 +138,8 @@ function BundleCard({ bundle, eventId }: { bundle: PublicBundle; eventId: string
     >
       <button
         onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-label={`${bundle.name ?? "Bundle"} — ${expanded ? "collapse" : "expand"}`}
         style={{
           width: "100%",
           padding: "14px 20px",
@@ -461,7 +463,7 @@ export default function SaleDetailClient({
   const router = useRouter();
   const qc = useQueryClient();
   const [messaging, setMessaging] = useState(false);
-  const [saved, setSaved] = useState<boolean | null>(null);
+  const [savedOverride, setSavedOverride] = useState<boolean | null>(null);
   const [savePending, setSavePending] = useState(false);
 
   const {
@@ -475,9 +477,7 @@ export default function SaleDetailClient({
     retry: false,
   });
 
-  useEffect(() => {
-    if (sale && sale.is_saved != null) setSaved(sale.is_saved);
-  }, [sale?.is_saved]);
+  const saved = savedOverride ?? sale?.is_saved ?? false;
 
   const handleToggleSave = async () => {
     if (!user) {
@@ -485,7 +485,7 @@ export default function SaleDetailClient({
       return;
     }
     const newSaved = !saved;
-    setSaved(newSaved);
+    setSavedOverride(newSaved);
     setSavePending(true);
     try {
       if (newSaved) {
@@ -495,7 +495,7 @@ export default function SaleDetailClient({
       }
       qc.invalidateQueries({ queryKey: ["saved"] });
     } catch {
-      setSaved(!newSaved);
+      setSavedOverride(!newSaved);
     } finally {
       setSavePending(false);
     }

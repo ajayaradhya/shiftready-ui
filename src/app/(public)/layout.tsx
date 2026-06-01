@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <SaleContextProvider>
       <ShellHeader hasSidebar={false} />
-      <main style={{ paddingTop: 48, minHeight: "calc(100vh - 60px)", background: "var(--sr-bg-app)" }}>
+      <main style={{ paddingTop: 48, minHeight: "calc(100dvh - 60px)", background: "var(--sr-bg-app)" }}>
         {children}
       </main>
       <LegalFooter />

@@ -354,7 +354,7 @@ export default function SavedPage() {
     return (
       <div
         style={{
-          height: "calc(100vh - 64px)",
+          height: "calc(100dvh - 64px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -371,7 +371,7 @@ export default function SavedPage() {
     return (
       <div
         style={{
-          height: "calc(100vh - 64px)",
+          height: "calc(100dvh - 64px)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

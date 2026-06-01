@@ -38,7 +38,7 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "calc(100dvh - 64px)",
         padding: "32px 24px",
         fontFamily: "var(--sr-font-sans)",
         textAlign: "center",

@@ -101,6 +101,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
             value={offerAmt}
             onChange={(e) => setOfferAmt(e.target.value)}
             autoFocus
+            aria-label="Offer amount in dollars"
             style={{
               flex: 1,
               background: "transparent",
@@ -117,6 +118,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
           <span style={{ flex: 1 }} />
           <button
             onClick={closeOfferMode}
+            aria-label="Cancel offer"
             style={{
               background: "none",
               border: "none",
@@ -253,6 +255,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
         <div style={{ display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
           <button
             title="Attach"
+            aria-label="Attach file"
             style={{
               width: 38,
               height: 38,
@@ -283,6 +286,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
             onClick={submit}
             disabled={!text.trim() || disabled}
             title="Send message"
+            aria-label="Send message"
             style={{
               width: 38,
               height: 38,

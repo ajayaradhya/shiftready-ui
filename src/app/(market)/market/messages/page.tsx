@@ -14,7 +14,7 @@ export default function MarketMessagesPage() {
     return (
       <div
         style={{
-          height: "calc(100vh - 64px)",
+          height: "calc(100dvh - 64px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -31,7 +31,7 @@ export default function MarketMessagesPage() {
     return (
       <div
         style={{
-          height: "calc(100vh - 64px)",
+          height: "calc(100dvh - 64px)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -92,7 +92,7 @@ export default function MarketMessagesPage() {
   }
 
   return (
-    <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "calc(100dvh - 64px)", display: "flex", overflow: "hidden" }}>
       {/* Conv list panel — full width on mobile, 320px sidebar on desktop */}
       <div
         className="flex-1 md:flex-none"

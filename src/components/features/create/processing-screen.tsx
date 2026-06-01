@@ -43,7 +43,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
   const analyzedItems = capturedItems.filter((i) => i.name);
 
   return (
-    <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
+    <div style={{ background: "var(--sr-bg-app)", minHeight: "100dvh", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={1} stepLabel="Organising capture" />
 
       <div style={{ maxWidth: 680, width: "100%", margin: "0 auto", padding: "48px 20px 64px", display: "flex", flexDirection: "column", gap: 28 }}>
@@ -278,7 +278,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
   const minRemaining = Math.max(1, 5 - Math.floor(itemCount / 6));
 
   return (
-    <div style={{ background: "var(--sr-bg-app)", minHeight: "100vh", fontFamily: "var(--sr-font-sans)" }}>
+    <div style={{ background: "var(--sr-bg-app)", minHeight: "100dvh", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={1} stepLabel="AI scanning" />
 
       <div style={{ maxWidth: 880, width: "100%", margin: "0 auto", padding: "56px 20px 64px", display: "flex", flexDirection: "column", gap: 32 }}>

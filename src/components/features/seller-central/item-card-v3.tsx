@@ -9,6 +9,7 @@ import { MarkSoldDialog } from "./MarkSoldDialog";
 import { ItemPhotoStrip } from "./item-photo-strip";
 import { formatAUD } from "@/lib/format";
 import { toast } from "sonner";
+import { FocusTrap } from "@/components/ui/focus-trap";
 
 interface ItemCardV3Props {
   eventId: string;
@@ -335,6 +336,8 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
               aria-label="Item options"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen((o) => !o)}
               style={{
                 color: "var(--sr-text-muted)", cursor: "pointer",
@@ -351,6 +354,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               <>
                 <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setMenuOpen(false)} />
                 <div
+                  role="menu"
                   style={{
                     position: "absolute", right: 0, top: 30, zIndex: 50,
                     background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)",
@@ -426,12 +430,15 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               />
             ) : (
               <span
+                role="button"
+                tabIndex={0}
                 style={{
                   flex: 1, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
                   letterSpacing: "-0.01em", color: "var(--ink-800)", lineHeight: 1.3, cursor: "text",
                 }}
                 onDoubleClick={() => setNameEditing(true)}
-                title="Double-click to rename"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setNameEditing(true); } }}
+                aria-label={`Item name: ${item.name}. Press Enter to rename.`}
               >
                 {item.name}
               </span>
@@ -868,12 +875,12 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
 
 function AttrCell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: "8px 11px", background: "var(--cream-50)" }}>
+    <label style={{ display: "flex", flexDirection: "column", gap: 3, padding: "8px 11px", background: "var(--cream-50)" }}>
       <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 8.5, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--sr-text-muted)" }}>
         {label}
       </span>
       {children}
-    </div>
+    </label>
   );
 }
 
@@ -924,6 +931,7 @@ function FooterBtn({
 function DropMenuItem({ icon, label, onClick, danger }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
   return (
     <button
+      role="menuitem"
       onClick={onClick}
       style={{
         display: "flex", alignItems: "center", gap: 8,
@@ -946,29 +954,34 @@ function DeleteConfirmDialog({ itemName, onCancel, onConfirm }: { itemName: stri
       style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(20,17,13,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={onCancel}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)", padding: "28px 32px", maxWidth: 360, width: "90%", fontFamily: "var(--sr-font-sans)" }}
-      >
-        <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", marginBottom: 8 }}>Delete item?</div>
-        <p style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5, margin: "0 0 22px" }}>
-          &ldquo;{itemName}&rdquo; will be permanently removed from this sale.
-        </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button
-            onClick={onCancel}
-            style={{ padding: "8px 16px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--sr-border-subtle)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--sr-text-primary)" }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            style={{ padding: "8px 16px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--rust-200)", background: "var(--rust-500)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          >
-            Delete
-          </button>
+      <FocusTrap onClose={onCancel}>
+        <div
+          role="dialog"
+          aria-modal
+          aria-labelledby="delete-dialog-title"
+          onClick={(e) => e.stopPropagation()}
+          style={{ background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)", padding: "28px 32px", maxWidth: 360, width: "90%", fontFamily: "var(--sr-font-sans)" }}
+        >
+          <div id="delete-dialog-title" style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", marginBottom: 8 }}>Delete item?</div>
+          <p style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.5, margin: "0 0 22px" }}>
+            &ldquo;{itemName}&rdquo; will be permanently removed from this sale.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button
+              onClick={onCancel}
+              style={{ padding: "8px 16px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--sr-border-subtle)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--sr-text-primary)" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              style={{ padding: "8px 16px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--rust-200)", background: "var(--rust-500)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
+      </FocusTrap>
     </div>
   );
 }
@@ -1008,15 +1021,19 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
       style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(20,17,13,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={onClose}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)", padding: "28px 32px", maxWidth: 480, width: "95%", fontFamily: "var(--sr-font-sans)", maxHeight: "90vh", overflowY: "auto" }}
-      >
+      <FocusTrap onClose={onClose}>
+        <div
+          role="dialog"
+          aria-modal
+          aria-labelledby="item-edit-dialog-title"
+          onClick={(e) => e.stopPropagation()}
+          style={{ background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)", padding: "28px 32px", maxWidth: 480, width: "95%", fontFamily: "var(--sr-font-sans)", maxHeight: "90vh", overflowY: "auto" }}
+        >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)" }}>
+          <div id="item-edit-dialog-title" style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)" }}>
             Edit - <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{item.name}</em>
           </div>
-          <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--sr-text-muted)", width: 28, height: 28, display: "grid", placeItems: "center", borderRadius: "var(--sr-radius-sm)" }}
+          <button onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", color: "var(--sr-text-muted)", width: 28, height: 28, display: "grid", placeItems: "center", borderRadius: "var(--sr-radius-sm)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-200)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
           >
@@ -1082,19 +1099,20 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
             <Check size={13} /> Save changes
           </button>
         </div>
-      </div>
+        </div>
+      </FocusTrap>
     </div>
   );
 }
 
 function ModalField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--sr-text-muted)" }}>
+    <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--sr-text-muted)" }}>
         {label}
-      </label>
+      </span>
       {children}
-    </div>
+    </label>
   );
 }
 
@@ -1136,18 +1154,22 @@ function RepriceSuggestDialog({
       style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(20,17,13,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={saving ? undefined : onReject}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)",
-          padding: "28px 32px", maxWidth: 400, width: "92%",
-          fontFamily: "var(--sr-font-sans)", boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
-        }}
-      >
+      <FocusTrap onClose={saving ? undefined : onReject}>
+        <div
+          role="dialog"
+          aria-modal
+          aria-labelledby="reprice-dialog-title"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "#FFFDF8", borderRadius: "var(--sr-radius-lg)",
+            padding: "28px 32px", maxWidth: 400, width: "92%",
+            fontFamily: "var(--sr-font-sans)", boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+          }}
+        >
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <Sparkles size={14} style={{ color: "var(--clay-500)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, color: "var(--ink-800)" }}>
+          <span id="reprice-dialog-title" style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, color: "var(--ink-800)" }}>
             AI pricing suggestion
           </span>
         </div>
@@ -1228,7 +1250,8 @@ function RepriceSuggestDialog({
             {saving ? "Saving…" : <><Check size={13} /> Accept price</>}
           </button>
         </div>
-      </div>
+        </div>
+      </FocusTrap>
     </div>
   );
 }

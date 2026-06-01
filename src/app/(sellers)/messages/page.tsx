@@ -7,7 +7,7 @@ import { ConversationList } from "@/components/features/messages/ConversationLis
 export default function InboxPage() {
   useEffect(() => { document.title = "Messages - ShiftReady"; }, []);
   return (
-    <div style={{ height: "calc(100vh - 64px)", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "calc(100dvh - 64px)", display: "flex", overflow: "hidden" }}>
       {/* Sidebar — full width on mobile, 320px on desktop */}
       <div
         className="flex-1 md:flex-none"

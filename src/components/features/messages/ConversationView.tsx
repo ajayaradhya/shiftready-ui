@@ -142,6 +142,9 @@ function MoreMenu({
       <button
         onClick={() => setOpen(!open)}
         title="More options"
+        aria-label="More options"
+        aria-haspopup="menu"
+        aria-expanded={open}
         style={{
           width: 34,
           height: 34,
@@ -170,6 +173,7 @@ function MoreMenu({
 
       {open && (
         <div
+          role="menu"
           style={{
             position: "absolute",
             right: 0,
@@ -184,6 +188,7 @@ function MoreMenu({
           }}
         >
           <button
+            role="menuitem"
             onClick={handleBlock}
             disabled={loading}
             style={{
@@ -362,6 +367,7 @@ export function ConversationView({
               return (
                 <>
                   <span
+                    aria-hidden
                     style={{
                       width: 7,
                       height: 7,

@@ -5,6 +5,7 @@
 
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--sr-bg-app);
   font-family: var(--sr-font-sans);
   color: var(--sr-text-primary);

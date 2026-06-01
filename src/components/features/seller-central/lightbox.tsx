@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Star } from "lucide-react";
 import type { InventoryImage } from "@/lib/types";
+import { FocusTrap } from "@/components/ui/focus-trap";
 
 interface LightboxProps {
   images: InventoryImage[];
@@ -32,8 +33,10 @@ export function Lightbox({
   onDelete, onSetCover, deletingId, coveringId,
 }: LightboxProps) {
   const [idx, setIdx] = useState(Math.min(initialIdx, Math.max(0, images.length - 1)));
-  const current = images[idx];
+  const safeIdx = images.length === 0 ? 0 : Math.min(idx, images.length - 1);
+  const current = images[safeIdx];
   const isBusy = !!(deletingId || coveringId);
+  const titleId = "lightbox-title";
 
   function prev() { if (!isBusy) setIdx((i) => Math.max(0, i - 1)); }
   function next() { if (!isBusy) setIdx((i) => Math.min(images.length - 1, i + 1)); }
@@ -48,18 +51,19 @@ export function Lightbox({
     return () => document.removeEventListener("keydown", onKey);
   });
 
-  // Keep idx in bounds if images array shrinks after delete
+  // Close when all images deleted
   useEffect(() => {
-    if (images.length === 0) { onClose(); return; }
-    if (idx >= images.length) setIdx(images.length - 1);
-  }, [images.length, idx, onClose]);
+    if (images.length === 0) onClose();
+  }, [images.length, onClose]);
 
   if (!current) return null;
 
   return (
+    <FocusTrap onClose={onClose}>
     <div
       role="dialog"
       aria-modal
+      aria-labelledby={titleId}
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, background: "rgba(20,17,13,0.94)",
@@ -76,12 +80,17 @@ export function Lightbox({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {itemName && (
-            <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>
+            <span id={titleId} style={{ fontFamily: "var(--sr-font-serif)", fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>
               {itemName}
             </span>
           )}
-          <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 11, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            {idx + 1} / {images.length}
+          {!itemName && <span id={titleId} className="sr-only">Image viewer</span>}
+          <span
+            aria-live="polite"
+            aria-atomic
+            style={{ fontFamily: "var(--sr-font-mono)", fontSize: 11, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}
+          >
+            <span className="sr-only">Image </span>{idx + 1} / {images.length}
           </span>
         </div>
 
@@ -127,6 +136,7 @@ export function Lightbox({
           </button>
           <button
             onClick={onClose}
+            aria-label="Close image viewer"
             style={{
               width: 32, height: 32, borderRadius: "50%",
               border: "1px solid rgba(255,255,255,0.18)", background: "transparent",
@@ -164,7 +174,7 @@ export function Lightbox({
           src={current.url ?? "/item-placeholder.svg"}
           alt=""
           style={{
-            maxWidth: "100%", maxHeight: "calc(100vh - 180px)", objectFit: "contain",
+            maxWidth: "100%", maxHeight: "calc(100dvh - 180px)", objectFit: "contain",
             borderRadius: "var(--sr-radius-lg)", boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             animation: "fadeSlide 160ms ease",
           }}
@@ -189,23 +199,34 @@ export function Lightbox({
         }}
       >
         {images.map((img, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <button
             key={img.id}
-            src={img.url ?? "/item-placeholder.svg"}
-            alt=""
             onClick={() => setIdx(i)}
+            aria-label={`View image ${i + 1}${i === idx ? " (current)" : ""}`}
+            aria-pressed={i === idx}
             style={{
-              width: 64, height: 64, objectFit: "cover",
-              borderRadius: "var(--sr-radius-sm)", cursor: "pointer", flexShrink: 0,
-              border: i === idx ? "2px solid var(--clay-400)" : "2px solid rgba(255,255,255,0.1)",
+              padding: 0, background: "transparent", border: "none", cursor: "pointer",
+              borderRadius: "var(--sr-radius-sm)", flexShrink: 0,
+              outline: i === idx ? "2px solid var(--clay-400)" : "2px solid rgba(255,255,255,0.1)",
+              outlineOffset: 0,
+              transition: "opacity 120ms, outline-color 120ms",
               opacity: i === idx ? 1 : 0.5,
-              transition: "opacity 120ms, border-color 120ms",
             }}
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={img.url ?? "/item-placeholder.svg"}
+              alt=""
+              style={{
+                width: 64, height: 64, objectFit: "cover",
+                borderRadius: "var(--sr-radius-sm)", display: "block",
+              }}
+            />
+          </button>
         ))}
       </div>
     </div>
+    </FocusTrap>
   );
 }
 

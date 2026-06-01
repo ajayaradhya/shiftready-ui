@@ -85,7 +85,7 @@ export function ItemReviewScreen({
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "calc(100dvh - 64px)",
         background: "var(--sr-bg-app)",
         display: "flex",
         flexDirection: "column",

@@ -167,7 +167,7 @@ export default function LoginPage() {
   return (
     <>
       <style>{KEYFRAMES}</style>
-      <div style={{ display: "flex", height: "100vh", overflow: "hidden", fontFamily: "var(--sr-font-sans)" }}>
+      <div style={{ display: "flex", height: "100dvh", overflow: "hidden", fontFamily: "var(--sr-font-sans)" }}>
 
         {/* ── LEFT PANEL ── */}
         <div
