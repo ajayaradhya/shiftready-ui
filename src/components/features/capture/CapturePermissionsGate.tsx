@@ -122,8 +122,8 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         }}
       >
         {[
-          "Video is processed on-device - nothing streamed yet",
-          "Rear camera used automatically on mobile",
+          "Each photo is uploaded to our servers for AI identification",
+          "Photos are deleted after your sale is finalised",
           "Microphone not required for this step",
         ].map((note) => (
           <div

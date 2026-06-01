@@ -59,7 +59,7 @@ export default function PurchasesPage() {
               marginBottom: 8,
             }}
           >
-            Coming soon · Phase E
+            Coming soon
           </p>
           <p
             style={{

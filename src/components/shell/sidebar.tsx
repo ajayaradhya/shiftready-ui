@@ -1,33 +1,27 @@
 "use client";
 
-import React from "react";
 import {
-  LayoutDashboard, Package, Store, CreditCard, LifeBuoy,
-  MessageSquare, Settings, Heart, ShoppingBag, Lock,
+  LayoutDashboard, Store,
+  MessageSquare, Settings, Heart, ShoppingBag, LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUnreadCount } from "@/hooks/use-conversations";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type NavItemDef = {
   icon: React.ComponentType<{ size: number; strokeWidth: number }>;
   label: string;
   href: string;
-  disabled?: boolean;
   showUnread?: boolean;
 };
 
 const SELLER_NAV: NavItemDef[] = [
-  { icon: LayoutDashboard, label: "Sales",     href: "/seller-central" },
-  { icon: Package,         label: "Inventory", href: "#",    disabled: true },
-  { icon: Store,           label: "Market",    href: "/market" },
-  { icon: MessageSquare,   label: "Messages",  href: "/messages", showUnread: true },
-  { icon: CreditCard,      label: "Finances",  href: "#",    disabled: true },
-  { icon: Settings,        label: "Settings",  href: "/settings" },
-  { icon: LifeBuoy,        label: "Help",      href: "#",    disabled: true },
+  { icon: LayoutDashboard, label: "Sales",    href: "/seller-central" },
+  { icon: Store,           label: "Market",   href: "/market" },
+  { icon: MessageSquare,   label: "Messages", href: "/messages", showUnread: true },
+  { icon: Settings,        label: "Settings", href: "/settings" },
 ];
 
 const MARKET_NAV: NavItemDef[] = [
@@ -37,8 +31,6 @@ const MARKET_NAV: NavItemDef[] = [
   { icon: ShoppingBag,   label: "Purchases", href: "/market/purchases" },
   { icon: LifeBuoy,      label: "Help",      href: "/market/help" },
 ];
-
-const SELLER_DIVIDER_BEFORE = 4;
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "#") return false;
@@ -62,18 +54,14 @@ function NavItem({
 
   const linkEl = (
     <Link
-      href={item.disabled ? "#" : item.href}
+      href={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
-      aria-disabled={item.disabled ? "true" : undefined}
-      tabIndex={item.disabled ? -1 : undefined}
       className={cn(
         "group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13px] transition-all duration-[140ms] no-underline select-none w-full",
         active
           ? "font-semibold bg-[var(--clay-50)] text-[var(--clay-600)]"
-          : item.disabled
-            ? "font-medium text-[var(--ink-300)] opacity-40 cursor-default pointer-events-none"
-            : "font-medium text-[var(--ink-400)] hover:bg-[var(--cream-100)] hover:text-[var(--ink-700)] cursor-pointer"
+          : "font-medium text-[var(--ink-400)] hover:bg-[var(--cream-100)] hover:text-[var(--ink-700)] cursor-pointer"
       )}
     >
       {active && (
@@ -89,20 +77,8 @@ function NavItem({
           {unread > 99 ? "99+" : unread}
         </span>
       )}
-      {item.disabled && (
-        <Lock size={11} strokeWidth={1.5} className="text-[var(--ink-300)]" aria-hidden />
-      )}
     </Link>
   );
-
-  if (item.disabled) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{linkEl}</TooltipTrigger>
-        <TooltipContent side="right">Coming soon</TooltipContent>
-      </Tooltip>
-    );
-  }
 
   return linkEl;
 }
@@ -116,7 +92,6 @@ export function ShellSidebar({ variant }: ShellSidebarProps) {
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.unreadCount ?? 0;
   const items = variant === "seller" ? SELLER_NAV : MARKET_NAV;
-  const dividerBefore = variant === "seller" ? SELLER_DIVIDER_BEFORE : -1;
   const logoHref = variant === "seller" ? "/seller-central" : "/market";
 
   return (
@@ -146,17 +121,8 @@ export function ShellSidebar({ variant }: ShellSidebarProps) {
 
       {/* Nav items */}
       <div className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-0.5">
-        {items.map((item, idx) => (
-          <React.Fragment key={item.label}>
-            {idx === dividerBefore && (
-              <div
-                aria-hidden
-                className="h-px mx-3 my-1.5"
-                style={{ background: "var(--sr-border-subtle)" }}
-              />
-            )}
-            <NavItem item={item} pathname={pathname} unreadCount={unreadCount} />
-          </React.Fragment>
+        {items.map((item) => (
+          <NavItem key={item.label} item={item} pathname={pathname} unreadCount={unreadCount} />
         ))}
       </div>
     </nav>

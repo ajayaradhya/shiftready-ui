@@ -233,6 +233,7 @@ export default function SellerCentralInventoryPage() {
 
   const allItems = summary?.bundles?.flatMap((b) => b.items) ?? [];
   const totalItems = allItems.length;
+  const uncategorisedCount = allItems.filter((i) => !i.category).length;
   const totalValue = summary?.bundles?.reduce((s, b) => s + (b.suggestedPrice ?? 0), 0) ?? 0;
   const selectedBundle = summary?.bundles?.find((b) => b.id === selectedBundleId) ?? null;
   const statusInfo = status ? (STATUS_BADGE[status] ?? STATUS_BADGE.archived) : null;
@@ -476,33 +477,42 @@ export default function SellerCentralInventoryPage() {
 
       {/* Publish bar */}
       {summary && totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
-          <div>
-            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", letterSpacing: "-0.01em" }}>
-              {isLive ? "Currently live" : "Ready to publish"}
+        <div style={{ background: "var(--sr-bg-card)", border: "1px solid var(--clay-200)", borderRadius: "var(--sr-radius-lg)", padding: "20px 24px", marginTop: 24, boxShadow: "0 2px 0 var(--clay-100)" }}>
+          {uncategorisedCount > 0 && !isLive && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", marginBottom: 14, borderRadius: "var(--sr-radius-sm)", background: "var(--honey-50)", border: "1px solid var(--honey-200)", fontSize: 12, color: "var(--honey-700)" }}>
+              <span style={{ fontWeight: 700 }}>⚠</span>
+              {uncategorisedCount} item{uncategorisedCount > 1 ? "s" : ""} missing a category — open each item card and set a category before publishing.
             </div>
-            <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", marginTop: 2 }}>
-              {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed - publish to the marketplace."}
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 500, color: "var(--ink-800)", letterSpacing: "-0.01em" }}>
+                {isLive ? "Currently live" : "Ready to publish"}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--sr-text-secondary)", marginTop: 2 }}>
+                {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed - publish to the marketplace."}
+              </div>
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic" }}>
-                {formatAUD(totalValue)}
-              </em>
-              <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic" }}>
+                  {formatAUD(totalValue)}
+                </em>
+                <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>
+              </div>
+              <InventoryActions
+                status={status ?? ""}
+                isLive={isLive}
+                isPublishing={publishMutation.isPending}
+                isUnpublishing={unpublishMutation.isPending}
+                isArchiving={archiveMutation.isPending}
+                emailVerified={user?.emailVerified ?? true}
+                uncategorisedCount={uncategorisedCount}
+                onPublish={(payload) => publishMutation.mutate(payload)}
+                onUnpublish={() => unpublishMutation.mutate()}
+                onArchive={() => archiveMutation.mutate()}
+              />
             </div>
-            <InventoryActions
-              status={status ?? ""}
-              isLive={isLive}
-              isPublishing={publishMutation.isPending}
-              isUnpublishing={unpublishMutation.isPending}
-              isArchiving={archiveMutation.isPending}
-              emailVerified={user?.emailVerified ?? true}
-              onPublish={(payload) => publishMutation.mutate(payload)}
-              onUnpublish={() => unpublishMutation.mutate()}
-              onArchive={() => archiveMutation.mutate()}
-            />
           </div>
         </div>
       )}

@@ -1,14 +1,7 @@
 import Image from "next/image";
 import { Tag, Percent } from "lucide-react";
 import type { PublicBundle, PublicBundleItem } from "@/lib/types";
-
-function formatAUD(amount: number) {
-  return amount.toLocaleString("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    maximumFractionDigits: 0,
-  });
-}
+import { formatAUD } from "@/lib/format";
 
 function BundleItemRow({ item }: { item: PublicBundleItem }) {
   return (

@@ -11,7 +11,8 @@ import type { SaleStatus } from "@/lib/types";
 const LIVE_STATUSES: SaleStatus[] = ["live", "partially_sold"];
 
 export default function SellerCentralPage() {
-  const { data: sales, isLoading, error } = useSalesList();
+  const { data: rawSales, isLoading, error } = useSalesList();
+  const sales = rawSales?.filter((s) => s.status !== "pending_upload");
 
   useEffect(() => { document.title = "My Sales - ShiftReady"; }, []);
 
@@ -59,17 +60,16 @@ export default function SellerCentralPage() {
       {/* Stats cards */}
       {sales && sales.length > 0 && (
         <div
-          className="grid grid-cols-2 md:grid-cols-4"
+          className="grid grid-cols-2 md:grid-cols-3"
           style={{
             gap: 14,
             marginBottom: 36,
           }}
         >
           {[
-            { label: "Total sales",      value: String(sales.length),                            delta: "Across all time" },
-            { label: "Items listed",    value: String(totalItems),                              delta: liveItems > 0 ? `↑ ${liveItems} live now` : "No items live", up: liveItems > 0 },
-            { label: "Total value",     value: formatAUDCompact(totalValue),                    delta: activeValue > 0 ? `↑ ${formatAUD(activeValue)} active` : "No active sales", up: activeValue > 0 },
-            { label: "Sold to date",    value: "$0",                                            delta: "Coming soon" },
+            { label: "Total sales",  value: String(sales.length),          delta: "Across all time" },
+            { label: "Items listed", value: String(totalItems),            delta: liveItems > 0 ? `↑ ${liveItems} live now` : "No items live", up: liveItems > 0 },
+            { label: "Total value",  value: formatAUDCompact(totalValue),  delta: activeValue > 0 ? `↑ ${formatAUD(activeValue)} active` : "No active sales", up: activeValue > 0 },
           ].map((stat) => (
             <div
               key={stat.label}

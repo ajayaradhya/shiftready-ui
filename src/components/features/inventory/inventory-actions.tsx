@@ -21,6 +21,7 @@ interface InventoryActionsProps {
   isUnpublishing: boolean;
   isArchiving: boolean;
   emailVerified?: boolean;
+  uncategorisedCount?: number;
   onPublish: (payload: PublishPayload) => void;
   onUnpublish: () => void;
   onArchive: () => void;
@@ -43,6 +44,7 @@ export function InventoryActions({
   isUnpublishing,
   isArchiving,
   emailVerified = true,
+  uncategorisedCount = 0,
   onPublish,
   onUnpublish,
   onArchive,
@@ -269,9 +271,15 @@ export function InventoryActions({
             variant="primary"
             size="md"
             onClick={() => setIsPublishDialogOpen(true)}
-            disabled={isPublishing || !emailVerified}
+            disabled={isPublishing || !emailVerified || uncategorisedCount > 0}
             aria-busy={isPublishing}
-            title={!emailVerified ? "Verify your email to publish" : undefined}
+            title={
+              !emailVerified
+                ? "Verify your email to publish"
+                : uncategorisedCount > 0
+                  ? `${uncategorisedCount} item${uncategorisedCount > 1 ? "s" : ""} missing a category — set in inventory before publishing`
+                  : undefined
+            }
           >
             {isPublishing ? (
               <Loader2 className="animate-spin" size={14} aria-hidden />

@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/components/providers";
-import Script from "next/script";
+import { GaScript } from "@/components/GaScript";
+import { CookieBanner } from "@/components/CookieBanner";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
 const GA_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
@@ -53,17 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-surface antialiased text-on-surface">
         <Providers>{children}</Providers>
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga4-init" strategy="afterInteractive">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
-            </Script>
-          </>
-        )}
+        {GA_ID && <GaScript gaId={GA_ID} />}
+        <CookieBanner />
       </body>
     </html>
   );
