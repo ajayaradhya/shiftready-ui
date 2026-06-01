@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/components/providers";
+import Script from "next/script";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
+const GA_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   title: {
@@ -9,11 +13,26 @@ export const metadata: Metadata = {
   },
   description:
     "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
+  metadataBase: new URL(SITE_URL),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "ShiftReady",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "ShiftReady",
+    title: "ShiftReady — AI-Powered Moving Sales",
+    description:
+      "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ShiftReady — AI-Powered Moving Sales",
+    description:
+      "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
   },
 };
 
@@ -34,6 +53,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-surface antialiased text-on-surface">
         <Providers>{children}</Providers>
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
