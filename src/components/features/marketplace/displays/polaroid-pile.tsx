@@ -37,7 +37,7 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
         )}
         <span className={s.polaroidPrice}>{formatAUD(item.price)}</span>
       </div>
-      <div className={s.polaroidCaption}>{item.name}</div>
+      <div className={s.polaroidCaption} title={item.name}>{item.name}</div>
     </Link>
   );
 }

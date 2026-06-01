@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { formatAUD } from "@/lib/format";
 import {
-  publishSale, unpublishSale,
+  publishSale, unpublishSale, updateSale,
   createBundle, deleteBundle, renameBundle, patchBundle,
   archiveSale, deleteSale, republishSale,
 } from "@/lib/api";
@@ -155,7 +155,16 @@ export default function SellerCentralInventoryPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (payload: import("@/lib/api").PublishPayload) => publishSale(eventId, payload),
+    mutationFn: async (payload: import("@/lib/api").PublishPayload) => {
+      await publishSale(eventId, payload);
+      if (!summary?.title || summary.title === "Your Moving Sale") {
+        try {
+          await updateSale(eventId, { title: `${payload.suburb} Moving Sale` });
+        } catch {
+          // non-critical — sale is already live
+        }
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       queryClient.invalidateQueries({ queryKey: ["status", eventId] });

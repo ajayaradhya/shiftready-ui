@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Camera, AlertTriangle, Wifi, ArrowLeft } from "lucide-react";
+import { Camera, AlertTriangle, Wifi, ArrowLeft, Monitor } from "lucide-react";
 
 interface Props {
   onGranted: (stream: MediaStream) => void;
@@ -11,6 +11,11 @@ interface Props {
 export function CapturePermissionsGate({ onGranted }: Props) {
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setIsDesktop(!window.matchMedia("(pointer: coarse)").matches);
+  }, []);
 
   const requestCamera = async () => {
     setRequesting(true);
@@ -150,6 +155,33 @@ export function CapturePermissionsGate({ onGranted }: Props) {
           </div>
         ))}
       </div>
+
+      {/* Desktop note */}
+      {isDesktop && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            padding: "10px 14px",
+            background: "var(--sr-bg-card)",
+            border: "1px solid var(--sr-border-subtle)",
+            borderRadius: "var(--sr-radius-md)",
+            maxWidth: 300,
+            width: "100%",
+            textAlign: "left",
+          }}
+        >
+          <Monitor
+            size={14}
+            strokeWidth={1.5}
+            style={{ color: "var(--clay-400)", flexShrink: 0, marginTop: 2 }}
+          />
+          <span style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.45 }}>
+            Best on mobile — your phone&apos;s rear camera gives clearest shots. On desktop your webcam will be used.
+          </span>
+        </div>
+      )}
 
       {/* Error */}
       {error && (

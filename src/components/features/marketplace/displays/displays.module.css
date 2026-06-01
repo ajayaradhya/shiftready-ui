@@ -64,6 +64,8 @@
   padding: 26px 0;
   overflow: hidden;
   border-radius: var(--sr-radius-md);
+  contain: content;
+  isolation: isolate;
 }
 .beltLane {
   position: relative;
@@ -207,9 +209,9 @@
     0 1px 0 rgba(74, 37, 25, 0.06),
     0 12px 28px -16px rgba(74, 37, 25, 0.35);
   transition: transform 260ms cubic-bezier(.2,.8,.2,1), box-shadow 260ms, z-index 0s;
-  will-change: transform;
 }
 .polaroid:hover {
+  will-change: transform;
   transform: rotate(0deg) translateY(-8px) scale(1.03) !important;
   box-shadow:
     0 1px 0 rgba(74, 37, 25, 0.08),
