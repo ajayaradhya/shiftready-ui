@@ -36,10 +36,10 @@ test.describe('Offer → accept flow', () => {
     // Navigate to marketplace
     await page.goto('/market');
 
-    // Find a sale / item card and open it
-    const itemCard = page.locator('[data-testid="item-card"], [class*="item-card"]').first();
-    await expect(itemCard).toBeVisible({ timeout: 10_000 });
-    await itemCard.click();
+    // Find a sale card and open it
+    const saleCard = page.locator('a[href*="/market/sale/"]').first();
+    await expect(saleCard).toBeVisible({ timeout: 10_000 });
+    await saleCard.click();
 
     // Look for "Express Interest" / "Message seller" / "Start conversation" button
     const contactBtn = page.locator(

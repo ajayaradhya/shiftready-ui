@@ -11,19 +11,23 @@ test.describe('Marketplace — anonymous browse', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('shows search input', async ({ page }) => {
+  test('shows search trigger button', async ({ page }) => {
     await page.goto('/market');
-    // Search input exists (may be a text input or a search field)
-    const search = page.locator('input[type="search"], input[placeholder*="earch"]').first();
-    await expect(search).toBeVisible({ timeout: 10_000 });
+    // Search is a command palette trigger button, not a plain input
+    const searchBtn = page.locator('button[aria-label*="command palette"], button:has-text("Search")').first();
+    await expect(searchBtn).toBeVisible({ timeout: 10_000 });
   });
 
-  test('empty search shows zero-results state gracefully', async ({ page }) => {
+  test('command palette opens and accepts input', async ({ page }) => {
     await page.goto('/market');
-    const search = page.locator('input[type="search"], input[placeholder*="earch"]').first();
-    await search.fill('xyznonexistentitem12345');
-    await search.press('Enter');
-    // Should not show error — may show empty state or zero count
+    // Open command palette via button
+    const searchBtn = page.locator('button[aria-label*="command palette"], button:has-text("Search")').first();
+    await searchBtn.click();
+    // cmdk input should be visible inside the dialog
+    const paletteInput = page.locator('[placeholder="Search pages, sales, actions…"]');
+    await expect(paletteInput).toBeVisible({ timeout: 5_000 });
+    await paletteInput.fill('xyznonexistentitem12345');
+    // Should not crash — no 500 or Internal Server Error
     await expect(page.locator('body')).not.toContainText('500');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
