@@ -258,6 +258,8 @@ function ItemDetailContent({
     if (item && item.is_saved != null) setSaved(item.is_saved);
   }, [item?.is_saved]);
 
+  const isSeller = !!user && !!item?.seller_id && user.uid === item.seller_id;
+
   const handleToggleSave = async () => {
     if (!user) {
       router.push(`/login?next=/market/sale/${eventId}/item/${itemId}?bundle=${bundleId}`);
@@ -826,6 +828,29 @@ function ItemDetailContent({
                   <AlertCircle size={15} strokeWidth={1.5} />
                   This item has been sold
                 </div>
+              ) : isSeller ? (
+                <Link
+                  href={`/seller-central/inventory/${eventId}?title=${encodeURIComponent(item?.sale_title || "Moving Sale")}`}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "13px 16px",
+                    borderRadius: "var(--sr-radius-lg)",
+                    background: "var(--cream-100)",
+                    color: "var(--ink-600)",
+                    fontFamily: "var(--sr-font-sans)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    border: "1px solid var(--sr-border-subtle)",
+                    textDecoration: "none",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  ✓ Your listing — Manage in Seller Central →
+                </Link>
               ) : (
                 <button
                   onClick={handleInterest}
@@ -865,33 +890,35 @@ function ItemDetailContent({
                     : "Express Interest"}
                 </button>
               )}
-              <button
-                onClick={handleToggleSave}
-                disabled={savePending}
-                aria-label={saved ? "Saved" : "Save item"}
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "var(--sr-radius-lg)",
-                  background: saved ? "var(--clay-50)" : "var(--sr-bg-paper)",
-                  border: `1px solid ${
-                    saved ? "var(--clay-200)" : "var(--sr-border-subtle)"
-                  }`,
-                  display: "grid",
-                  placeItems: "center",
-                  cursor: savePending ? "default" : "pointer",
-                  opacity: savePending ? 0.6 : 1,
-                  transition: "all 140ms",
-                  flexShrink: 0,
-                }}
-              >
-                <Heart
-                  size={18}
-                  color={saved ? "var(--clay-500)" : "var(--ink-400)"}
-                  fill={saved ? "var(--clay-500)" : "none"}
-                  strokeWidth={1.5}
-                />
-              </button>
+              {!isSeller && (
+                <button
+                  onClick={handleToggleSave}
+                  disabled={savePending}
+                  aria-label={saved ? "Saved" : "Save item"}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: "var(--sr-radius-lg)",
+                    background: saved ? "var(--clay-50)" : "var(--sr-bg-paper)",
+                    border: `1px solid ${
+                      saved ? "var(--clay-200)" : "var(--sr-border-subtle)"
+                    }`,
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: savePending ? "default" : "pointer",
+                    opacity: savePending ? 0.6 : 1,
+                    transition: "all 140ms",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Heart
+                    size={18}
+                    color={saved ? "var(--clay-500)" : "var(--ink-400)"}
+                    fill={saved ? "var(--clay-500)" : "none"}
+                    strokeWidth={1.5}
+                  />
+                </button>
+              )}
             </div>
 
             {/* Seller strip */}

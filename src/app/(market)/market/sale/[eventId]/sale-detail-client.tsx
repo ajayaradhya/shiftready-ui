@@ -697,7 +697,7 @@ export default function SaleDetailClient({
                   {daysAgo(sale.publishedAt)}
                 </span>
               )}
-              <button
+              {!isSeller && <button
                 onClick={handleToggleSave}
                 disabled={savePending}
                 aria-label={saved ? "Unsave sale" : "Save sale"}
@@ -728,7 +728,7 @@ export default function SaleDetailClient({
                   strokeWidth={1.5}
                 />
                 {saved ? "Saved" : "Save"}
-              </button>
+              </button>}
             </div>
             <h1
               style={{
@@ -992,62 +992,102 @@ export default function SaleDetailClient({
                   </div>
                 </div>
                 <div style={{ padding: "14px 18px" }}>
-                  {!isSeller && (
-                    <button
-                      onClick={handleContact}
-                      disabled={messaging}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        padding: "11px 16px",
-                        borderRadius: "var(--sr-radius-lg)",
-                        background: "var(--clay-500)",
-                        color: "#fff",
-                        fontFamily: "var(--sr-font-sans)",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        border: "none",
-                        cursor: messaging ? "default" : "pointer",
-                        opacity: messaging ? 0.7 : 1,
-                        transition: "opacity 140ms, background 140ms",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!messaging)
-                          e.currentTarget.style.background = "var(--clay-600)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "var(--clay-500)";
-                      }}
-                    >
-                      <MessageSquare size={15} strokeWidth={1.5} />
-                      {messaging ? "Opening…" : "Express Interest"}
-                    </button>
-                  )}
-                  {!user && (
-                    <p
-                      style={{
-                        fontSize: 11,
-                        color: "var(--ink-400)",
-                        textAlign: "center",
-                        marginTop: 8,
-                        fontFamily: "var(--sr-font-sans)",
-                      }}
-                    >
-                      <Link
-                        href="/login"
+                  {isSeller ? (
+                    <>
+                      <p
                         style={{
-                          color: "var(--clay-600)",
-                          fontWeight: 600,
-                          textDecoration: "none",
+                          fontFamily: "var(--sr-font-mono)",
+                          fontSize: 10,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.12em",
+                          color: "var(--moss-600)",
+                          textAlign: "center",
+                          marginBottom: 10,
                         }}
                       >
-                        Sign in
-                      </Link>{" "}
-                      to message the seller
-                    </p>
+                        ✓ Your listing
+                      </p>
+                      <Link
+                        href={`/seller-central/inventory/${sale.id}?title=${encodeURIComponent(sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale"))}`}
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          padding: "11px 16px",
+                          borderRadius: "var(--sr-radius-lg)",
+                          background: "var(--cream-100)",
+                          color: "var(--ink-600)",
+                          fontFamily: "var(--sr-font-sans)",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          border: "1px solid var(--sr-border-subtle)",
+                          textDecoration: "none",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        Manage in Seller Central →
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleContact}
+                        disabled={messaging}
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          padding: "11px 16px",
+                          borderRadius: "var(--sr-radius-lg)",
+                          background: "var(--clay-500)",
+                          color: "#fff",
+                          fontFamily: "var(--sr-font-sans)",
+                          fontSize: 14,
+                          fontWeight: 600,
+                          border: "none",
+                          cursor: messaging ? "default" : "pointer",
+                          opacity: messaging ? 0.7 : 1,
+                          transition: "opacity 140ms, background 140ms",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!messaging)
+                            e.currentTarget.style.background = "var(--clay-600)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "var(--clay-500)";
+                        }}
+                      >
+                        <MessageSquare size={15} strokeWidth={1.5} />
+                        {messaging ? "Opening…" : "Express Interest"}
+                      </button>
+                      {!user && (
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "var(--ink-400)",
+                            textAlign: "center",
+                            marginTop: 8,
+                            fontFamily: "var(--sr-font-sans)",
+                          }}
+                        >
+                          <Link
+                            href="/login"
+                            style={{
+                              color: "var(--clay-600)",
+                              fontWeight: 600,
+                              textDecoration: "none",
+                            }}
+                          >
+                            Sign in
+                          </Link>{" "}
+                          to message the seller
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1073,7 +1113,7 @@ export default function SaleDetailClient({
                 >
                   Sale overview
                 </p>
-                {daysLeft != null && (
+                {daysLeft != null ? (
                   <div>
                     <div
                       style={{
@@ -1132,6 +1172,17 @@ export default function SaleDetailClient({
                       />
                     </div>
                   </div>
+                ) : (
+                  <p
+                    style={{
+                      fontFamily: "var(--sr-font-sans)",
+                      fontSize: 12,
+                      color: "var(--ink-400)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Move date not set. Items priced for a quick sale.
+                  </p>
                 )}
               </div>
             </div>

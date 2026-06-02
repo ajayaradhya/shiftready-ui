@@ -201,7 +201,7 @@ export interface InventoryItem {
   actual_original_price?: number | null;
   predicted_listing_price?: number;
   actual_listing_price?: number | null;
-  pricing_reasoning?: string;
+  pricing_reasoning?: string | null;
 
   // Purchase Metadata
   predicted_year_of_purchase?: number;

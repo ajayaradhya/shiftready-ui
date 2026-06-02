@@ -670,9 +670,9 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                     const v = parseFloat(listingVal);
                     const original = item.actual_listing_price ?? item.predicted_listing_price;
                     if (!isNaN(v) && v >= 0 && v !== original) {
-                      patchMutation.mutate({ actual_listing_price: v });
+                      patchMutation.mutate({ actual_listing_price: v, pricing_reasoning: null });
                     } else if (listingVal === "" && original != null) {
-                      patchMutation.mutate({ actual_listing_price: 0 });
+                      patchMutation.mutate({ actual_listing_price: 0, pricing_reasoning: null });
                     }
                   }}
                   placeholder="-"

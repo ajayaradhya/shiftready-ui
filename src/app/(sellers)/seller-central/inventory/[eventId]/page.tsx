@@ -334,7 +334,7 @@ export default function SellerCentralInventoryPage() {
               Edit details
             </button>
             <button
-              onClick={() => window.open(`/sale/${eventId}`, "_blank")}
+              onClick={() => window.open(`/market/sale/${eventId}`, "_blank")}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "7px 12px", borderRadius: "var(--sr-radius-sm)", fontSize: 12, fontWeight: 600,
