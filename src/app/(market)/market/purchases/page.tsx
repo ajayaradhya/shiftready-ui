@@ -99,11 +99,15 @@ function EnquiryRow({ conv }: { conv: ConversationSummary }) {
         {itemName && (
           <p style={{ fontSize: 13, color: "var(--ink-600)", fontFamily: "var(--sr-font-sans)", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {itemName}
-            {itemPrice != null && (
+            {conv.dealStatus === "agreed" && conv.agreedPrice != null ? (
+              <span style={{ color: "var(--moss-600)", marginLeft: 6, fontWeight: 600 }}>
+                — ${conv.agreedPrice.toLocaleString("en-AU")} agreed
+              </span>
+            ) : itemPrice != null ? (
               <span style={{ color: "var(--ink-400)", marginLeft: 6 }}>
                 — ${itemPrice.toLocaleString("en-AU")}
               </span>
-            )}
+            ) : null}
           </p>
         )}
 

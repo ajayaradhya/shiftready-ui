@@ -648,6 +648,7 @@ export function ConversationView({
                   onCounter={(offerId, amount) => counterOfferMutation.mutate({ offerId, amount })}
                   onWithdraw={(offerId) => withdrawOfferMutation.mutate({ offerId })}
                   disabled={
+                    conversation.dealStatus === "agreed" ||
                     acceptOfferMutation.isPending ||
                     counterOfferMutation.isPending ||
                     withdrawOfferMutation.isPending

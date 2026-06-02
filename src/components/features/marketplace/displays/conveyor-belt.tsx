@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { MarketplaceItem } from "@/lib/types";
@@ -8,11 +8,12 @@ import { formatAUD } from "@/lib/format";
 import s from "./displays.module.css";
 
 function BeltItem({ item }: { item: MarketplaceItem }) {
+  const [imgError, setImgError] = useState(false);
   return (
     <Link href={`/market/sale/${item.eventId}`} className={s.beltItem}>
       <div className={s.beltMedia}>
-        {item.image_url ? (
-          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="160px" />
+        {item.image_url && !imgError ? (
+          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover" }} sizes="160px" onError={() => setImgError(true)} />
         ) : null}
         <span className={s.beltPrice}>{formatAUD(item.price)}</span>
       </div>

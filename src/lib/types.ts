@@ -424,6 +424,7 @@ export interface ConversationSummary {
   pinSnapshot?: PinSnapshot | null;
   activeOfferId?: string | null;
   dealStatus?: DealStatus;
+  agreedPrice?: number | null;
   phoneSharedByMe?: boolean;
   phoneRevealAvailable?: boolean;
   otherLastSeenAt?: string | null;

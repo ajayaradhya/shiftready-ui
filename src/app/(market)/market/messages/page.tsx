@@ -107,7 +107,7 @@ export default function MarketMessagesPage() {
           background: "var(--sr-bg-app)",
         }}
       >
-        <ConversationList basePath="/market/messages" />
+        <ConversationList basePath="/market/messages" contextLabel="Buyer" />
       </div>
 
       {/* Empty right pane — desktop only */}

@@ -22,7 +22,7 @@ export default function InboxPage() {
           background: "var(--sr-bg-app)",
         }}
       >
-        <ConversationList basePath="/messages" />
+        <ConversationList basePath="/messages" contextLabel="Seller" />
       </div>
 
       {/* Empty state — desktop only */}

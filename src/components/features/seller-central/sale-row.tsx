@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal, Archive, Pencil } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { SaleListing, SaleStatus } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 
@@ -57,6 +57,8 @@ export function SaleRow({ sale }: SaleRowProps) {
   const isLiveStatus = sale.status === "live" || sale.status === "partially_sold";
   const hasInventory = sale.status !== "pending_upload" && sale.status !== "processing";
   const previews = (sale.preview_images ?? []).slice(0, 4);
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
+  const handleImgError = useCallback((i: number) => setImgErrors((e) => ({ ...e, [i]: true })), []);
 
   const inventoryUrl = `/seller-central/inventory/${sale.id}?title=${encodeURIComponent(sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Your Moving Sale"))}`;
 
@@ -123,9 +125,15 @@ export function SaleRow({ sale }: SaleRowProps) {
                 background: "var(--cream-100)",
                 border: "1px solid var(--sr-border-subtle)",
                 flexShrink: 0,
+                display: "grid",
+                placeItems: "center",
               }}
             >
-              <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="52px" />
+              {!imgErrors[i] ? (
+                <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="52px" onError={() => handleImgError(i)} />
+              ) : (
+                <Package size={18} strokeWidth={1.4} color="var(--ink-300)" />
+              )}
             </div>
           ))
         ) : (

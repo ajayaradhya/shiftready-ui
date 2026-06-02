@@ -194,9 +194,11 @@ function ConvRow({
 export function ConversationList({
   activeId,
   basePath = "/messages",
+  contextLabel,
 }: {
   activeId?: string;
   basePath?: string;
+  contextLabel?: string;
 }) {
   const { data: convs, isLoading, error } = useConversations();
   const [search, setSearch] = useState("");
@@ -231,17 +233,36 @@ export function ConversationList({
             marginBottom: 11,
           }}
         >
-          <span
-            style={{
-              fontFamily: "var(--sr-font-serif)",
-              fontSize: 19,
-              fontWeight: 500,
-              letterSpacing: "-0.015em",
-              color: "var(--ink-800)",
-            }}
-          >
-            Messages
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                fontFamily: "var(--sr-font-serif)",
+                fontSize: 19,
+                fontWeight: 500,
+                letterSpacing: "-0.015em",
+                color: "var(--ink-800)",
+              }}
+            >
+              Messages
+            </span>
+            {contextLabel && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: "var(--sr-font-mono)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--clay-600)",
+                  background: "var(--clay-50)",
+                  border: "1px solid var(--clay-200)",
+                  borderRadius: "var(--sr-radius-sm)",
+                  padding: "2px 7px",
+                }}
+              >
+                {contextLabel}
+              </span>
+            )}
+          </div>
           {totalUnread > 0 && (
             <span
               style={{

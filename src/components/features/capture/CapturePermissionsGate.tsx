@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Camera, AlertTriangle, Wifi, ArrowLeft, Monitor } from "lucide-react";
+import { Camera, AlertTriangle, CloudUpload, Trash2, MicOff, ArrowLeft, Monitor } from "lucide-react";
 
 interface Props {
   onGranted: (stream: MediaStream) => void;
@@ -127,12 +127,12 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         }}
       >
         {[
-          "Each photo is uploaded to our servers for AI identification",
-          "Photos are deleted after your sale is finalised",
-          "Microphone not required for this step",
-        ].map((note) => (
+          { text: "Each photo is uploaded to our servers for AI identification", icon: <CloudUpload size={14} strokeWidth={1.5} style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }} /> },
+          { text: "Photos are deleted after your sale is finalised", icon: <Trash2 size={14} strokeWidth={1.5} style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }} /> },
+          { text: "Microphone not required for this step", icon: <MicOff size={14} strokeWidth={1.5} style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }} /> },
+        ].map(({ text, icon }) => (
           <div
-            key={note}
+            key={text}
             style={{
               display: "flex",
               alignItems: "flex-start",
@@ -144,13 +144,9 @@ export function CapturePermissionsGate({ onGranted }: Props) {
               textAlign: "left",
             }}
           >
-            <Wifi
-              size={14}
-              strokeWidth={1.5}
-              style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }}
-            />
+            {icon}
             <span style={{ fontSize: 13, color: "var(--sr-text-secondary)", lineHeight: 1.45 }}>
-              {note}
+              {text}
             </span>
           </div>
         ))}
