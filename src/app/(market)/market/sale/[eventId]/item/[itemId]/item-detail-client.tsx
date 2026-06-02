@@ -20,7 +20,7 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import { getPublicItem, startConversation, saveItem, unsaveItem, setPin } from "@/lib/api";
+import { getPublicItem, getPublicSale, startConversation, saveItem, unsaveItem, setPin } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import type { PublicItemImage } from "@/lib/types";
 
@@ -234,13 +234,32 @@ function ItemDetailContent({
   itemId: string;
 }) {
   const searchParams = useSearchParams();
-  const bundleId = searchParams.get("bundle") ?? "";
+  const queryBundleId = searchParams.get("bundle") ?? "";
   const { user } = useAuth();
   const router = useRouter();
   const qc = useQueryClient();
   const [messaging, setMessaging] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savePending, setSavePending] = useState(false);
+
+  // Deep-link / refresh without ?bundle= — resolve the bundle from the sale so
+  // shareable links and back/refresh work without the query param.
+  const {
+    data: saleForResolve,
+    isLoading: resolveLoading,
+    isFetched: resolveFetched,
+  } = useQuery({
+    queryKey: ["resolve-bundle", eventId, itemId],
+    queryFn: () => getPublicSale(eventId),
+    enabled: !queryBundleId,
+    staleTime: 60_000,
+    retry: false,
+  });
+  const resolvedBundleId =
+    saleForResolve?.bundles.find((b) => b.items.some((i) => i.id === itemId))?.id ?? "";
+  const bundleId = queryBundleId || resolvedBundleId;
+  const resolving = !queryBundleId && !resolvedBundleId && resolveLoading;
+  const resolveFailed = !queryBundleId && resolveFetched && !resolvedBundleId;
 
   const {
     data: item,
@@ -350,8 +369,26 @@ function ItemDetailContent({
         Back to sale
       </Link>
 
-      {/* Missing bundle ID */}
-      {!bundleId && (
+      {/* Resolving bundle from deep-link */}
+      {resolving && (
+        <div
+          style={{
+            height: 300,
+            display: "grid",
+            placeItems: "center",
+            color: "var(--ink-400)",
+            fontFamily: "var(--sr-font-mono)",
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+          }}
+        >
+          Loading item…
+        </div>
+      )}
+
+      {/* Item genuinely not found in this sale */}
+      {resolveFailed && (
         <div style={{ textAlign: "center", padding: "80px 32px" }}>
           <Package
             size={40}
@@ -368,7 +405,7 @@ function ItemDetailContent({
               marginBottom: 12,
             }}
           >
-            Item not accessible directly
+            Item no longer available
           </p>
           <Link
             href={`/market/sale/${eventId}`}

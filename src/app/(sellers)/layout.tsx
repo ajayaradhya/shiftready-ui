@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { ShellSidebar } from "@/components/shell/sidebar";
 import { ShellHeader } from "@/components/shell/header";
@@ -12,6 +12,8 @@ import { MailWarning, X } from "lucide-react";
 export default function SellersLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, sendVerificationEmail } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isConversationDetail = /\/messages\/[^/]+$/.test(pathname);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -79,7 +81,7 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
       )}
       <main
         id="main-content"
-        className="md:pl-[224px] min-h-screen relative pb-16 md:pb-0"
+        className={`md:pl-[224px] min-h-screen relative md:pb-0 ${isConversationDetail ? "pb-0" : "pb-16"}`}
         style={{
           paddingTop: user && !user.emailVerified && !bannerDismissed ? 48 + 36 : 48,
           background: "var(--sr-bg-app)",

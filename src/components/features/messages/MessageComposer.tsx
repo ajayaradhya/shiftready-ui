@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Send, Paperclip, Percent, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 interface MessageComposerProps {
   onSend: (text: string) => void;
@@ -16,6 +17,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
   const [offerMode, setOfferMode] = useState(false);
   const [offerAmt, setOfferAmt] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   const submit = () => {
     const trimmed = text.trim();
@@ -174,16 +176,20 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
 
       {/* Composer row */}
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-        {/* Make an offer pill */}
+        {/* Make an offer pill — icon-only on mobile to free up textarea width */}
         {!offerMode && !disabled && (
           <button
             onClick={() => setOfferMode(true)}
+            title={isMobile ? "Make an offer" : undefined}
+            aria-label="Make an offer"
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 6,
-              padding: "0 13px",
+              gap: isMobile ? 0 : 6,
+              padding: isMobile ? 0 : "0 13px",
+              width: isMobile ? 38 : undefined,
               height: 38,
+              justifyContent: "center",
               background: "var(--cream-100)",
               border: "1px solid var(--cream-300)",
               borderRadius: 9999,
@@ -209,8 +215,8 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
               el.style.color = "var(--sr-text-muted)";
             }}
           >
-            <Percent size={12} strokeWidth={1.75} />
-            Make an offer
+            <Percent size={isMobile ? 15 : 12} strokeWidth={1.75} />
+            {!isMobile && "Make an offer"}
           </button>
         )}
 
@@ -228,6 +234,7 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
           maxLength={2000}
           style={{
             flex: 1,
+            minWidth: 0,
             resize: "none",
             background: "var(--cream-50)",
             border: "1px solid var(--sr-border-default)",

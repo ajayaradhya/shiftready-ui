@@ -7,6 +7,7 @@ import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal,
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { SaleListing, SaleStatus } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {
   pending_upload: "Pending Upload",
@@ -49,6 +50,7 @@ interface SaleRowProps {
 
 export function SaleRow({ sale }: SaleRowProps) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isLive = sale.status === "live" || sale.status === "partially_sold";
@@ -56,7 +58,10 @@ export function SaleRow({ sale }: SaleRowProps) {
   const dotColor = DOT_COLORS[sale.status] ?? "var(--ink-300)";
   const isLiveStatus = sale.status === "live" || sale.status === "partially_sold";
   const hasInventory = sale.status !== "pending_upload" && sale.status !== "processing";
-  const previews = (sale.preview_images ?? []).slice(0, 4);
+  const previewCap = isMobile ? 3 : 4;
+  const allPreviews = sale.preview_images ?? [];
+  const previews = allPreviews.slice(0, previewCap);
+  const extraPreviews = allPreviews.length - previews.length;
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
   const handleImgError = useCallback((i: number) => setImgErrors((e) => ({ ...e, [i]: true })), []);
 
@@ -73,6 +78,117 @@ export function SaleRow({ sale }: SaleRowProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
+  const kebabNode = (
+    <div ref={menuRef} style={{ position: "relative" }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
+        aria-label="More options"
+        style={{
+          display: "grid",
+          placeItems: "center",
+          width: 30,
+          height: 30,
+          borderRadius: "var(--sr-radius-sm)",
+          border: "1px solid var(--sr-border-subtle)",
+          background: menuOpen ? "var(--cream-100)" : "transparent",
+          color: "var(--ink-400)",
+          cursor: "pointer",
+          transition: "all 120ms",
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; (e.currentTarget as HTMLElement).style.color = "var(--ink-700)"; }}
+        onMouseLeave={(e) => { if (!menuOpen) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--ink-400)"; } }}
+      >
+        <MoreHorizontal size={14} />
+      </button>
+
+      {menuOpen && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 4px)",
+            zIndex: 50,
+            minWidth: 160,
+            background: "var(--sr-bg-card)",
+            border: "1px solid var(--sr-border-subtle)",
+            borderRadius: "var(--sr-radius-md)",
+            boxShadow: "var(--sr-shadow-md)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Marketplace folded into menu on mobile */}
+          {isMobile && isLive && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(`/market/sale/${sale.id}`); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 9,
+                width: "100%",
+                padding: "10px 14px",
+                background: "transparent",
+                border: "none",
+                fontSize: 13,
+                color: "var(--moss-700)",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <ShoppingBag size={13} strokeWidth={1.6} />
+              View in Marketplace
+            </button>
+          )}
+          {hasInventory && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(inventoryUrl); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 9,
+                width: "100%",
+                padding: "10px 14px",
+                background: "transparent",
+                border: "none",
+                fontSize: 13,
+                color: "var(--ink-700)",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <Pencil size={13} strokeWidth={1.6} />
+              Edit inventory
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              width: "100%",
+              padding: "10px 14px",
+              background: "transparent",
+              border: "none",
+              fontSize: 13,
+              color: "var(--ink-400)",
+              cursor: "not-allowed",
+              textAlign: "left",
+              opacity: 0.5,
+            }}
+          >
+            <Archive size={13} strokeWidth={1.6} />
+            Archive
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div
       onClick={() => hasInventory && router.push(inventoryUrl)}
@@ -80,12 +196,14 @@ export function SaleRow({ sale }: SaleRowProps) {
         background: "var(--sr-bg-card)",
         border: "1px solid var(--sr-border-subtle)",
         borderRadius: "var(--sr-radius-lg)",
-        padding: "16px 24px",
+        padding: isMobile ? "14px 16px" : "16px 24px",
         display: "flex",
-        alignItems: "center",
-        gap: 20,
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "stretch" : "center",
+        gap: isMobile ? 12 : 20,
         transition: "border-color 160ms, box-shadow 160ms",
         cursor: hasInventory ? "pointer" : "default",
+        overflow: "hidden",
       }}
       onMouseEnter={(e) => {
         if (hasInventory) {
@@ -98,6 +216,8 @@ export function SaleRow({ sale }: SaleRowProps) {
         (e.currentTarget as HTMLElement).style.boxShadow = "";
       }}
     >
+      {/* Top row: status dot + thumbnails (+ kebab on mobile) */}
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 20, flexShrink: 0 }}>
       {/* Status dot */}
       <span
         style={{
@@ -153,11 +273,39 @@ export function SaleRow({ sale }: SaleRowProps) {
             <Package size={20} strokeWidth={1.4} />
           </div>
         )}
+        {isMobile && extraPreviews > 0 && (
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "var(--sr-radius-sm)",
+              background: "var(--cream-100)",
+              border: "1px solid var(--sr-border-subtle)",
+              display: "grid",
+              placeItems: "center",
+              color: "var(--ink-400)",
+              fontSize: 12,
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            +{extraPreviews}
+          </div>
+        )}
+      </div>
+
+      {/* Kebab on mobile sits at the end of the top row */}
+      {isMobile && (
+        <>
+          <span style={{ flex: 1 }} />
+          {kebabNode}
+        </>
+      )}
       </div>
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)" }}>
             {sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Your Moving Sale")}
           </span>
@@ -199,140 +347,60 @@ export function SaleRow({ sale }: SaleRowProps) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        {isLive && (
-          <Link
-            href={`/market/sale/${sale.id}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 13px",
-              borderRadius: "var(--sr-radius-sm)",
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "1px solid var(--moss-100)",
-              background: "var(--moss-50)",
-              color: "var(--moss-700)",
-              textDecoration: "none",
-              transition: "all 120ms",
-            }}
-          >
-            <ShoppingBag size={12} />
-            Marketplace
-          </Link>
-        )}
-        {hasInventory && (
-          <Link
-            href={inventoryUrl}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 13px",
-              borderRadius: "var(--sr-radius-sm)",
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "1px solid var(--clay-200)",
-              background: "var(--clay-50)",
-              color: "var(--clay-700)",
-              textDecoration: "none",
-              transition: "all 120ms",
-            }}
-          >
-            Inventory <ArrowRight size={11} />
-          </Link>
-        )}
-
-        {/* Kebab */}
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
-            style={{
-              display: "grid",
-              placeItems: "center",
-              width: 30,
-              height: 30,
-              borderRadius: "var(--sr-radius-sm)",
-              border: "1px solid var(--sr-border-subtle)",
-              background: menuOpen ? "var(--cream-100)" : "transparent",
-              color: "var(--ink-400)",
-              cursor: "pointer",
-              transition: "all 120ms",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; (e.currentTarget as HTMLElement).style.color = "var(--ink-700)"; }}
-            onMouseLeave={(e) => { if (!menuOpen) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--ink-400)"; } }}
-          >
-            <MoreHorizontal size={14} />
-          </button>
-
-          {menuOpen && (
-            <div
+      {/* Actions (desktop) */}
+      {!isMobile && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {isLive && (
+            <Link
+              href={`/market/sale/${sale.id}`}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                position: "absolute",
-                right: 0,
-                top: "calc(100% + 4px)",
-                zIndex: 50,
-                minWidth: 160,
-                background: "var(--sr-bg-card)",
-                border: "1px solid var(--sr-border-subtle)",
-                borderRadius: "var(--sr-radius-md)",
-                boxShadow: "var(--sr-shadow-md)",
-                overflow: "hidden",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 13px",
+                borderRadius: "var(--sr-radius-sm)",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                border: "1px solid var(--moss-100)",
+                background: "var(--moss-50)",
+                color: "var(--moss-700)",
+                textDecoration: "none",
+                transition: "all 120ms",
               }}
             >
-              {hasInventory && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(inventoryUrl); }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 9,
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "transparent",
-                    border: "none",
-                    fontSize: 13,
-                    color: "var(--ink-700)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                >
-                  <Pencil size={13} strokeWidth={1.6} />
-                  Edit inventory
-                </button>
-              )}
-              <button
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  width: "100%",
-                  padding: "10px 14px",
-                  background: "transparent",
-                  border: "none",
-                  fontSize: 13,
-                  color: "var(--ink-400)",
-                  cursor: "not-allowed",
-                  textAlign: "left",
-                  opacity: 0.5,
-                }}
-              >
-                <Archive size={13} strokeWidth={1.6} />
-                Archive
-              </button>
-            </div>
+              <ShoppingBag size={12} />
+              Marketplace
+            </Link>
           )}
+          {hasInventory && (
+            <Link
+              href={inventoryUrl}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 13px",
+                borderRadius: "var(--sr-radius-sm)",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                border: "1px solid var(--clay-200)",
+                background: "var(--clay-50)",
+                color: "var(--clay-700)",
+                textDecoration: "none",
+                transition: "all 120ms",
+              }}
+            >
+              Inventory <ArrowRight size={11} />
+            </Link>
+          )}
+
+          {kebabNode}
         </div>
-      </div>
+      )}
     </div>
   );
 }

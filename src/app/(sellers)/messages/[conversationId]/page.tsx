@@ -20,7 +20,7 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
 
   if (isLoading) {
     return (
-      <div style={{ height: "calc(100dvh - 64px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height: "calc(100dvh - 48px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>Loading…</span>
       </div>
     );
@@ -28,14 +28,14 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
 
   if (!conversation) {
     return (
-      <div style={{ height: "calc(100dvh - 64px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height: "calc(100dvh - 48px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>Conversation not found.</span>
       </div>
     );
   }
 
   return (
-    <div style={{ height: "calc(100dvh - 64px)", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "calc(100dvh - 48px)", display: "flex", overflow: "hidden" }}>
       {/* Sidebar */}
       <div
         className="hidden md:flex flex-col"

@@ -1263,7 +1263,7 @@ export default function SettingsPage() {
         .sec-anim { animation: secIn 200ms ease both; }
       `}</style>
 
-      <div className="flex flex-col md:flex-row px-5 pt-8 pb-20 md:px-10 md:pt-10 md:gap-11" style={{ maxWidth: 920, margin: "0 auto", gap: 24, alignItems: "flex-start" }}>
+      <div className="flex flex-col md:flex-row px-5 pt-8 pb-20 md:px-10 md:pt-10 md:gap-11 overflow-x-hidden" style={{ maxWidth: 920, margin: "0 auto", gap: 24, alignItems: "flex-start", width: "100%" }}>
 
         {/* Left nav */}
         <nav className="w-full md:w-44 md:shrink-0 md:sticky md:top-10" style={{ flexShrink: 0 }}>

@@ -73,7 +73,7 @@ export function NotificationsPanel({ open, onOpenChange }: NotificationsPanelPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[380px] flex flex-col p-0">
+      <SheetContent side="right" className="w-full sm:w-[380px] max-w-[100vw] flex flex-col p-0">
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-3.5 shrink-0"

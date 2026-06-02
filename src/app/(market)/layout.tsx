@@ -1,11 +1,14 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { ShellSidebar } from "@/components/shell/sidebar";
 import { ShellHeader } from "@/components/shell/header";
 import { BottomTabBar } from "@/components/shell/bottom-tab-bar";
 import { SaleContextProvider } from "@/lib/sale-context";
 
 export default function MarketLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isConversationDetail = /\/messages\/[^/]+$/.test(pathname);
   return (
     <SaleContextProvider>
       <a
@@ -19,7 +22,7 @@ export default function MarketLayout({ children }: { children: React.ReactNode }
       <ShellHeader hasSidebar />
       <main
         id="main-content"
-        className="md:pl-[224px] min-h-screen relative pb-16 md:pb-0"
+        className={`md:pl-[224px] min-h-screen relative md:pb-0 ${isConversationDetail ? "pb-0" : "pb-16"}`}
         style={{ paddingTop: 48, background: "var(--sr-bg-app)" }}
       >
         {children}

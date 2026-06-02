@@ -46,6 +46,11 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
   const unreadCount = unreadData?.unreadCount ?? 0;
   const tabs = variant === "seller" ? SELLER_TABS : MARKET_TABS;
 
+  // Hide on conversation detail routes — those are full-height chats with their
+  // own fixed composer; a second bottom bar would stack and steal viewport.
+  const isConversationDetail = /\/messages\/[^/]+$/.test(pathname);
+  if (isConversationDetail) return null;
+
   return (
     <nav
       aria-label="Mobile navigation"

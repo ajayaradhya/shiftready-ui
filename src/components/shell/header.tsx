@@ -223,47 +223,50 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
           ?
         </button>
 
-        {/* Notification bell */}
-        <button
-          onClick={() => setNotifOpen(true)}
-          aria-label={`Notifications${unreadNotifs > 0 ? ` (${unreadNotifs} unread)` : ""}`}
-          className="relative w-11 h-11 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
-          style={{ color: "var(--ink-400)" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "var(--ink-700)";
-            (e.currentTarget as HTMLElement).style.background = "var(--cream-100)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "var(--ink-400)";
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-          }}
-        >
-          <Bell size={17} strokeWidth={1.5} />
-          {unreadNotifs > 0 && (
-            <span
-              className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-white leading-none"
-              style={{
-                background: "var(--clay-500)",
-                fontSize: 9,
-                fontWeight: 700,
-                fontFamily: "var(--sr-font-sans)",
-                padding: "0 3px",
-              }}
-              aria-hidden
-            >
-              {unreadNotifs > 99 ? "99+" : unreadNotifs}
-            </span>
-          )}
-        </button>
+        {/* Notification bell — only for signed-in users (no notifications exist when logged out) */}
+        {user && (
+          <button
+            onClick={() => setNotifOpen(true)}
+            aria-label={`Notifications${unreadNotifs > 0 ? ` (${unreadNotifs} unread)` : ""}`}
+            className="relative w-11 h-11 rounded-full grid place-items-center transition-colors duration-150 cursor-pointer border-none bg-transparent"
+            style={{ color: "var(--ink-400)" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "var(--ink-700)";
+              (e.currentTarget as HTMLElement).style.background = "var(--cream-100)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "var(--ink-400)";
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+            }}
+          >
+            <Bell size={17} strokeWidth={1.5} />
+            {unreadNotifs > 0 && (
+              <span
+                className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-white leading-none"
+                style={{
+                  background: "var(--clay-500)",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  fontFamily: "var(--sr-font-sans)",
+                  padding: "0 3px",
+                }}
+                aria-hidden
+              >
+                {unreadNotifs > 99 ? "99+" : unreadNotifs}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* Profile or auth */}
         {user ? (
           <ProfileMenu />
         ) : (
           <div className="flex items-center gap-2">
+            {/* Sign-up CTA hidden on mobile to leave room for a single clear "Sign in" */}
             <Link
               href="/login?tab=create"
-              className="no-underline text-[13px] font-semibold text-white px-3.5 py-1.5 rounded-[10px] transition-colors"
+              className="hidden sm:inline-block no-underline text-[13px] font-semibold text-white px-3.5 py-1.5 rounded-[10px] transition-colors"
               style={{ background: "var(--clay-700)" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-800)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--clay-700)"; }}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { Package } from "lucide-react";
 import type { MarketplaceItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
@@ -18,6 +19,7 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
   const rotate = ((r % 100) / 100 - 0.5) * 8;
   const offsetY = (pseudoRandom(item.id, 2) % 18) - 9;
   const decor = pseudoRandom(item.id, 3) % 3;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Link
@@ -28,8 +30,8 @@ function Polaroid({ item, index }: { item: MarketplaceItem; index: number }) {
       {decor === 0 && <span className={s.pin} aria-hidden />}
       {decor === 1 && <span className={s.tape} aria-hidden />}
       <div className={s.polaroidMedia}>
-        {item.image_url ? (
-          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" />
+        {item.image_url && !imgError ? (
+          <Image src={item.thumb_url ?? item.image_url} alt={item.name} fill style={{ objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }} sizes="(max-width: 640px) 45vw, 200px" onError={() => setImgError(true)} />
         ) : (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--cream-100)" }}>
             <Package size={24} style={{ color: "var(--ink-200)" }} />

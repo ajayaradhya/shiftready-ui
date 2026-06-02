@@ -30,6 +30,28 @@ async function fetchItemData(
   }
 }
 
+/** Resolve the bundle that contains `itemId` when the URL omits ?bundle=. */
+async function resolveBundleId(
+  eventId: string,
+  itemId: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/marketplace/sales/${eventId}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    const sale = await res.json();
+    const bundles: Array<{ id: string; items?: Array<{ id: string }> }> =
+      sale?.bundles ?? [];
+    return (
+      bundles.find((b) => (b.items ?? []).some((i) => i.id === itemId))?.id ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -38,7 +60,8 @@ export async function generateMetadata({
   searchParams: Promise<{ bundle?: string }>;
 }): Promise<Metadata> {
   const { eventId, itemId } = await params;
-  const { bundle: bundleId } = await searchParams;
+  const { bundle } = await searchParams;
+  const bundleId = bundle || (await resolveBundleId(eventId, itemId));
   if (!bundleId) return { title: "Item" };
 
   const item = await fetchItemData(eventId, bundleId, itemId);
@@ -91,7 +114,8 @@ export default async function ItemPage({
   searchParams: Promise<{ bundle?: string }>;
 }) {
   const { eventId, itemId } = await params;
-  const { bundle: bundleId } = await searchParams;
+  const { bundle } = await searchParams;
+  const bundleId = bundle || (await resolveBundleId(eventId, itemId));
   const item = bundleId ? await fetchItemData(eventId, bundleId, itemId) : null;
 
   const jsonLd =
