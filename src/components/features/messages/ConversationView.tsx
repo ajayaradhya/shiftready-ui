@@ -594,8 +594,10 @@ export function ConversationView({
           }
 
           if (msg.type === "system" && msg.subtype === "deal_agreed") {
-            const dealAmt = allMessages
-              .slice(0, i + 1)
+            // Search ALL messages for the most recent offer_accepted.
+            // Both offer_accepted and deal_agreed share the same createdAt timestamp,
+            // so Firestore sort order is non-deterministic — slice(0, i+1) can miss it.
+            const dealAmt = [...allMessages]
               .reverse()
               .find((m) => m.type === "offer_accepted")
               ?.offerPayload?.amount ?? 0;

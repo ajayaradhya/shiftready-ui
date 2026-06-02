@@ -54,6 +54,7 @@ export default function ThreadPage({ params }: { params: Promise<{ conversationI
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {user && (
           <ConversationView
+            key={conversationId}
             convId={conversationId}
             currentUserId={user.uid}
             conversation={conversation}

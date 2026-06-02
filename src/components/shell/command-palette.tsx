@@ -4,13 +4,15 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Store, MessageSquare, Settings, Camera,
-  Package, ArrowRight, Clock, Search, X,
+  Package, ArrowRight, Clock, Search, X, Tag,
 } from "lucide-react";
 import { Command } from "cmdk";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { useSalesList } from "@/hooks/use-sales";
 import { useAuth } from "@/hooks/use-auth";
+import { searchMarketplace } from "@/lib/api";
+import type { MarketplaceItem } from "@/lib/types";
 
 // ── Recent ring buffer (localStorage) ────────────────────────────────────────
 
@@ -41,7 +43,7 @@ function pushRecent(entry: RecentEntry) {
 // ── Icon map (serialised name → component) ────────────────────────────────────
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; strokeWidth: number }>> = {
-  LayoutDashboard, Store, MessageSquare, Settings, Camera, Package, ArrowRight,
+  LayoutDashboard, Store, MessageSquare, Settings, Camera, Package, ArrowRight, Tag,
 };
 
 // ── Static command definitions ────────────────────────────────────────────────
@@ -78,13 +80,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const { data: sales } = useSalesList();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<RecentEntry[]>([]);
+  const [marketplaceResults, setMarketplaceResults] = useState<MarketplaceItem[]>([]);
+  const [searchPending, setSearchPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load recent on open
+  // Load recent on open; clear search results on close
   useEffect(() => {
     if (open) {
       setRecent(getRecent());
       setQuery("");
+      setMarketplaceResults([]);
       setTimeout(() => inputRef.current?.focus(), 10);
     }
   }, [open]);
@@ -113,6 +119,30 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const hasQuery = query.trim().length > 0;
   const hasRecent = !hasQuery && recent.length > 0;
+
+  // Debounced marketplace search
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setMarketplaceResults([]);
+      return;
+    }
+    setSearchPending(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await searchMarketplace({ q });
+        setMarketplaceResults(result.items.slice(0, 6));
+      } catch {
+        setMarketplaceResults([]);
+      } finally {
+        setSearchPending(false);
+      }
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -183,7 +213,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {/* Results */}
           <Command.List className="max-h-[380px] overflow-y-auto py-2">
             <Command.Empty className="py-10 text-center text-[13px]" style={{ color: "var(--sr-text-muted)" }}>
-              No results for &ldquo;{query}&rdquo;
+              {searchPending ? "Searching…" : `No results for "${query}"`}
             </Command.Empty>
 
             {/* Recent (shown only when no query) */}
@@ -252,6 +282,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     label={s.label}
                     subtitle={s.subtitle}
                     onSelect={() => go({ id: s.id, label: s.label, href: s.href, icon: "Package" })}
+                  />
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Marketplace search results */}
+            {hasQuery && marketplaceResults.length > 0 && (
+              <Command.Group heading="Marketplace" className={groupClass}>
+                {marketplaceResults.map((item) => (
+                  <PaletteItem
+                    key={`mkt-${item.id}`}
+                    id={`mkt-${item.id}`}
+                    icon={<Tag size={15} strokeWidth={1.5} />}
+                    label={item.name}
+                    subtitle={item.brand || item.bundleName || undefined}
+                    onSelect={() => go({
+                      id: `mkt-${item.id}`,
+                      label: item.name,
+                      href: `/market/sale/${item.eventId}`,
+                      icon: "Tag",
+                    })}
                   />
                 ))}
               </Command.Group>

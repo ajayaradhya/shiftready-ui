@@ -4,8 +4,12 @@ import type { PublicBundle, PublicBundleItem } from "@/lib/types";
 import { formatAUD } from "@/lib/format";
 
 function BundleItemRow({ item }: { item: PublicBundleItem }) {
+  const isSold = item.sale_status === "sold";
+  const isReserved = item.sale_status === "reserved";
+  const unavailable = isSold || isReserved;
+
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-outline-variant/10 last:border-0">
+    <div className={`flex items-center gap-3 py-3 border-b border-outline-variant/10 last:border-0 ${unavailable ? "opacity-50" : ""}`}>
       {item.image_url ? (
         <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
           <Image src={item.image_url} alt={item.name ?? "Item"} fill style={{ objectFit: "cover" }} sizes="40px" />
@@ -14,7 +18,7 @@ function BundleItemRow({ item }: { item: PublicBundleItem }) {
         <div className="w-10 h-10 rounded-lg bg-surface-container-high shrink-0" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-on-surface font-medium truncate">
+        <p className={`text-sm font-medium truncate ${unavailable ? "line-through text-outline" : "text-on-surface"}`}>
           {item.name ?? "Item"}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
@@ -23,14 +27,24 @@ function BundleItemRow({ item }: { item: PublicBundleItem }) {
               {item.brand}
             </span>
           )}
-          {item.condition && (
+          {item.condition && !unavailable && (
             <span className="text-[10px] text-outline/70 bg-surface-container-high px-1.5 py-0.5 rounded uppercase tracking-widest">
               {item.condition}
             </span>
           )}
+          {isSold && (
+            <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-outline/10 text-outline">
+              Sold
+            </span>
+          )}
+          {isReserved && (
+            <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-outline/10 text-outline">
+              Reserved
+            </span>
+          )}
         </div>
       </div>
-      <span className="text-sm font-semibold text-on-surface shrink-0">
+      <span className={`text-sm font-semibold shrink-0 ${unavailable ? "text-outline line-through" : "text-on-surface"}`}>
         {item.price > 0 ? formatAUD(item.price) : "-"}
       </span>
     </div>
@@ -38,8 +52,11 @@ function BundleItemRow({ item }: { item: PublicBundleItem }) {
 }
 
 export function BundleCard({ bundle }: { bundle: PublicBundle }) {
+  const availableItems = bundle.items.filter((i) => i.sale_status !== "sold" && i.sale_status !== "reserved");
   const savings = bundle.itemTotal - bundle.bundlePrice;
   const hasBundleDiscount = savings > 0 && bundle.itemTotal > 0;
+  const totalCount = bundle.items.length;
+  const availableCount = availableItems.length;
 
   return (
     <div className="rounded-2xl border border-outline-variant/15 bg-surface-container overflow-hidden">
@@ -50,7 +67,9 @@ export function BundleCard({ bundle }: { bundle: PublicBundle }) {
             {bundle.name ?? "Bundle"}
           </h2>
           <span className="text-[10px] text-outline uppercase tracking-widest">
-            {bundle.items.length} {bundle.items.length === 1 ? "item" : "items"}
+            {availableCount < totalCount
+              ? `${availableCount} of ${totalCount} available`
+              : `${totalCount} ${totalCount === 1 ? "item" : "items"}`}
           </span>
         </div>
 

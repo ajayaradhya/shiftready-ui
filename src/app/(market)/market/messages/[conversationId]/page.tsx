@@ -149,6 +149,7 @@ export default function MarketConversationPage({
           </div>
         ) : (
           <ConversationView
+            key={conversationId}
             convId={conversationId}
             currentUserId={user.uid}
             conversation={conversation}
