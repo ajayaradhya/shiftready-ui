@@ -97,6 +97,12 @@ export interface PublicSaleDetail {
   is_saved: boolean | null;
 }
 
+export interface PublicItemImage {
+  url: string | null;
+  thumb_url: string | null;
+  is_cover: boolean;
+}
+
 export interface PublicItemDetail {
   name: string | null;
   brand: string | null;
@@ -104,10 +110,24 @@ export interface PublicItemDetail {
   price: number | null;
   original_price: number | null;
   year: number | null;
+  // Legacy single-image (still populated for compat)
   image_url: string | null;
+  thumb_url: string | null;
+  // Full gallery
+  images: PublicItemImage[];
+  // Availability
+  sale_status: "available" | "reserved" | "sold";
+  // Physical details
+  dimensions: string | null;
+  material: string | null;
+  is_fragile: boolean;
+  disassembly_required: boolean;
+  // Context
   bundle_id: string;
   bundle_name: string | null;
   suburb: string | null;
+  sale_title: string | null;
+  move_out_date: string | null;
   seller_id: string | null;
   pricing_reasoning?: string | null;
   is_saved: boolean | null;

@@ -13,9 +13,16 @@ import {
   ShieldCheck,
   MapPin,
   Lock,
+  AlertTriangle,
+  Ruler,
+  Layers,
+  Wrench,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { getPublicItem, startConversation, saveItem, unsaveItem, setPin } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import type { PublicItemImage } from "@/lib/types";
 
 function fmt(n: number) {
   return n.toLocaleString("en-AU", {
@@ -23,6 +30,200 @@ function fmt(n: number) {
     currency: "AUD",
     maximumFractionDigits: 0,
   });
+}
+
+function daysUntil(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null;
+  const target = new Date(dateStr);
+  if (isNaN(target.getTime())) return null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - now.getTime()) / 86_400_000);
+}
+
+function Gallery({ images, name }: { images: PublicItemImage[]; name: string | null }) {
+  const validImages = images.filter((img) => img.url);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  // Reset if images change
+  useEffect(() => setActiveIdx(0), [images]);
+
+  const active = validImages[activeIdx] ?? null;
+
+  return (
+    <div>
+      {/* Main image */}
+      <div
+        style={{
+          aspectRatio: "1",
+          borderRadius: "var(--sr-radius-xl)",
+          overflow: "hidden",
+          background: "var(--cream-100)",
+          position: "relative",
+        }}
+      >
+        {active?.url ? (
+          <Image
+            src={active.url}
+            alt={name ?? "Item"}
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="(max-width: 640px) 100vw, 50vw"
+            priority
+          />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center" }}>
+            <Package size={48} color="var(--ink-300)" strokeWidth={1.5} />
+          </div>
+        )}
+
+        {/* Image count badge */}
+        {validImages.length > 1 && (
+          <span
+            style={{
+              position: "absolute",
+              bottom: 10,
+              right: 10,
+              fontFamily: "var(--sr-font-mono)",
+              fontSize: 9,
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              fontWeight: 700,
+              color: "#fff",
+              background: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(6px)",
+              padding: "3px 8px",
+              borderRadius: "var(--sr-radius-sm)",
+            }}
+          >
+            {activeIdx + 1} / {validImages.length}
+          </span>
+        )}
+      </div>
+
+      {/* Thumbnail strip */}
+      {validImages.length > 1 && (
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 10,
+            overflowX: "auto",
+            paddingBottom: 2,
+          }}
+        >
+          {validImages.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIdx(i)}
+              style={{
+                flexShrink: 0,
+                width: 60,
+                height: 60,
+                borderRadius: "var(--sr-radius-md)",
+                overflow: "hidden",
+                border: i === activeIdx ? "2px solid var(--clay-500)" : "2px solid transparent",
+                background: "var(--cream-100)",
+                cursor: "pointer",
+                padding: 0,
+                position: "relative",
+                opacity: i === activeIdx ? 1 : 0.65,
+                transition: "opacity 120ms, border-color 120ms",
+              }}
+            >
+              {img.thumb_url || img.url ? (
+                <Image
+                  src={img.thumb_url ?? img.url!}
+                  alt={`Photo ${i + 1}`}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="60px"
+                />
+              ) : (
+                <Package size={20} color="var(--ink-300)" strokeWidth={1.5} />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: "available" | "reserved" | "sold" }) {
+  if (status === "available") return null;
+
+  const config =
+    status === "sold"
+      ? { label: "Sold", bg: "var(--ink-100)", color: "var(--ink-600)", icon: AlertCircle }
+      : { label: "Reserved", bg: "var(--honey-50)", color: "var(--honey-700)", icon: AlertTriangle };
+
+  const Icon = config.icon;
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        fontFamily: "var(--sr-font-mono)",
+        fontSize: 10,
+        textTransform: "uppercase",
+        letterSpacing: "0.14em",
+        fontWeight: 700,
+        color: config.color,
+        background: config.bg,
+        padding: "5px 10px",
+        borderRadius: "var(--sr-radius-full)",
+      }}
+    >
+      <Icon size={11} strokeWidth={2} />
+      {config.label}
+    </span>
+  );
+}
+
+function UrgencyBanner({ moveOutDate }: { moveOutDate: string | null }) {
+  const days = daysUntil(moveOutDate);
+  if (days === null || days > 14) return null;
+
+  const isPast = days < 0;
+  const isToday = days === 0;
+
+  let label: string;
+  if (isPast) label = "Move already happened — pick up ASAP";
+  else if (isToday) label = "Moving out today";
+  else if (days === 1) label = "Moving out tomorrow";
+  else label = `Moving out in ${days} days`;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 14px",
+        borderRadius: "var(--sr-radius-lg)",
+        background: days <= 3 ? "var(--clay-50)" : "var(--cream-100)",
+        border: `1px solid ${days <= 3 ? "var(--clay-200)" : "var(--sr-border-subtle)"}`,
+      }}
+    >
+      <Clock size={13} color={days <= 3 ? "var(--clay-600)" : "var(--ink-400)"} strokeWidth={2} />
+      <span
+        style={{
+          fontFamily: "var(--sr-font-mono)",
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+          fontWeight: 700,
+          color: days <= 3 ? "var(--clay-700)" : "var(--ink-500)",
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
 }
 
 function ItemDetailContent({
@@ -110,6 +311,20 @@ function ItemDetailContent({
     item?.original_price && item.price && item.original_price > item.price
       ? Math.round((1 - item.price / item.original_price) * 100)
       : null;
+
+  const isSold = item?.sale_status === "sold";
+  const isReserved = item?.sale_status === "reserved";
+  const unavailable = isSold || isReserved;
+
+  // Spec pills: only non-empty values
+  const specs = item
+    ? [
+        item.dimensions ? { icon: Ruler, label: item.dimensions } : null,
+        item.material ? { icon: Layers, label: item.material } : null,
+        item.disassembly_required ? { icon: Wrench, label: "Disassembly required" } : null,
+        item.is_fragile ? { icon: AlertTriangle, label: "Handle with care" } : null,
+      ].filter(Boolean)
+    : [];
 
   return (
     <div style={{ padding: "32px 24px 80px", maxWidth: 900, margin: "0 auto" }}>
@@ -251,42 +466,18 @@ function ItemDetailContent({
             alignItems: "start",
           }}
         >
-          {/* Gallery */}
-          <div>
-            <div
-              style={{
-                aspectRatio: "1",
-                borderRadius: "var(--sr-radius-xl)",
-                overflow: "hidden",
-                background: "var(--cream-100)",
-                position: "relative",
-              }}
-            >
-              {item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt={item.name ?? "Item"}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <Package size={48} color="var(--ink-300)" strokeWidth={1.5} />
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Gallery column */}
+          <Gallery images={item.images ?? []} name={item.name} />
 
-          {/* Details */}
+          {/* Details column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {/* Status badge + urgency */}
+            {item.sale_status && item.sale_status !== "available" && (
+              <StatusBadge status={item.sale_status} />
+            )}
+
+            <UrgencyBanner moveOutDate={item.move_out_date} />
+
             {/* Brand + condition + year */}
             <div
               style={{
@@ -353,6 +544,7 @@ function ItemDetailContent({
                 color: "var(--sr-text-primary)",
                 margin: 0,
                 lineHeight: 1.2,
+                opacity: unavailable ? 0.5 : 1,
               }}
             >
               {item.name ?? "Item"}
@@ -360,7 +552,7 @@ function ItemDetailContent({
 
             {/* Price */}
             <div
-              style={{ display: "flex", alignItems: "flex-end", gap: 10 }}
+              style={{ display: "flex", alignItems: "flex-end", gap: 10, opacity: unavailable ? 0.5 : 1 }}
             >
               <span
                 style={{
@@ -368,6 +560,7 @@ function ItemDetailContent({
                   fontSize: 32,
                   fontWeight: 600,
                   color: "var(--sr-text-primary)",
+                  textDecoration: isSold ? "line-through" : "none",
                 }}
               >
                 {item.price != null ? fmt(item.price) : "POA"}
@@ -450,6 +643,44 @@ function ItemDetailContent({
                 </span>
               )}
             </div>
+
+            {/* Physical specs */}
+            {specs.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                }}
+              >
+                {specs.map((spec, i) => {
+                  if (!spec) return null;
+                  const Icon = spec.icon;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontFamily: "var(--sr-font-mono)",
+                        fontSize: 9,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        color: "var(--ink-500)",
+                        background: "var(--sr-bg-paper)",
+                        padding: "4px 9px",
+                        borderRadius: "var(--sr-radius-full)",
+                        border: "1px solid var(--sr-border-subtle)",
+                      }}
+                    >
+                      <Icon size={10} strokeWidth={1.8} />
+                      {spec.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Bundle context */}
             {item.bundle_name && (
@@ -574,38 +805,66 @@ function ItemDetailContent({
 
             {/* CTAs */}
             <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={handleInterest}
-                disabled={messaging}
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  padding: "13px 16px",
-                  borderRadius: "var(--sr-radius-lg)",
-                  background: "var(--clay-500)",
-                  color: "#fff",
-                  fontFamily: "var(--sr-font-sans)",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: messaging ? "default" : "pointer",
-                  opacity: messaging ? 0.7 : 1,
-                  transition: "opacity 140ms, background 140ms",
-                }}
-                onMouseEnter={(e) => {
-                  if (!messaging)
-                    e.currentTarget.style.background = "var(--clay-600)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--clay-500)";
-                }}
-              >
-                <MessageSquare size={15} strokeWidth={1.5} />
-                {messaging ? "Opening…" : "Express Interest"}
-              </button>
+              {isSold ? (
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "13px 16px",
+                    borderRadius: "var(--sr-radius-lg)",
+                    background: "var(--cream-100)",
+                    border: "1px solid var(--sr-border-subtle)",
+                    fontFamily: "var(--sr-font-sans)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--ink-400)",
+                  }}
+                >
+                  <AlertCircle size={15} strokeWidth={1.5} />
+                  This item has been sold
+                </div>
+              ) : (
+                <button
+                  onClick={handleInterest}
+                  disabled={messaging}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "13px 16px",
+                    borderRadius: "var(--sr-radius-lg)",
+                    background: isReserved ? "var(--honey-100)" : "var(--clay-500)",
+                    color: isReserved ? "var(--honey-800)" : "#fff",
+                    fontFamily: "var(--sr-font-sans)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    border: isReserved ? "1px solid var(--honey-200)" : "none",
+                    cursor: messaging ? "default" : "pointer",
+                    opacity: messaging ? 0.7 : 1,
+                    transition: "opacity 140ms, background 140ms",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!messaging && !isReserved)
+                      e.currentTarget.style.background = "var(--clay-600)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isReserved)
+                      e.currentTarget.style.background = "var(--clay-500)";
+                  }}
+                >
+                  <MessageSquare size={15} strokeWidth={1.5} />
+                  {messaging
+                    ? "Opening…"
+                    : isReserved
+                    ? "Message seller — may still be available"
+                    : "Express Interest"}
+                </button>
+              )}
               <button
                 onClick={handleToggleSave}
                 disabled={savePending}
@@ -655,7 +914,7 @@ function ItemDetailContent({
                   fontWeight: 500,
                 }}
               >
-                ← View full sale
+                {item.sale_title ? `← ${item.sale_title}` : "← View full sale"}
               </Link>
             </div>
           </div>
