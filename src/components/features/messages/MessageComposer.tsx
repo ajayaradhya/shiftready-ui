@@ -227,7 +227,11 @@ export function MessageComposer({ onSend, onSendOffer, disabled, placeholder, ot
           onKeyDown={handleKeyDown}
           placeholder={
             placeholder ??
-            (otherUsername ? `Message @${otherUsername}…` : "Type a message…")
+            (isMobile
+              ? "Message…"
+              : otherUsername
+                ? `Message @${otherUsername}…`
+                : "Type a message…")
           }
           disabled={disabled}
           rows={1}
