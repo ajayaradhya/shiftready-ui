@@ -81,6 +81,10 @@ function CapturePageContent() {
   const [toasts, setToasts] = useState<import("@/lib/capture/capture-types").CaptureToast[]>([]);
   const [saleTitle, setSaleTitle] = useState("");
 
+  // Dev-panel display state (refs can't be read during render)
+  const [networkErrorTotal, setNetworkErrorTotal] = useState(0);
+  const [debugElapsed, setDebugElapsed] = useState<number | null>(null);
+
   // Undo-last state
   const [undoItemId, setUndoItemId] = useState<string | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,19 +109,6 @@ function CapturePageContent() {
   useEffect(() => {
     return () => { stream?.getTracks().forEach((t) => t.stop()); };
   }, [stream]);
-
-  // Auto-retry network_error items when coming back online
-  useEffect(() => {
-    const handleOnline = () => {
-      const networkErrorItems = confirmedItemsRef.current.filter((i) => i.network_error);
-      for (const item of networkErrorItems) {
-        handleRetry(item.id);
-      }
-    };
-    window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const initSaleOnce = useCallback(async () => {
     if (eventIdRef.current) return;
@@ -186,7 +177,10 @@ function CapturePageContent() {
       );
     } catch (err) {
       const isNetworkErr = err instanceof TypeError && err.message.includes("fetch");
-      if (isNetworkErr) networkErrorTotalRef.current += 1;
+      if (isNetworkErr) {
+        networkErrorTotalRef.current += 1;
+        setNetworkErrorTotal((n) => n + 1);
+      }
       setConfirmedItems((prev) =>
         prev.map((i) =>
           i.id === itemId
@@ -205,6 +199,31 @@ function CapturePageContent() {
     );
     runCaptureFrame(id, item.frameSrc);
   }, [runCaptureFrame]);
+
+  // Auto-retry network_error items when coming back online
+  useEffect(() => {
+    const handleOnline = () => {
+      const networkErrorItems = confirmedItemsRef.current.filter((i) => i.network_error);
+      for (const item of networkErrorItems) {
+        handleRetry(item.id);
+      }
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [handleRetry]);
+
+  // Tick elapsed seconds for the dev analytics panel (avoids reading refs/Date.now in render)
+  useEffect(() => {
+    if (!isDev) return;
+    const id = setInterval(() => {
+      setDebugElapsed(
+        captureStartTimeRef.current
+          ? Math.round((Date.now() - captureStartTimeRef.current) / 1000)
+          : null
+      );
+    }, 1000);
+    return () => clearInterval(id);
+  }, [isDev]);
 
   // Tap → immediately add item to bucket, Gemini runs in background
   const handleUserTap = useCallback((frameSrc: string) => {
@@ -227,7 +246,7 @@ function CapturePageContent() {
     undoTimerRef.current = setTimeout(() => setUndoItemId(null), 3000);
 
     runCaptureFrame(itemId, frameSrc);
-  }, [addToast, runCaptureFrame]);
+  }, [addToast, runCaptureFrame, initSaleOnce]);
 
   const handleUndo = useCallback(() => {
     if (!undoItemId) return;
@@ -256,7 +275,7 @@ function CapturePageContent() {
       next.splice(idx + 1, 0, clone);
       return next;
     });
-  }, [handleRetry]);
+  }, []);
 
   const handleUpdateItem = useCallback((id: string, updates: Partial<CapturedItem>) => {
     setConfirmedItems((prev) => prev.map((i) => i.id === id ? { ...i, ...updates } : i));
@@ -312,7 +331,7 @@ function CapturePageContent() {
         const elapsed = captureStartTimeRef.current
           ? Math.round((Date.now() - captureStartTimeRef.current) / 1000)
           : 0;
-        console.table({
+        console.warn("Capture session analytics", {
           "Total items": allItems.length,
           "Identified (name+gcs_uri)": allItems.filter((i) => i.name && i.gcs_uri).length,
           "User-named overrides": allItems.filter((i) => i.nameSource === "user").length,
@@ -502,14 +521,10 @@ function CapturePageContent() {
               <div>user-named: <b>{confirmedItems.filter((i) => i.nameSource === "user").length}</b></div>
               <div>low-conf: <b>{confirmedItems.filter((i) => i.confidence === "low").length}</b></div>
               <div>net-err live: <b>{confirmedItems.filter((i) => i.network_error).length}</b></div>
-              <div>net-err total: <b>{networkErrorTotalRef.current}</b></div>
+              <div>net-err total: <b>{networkErrorTotal}</b></div>
               <div>
                 elapsed:{" "}
-                <b>
-                  {captureStartTimeRef.current
-                    ? `${Math.round((Date.now() - captureStartTimeRef.current) / 1000)}s`
-                    : "—"}
-                </b>
+                <b>{debugElapsed != null ? `${debugElapsed}s` : "—"}</b>
               </div>
             </div>
           )}

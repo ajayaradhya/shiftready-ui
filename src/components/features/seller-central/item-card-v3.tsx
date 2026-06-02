@@ -431,7 +431,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         {/* ── Body ── */}
         <div style={{ padding: "14px 18px 16px" }}>
           {/* Name row */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, minWidth: 0 }}>
             {nameEditing ? (
               <input
                 autoFocus
@@ -441,7 +441,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameVal(item.name); setNameEditing(false); } }}
                 maxLength={120}
                 style={{
-                  flex: 1, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
+                  flex: 1, minWidth: 0, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
                   letterSpacing: "-0.01em", color: "var(--ink-800)", background: "transparent",
                   border: "none", borderBottom: "2px solid var(--clay-300)", outline: "none",
                   lineHeight: 1.3, padding: "0 0 2px",
@@ -452,7 +452,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 role="button"
                 tabIndex={0}
                 style={{
-                  flex: 1, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
+                  flex: 1, minWidth: 0, overflowWrap: "anywhere", fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
                   letterSpacing: "-0.01em", color: "var(--ink-800)", lineHeight: 1.3, cursor: "text",
                 }}
                 onDoubleClick={() => setNameEditing(true)}
@@ -756,7 +756,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           {/* Footer */}
           <div
             style={{
-              display: "flex", alignItems: "center", gap: 2,
+              display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap",
               paddingTop: 10, borderTop: "1px solid var(--sr-border-subtle)",
             }}
           >

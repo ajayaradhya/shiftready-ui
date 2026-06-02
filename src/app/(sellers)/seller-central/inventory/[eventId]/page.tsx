@@ -261,7 +261,7 @@ export default function SellerCentralInventoryPage() {
 
   return (
     <div
-      style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px", overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
+      style={{ maxWidth: 1200, margin: "0 auto", padding: "28px clamp(16px, 4vw, 32px)", overflowX: "hidden", overflowY: "auto", fontFamily: "var(--sr-font-sans)" }}
       className="custom-scrollbar pb-14"
       aria-busy={isGlobalLoading || isPricing}
     >
@@ -283,10 +283,10 @@ export default function SellerCentralInventoryPage() {
 
       {/* ── Sale header ── */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
           {/* Title */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: "1 1 240px" }}>
+            <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>
               {titleMain}{" "}
               <em style={{ fontStyle: "italic", color: "var(--clay-600)" }}>{titleAccent}</em>
             </h2>
@@ -432,8 +432,8 @@ export default function SellerCentralInventoryPage() {
         <div style={{ animation: "fadeSlide 280ms ease" }}>
           {/* Slim bundle context bar */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "12px 18px", background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)" }}>
-            <div>
-              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", overflowWrap: "anywhere" }}>
                 {selectedBundle.name}
               </div>
               <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 1 }}>
@@ -502,9 +502,9 @@ export default function SellerCentralInventoryPage() {
                 {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed - publish to the marketplace."}
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
+                <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic", overflowWrap: "anywhere" }}>
                   {formatAUD(totalValue)}
                 </em>
                 <span style={{ fontSize: 13, color: "var(--sr-text-muted)" }}>total listing value</span>

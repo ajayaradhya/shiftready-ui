@@ -237,7 +237,7 @@ export function BundleCard({
           </div>
         ) : (
           <div
-            style={{ fontFamily: "var(--sr-font-serif)", fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 4px" }}
+            style={{ fontFamily: "var(--sr-font-serif)", fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", color: "var(--ink-800)", margin: "0 0 4px", overflowWrap: "anywhere" }}
             onDoubleClick={(e) => { e.stopPropagation(); setRenameVal(bundle.name); setIsRenaming(true); }}
             title="Double-click to rename"
           >
@@ -250,7 +250,7 @@ export function BundleCard({
             <div style={{ fontSize: 11, color: "var(--sr-text-muted)", textDecoration: "line-through", lineHeight: 1.3 }}>
               {formatAUD(itemTotal)} individually
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
               <strong style={{ fontSize: 16, fontWeight: 700, color: "var(--moss-700)" }}>
                 {formatAUD(bundlePrice)}
               </strong>
