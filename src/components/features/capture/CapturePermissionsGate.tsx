@@ -41,14 +41,10 @@ export function CapturePermissionsGate({ onGranted }: Props) {
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "calc(100dvh - 64px)",
-        padding: "32px 24px",
+        height: "100dvh",
         fontFamily: "var(--sr-font-sans)",
-        textAlign: "center",
-        gap: 24,
         position: "relative",
+        background: "var(--sr-bg-app)",
       }}
     >
       {/* Back navigation */}
@@ -56,8 +52,9 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         href="/seller-central"
         style={{
           position: "absolute",
-          top: 16,
+          top: "calc(16px + env(safe-area-inset-top, 0px))",
           left: 16,
+          zIndex: 2,
           display: "inline-flex",
           alignItems: "center",
           gap: 6,
@@ -81,6 +78,22 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         <ArrowLeft size={14} strokeWidth={1.75} />
         Back
       </Link>
+
+      {/* Scrollable content — centered when it fits, scrolls on short screens */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          gap: 24,
+          padding: "72px 24px 24px",
+        }}
+      >
       {/* Icon */}
       <div
         style={{
@@ -179,54 +192,73 @@ export function CapturePermissionsGate({ onGranted }: Props) {
         </div>
       )}
 
-      {/* Error */}
-      {error && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 10,
-            padding: "12px 16px",
-            background: "var(--rust-50)",
-            border: "1px solid var(--rust-100)",
-            borderRadius: "var(--sr-radius-md)",
-            maxWidth: 320,
-            width: "100%",
-            textAlign: "left",
-          }}
-        >
-          <AlertTriangle size={14} strokeWidth={1.5} style={{ color: "var(--rust-500)", flexShrink: 0, marginTop: 2 }} />
-          <span style={{ fontSize: 13, color: "var(--rust-600)", lineHeight: 1.45 }}>{error}</span>
-        </div>
-      )}
+      </div>
+      {/* /Scrollable content */}
 
-      {/* CTA */}
-      <button
-        onClick={requestCamera}
-        disabled={requesting}
+      {/* Sticky footer — CTA always visible */}
+      <div
         style={{
-          display: "inline-flex",
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          minWidth: 220,
-          minHeight: 52,
-          padding: "14px 28px",
-          borderRadius: "var(--sr-radius-lg)",
-          border: "none",
-          background: requesting ? "var(--clay-200)" : "var(--clay-600)",
-          color: "#fff",
-          fontSize: 15,
-          fontWeight: 600,
-          fontFamily: "var(--sr-font-sans)",
-          cursor: requesting ? "not-allowed" : "pointer",
-          transition: "background 120ms",
-          letterSpacing: "-0.01em",
+          gap: 12,
+          padding: "16px 24px",
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          background: "var(--sr-bg-card)",
+          borderTop: "1px solid var(--sr-border-subtle)",
         }}
       >
-        <Camera size={18} strokeWidth={1.75} />
-        {requesting ? "Requesting…" : "Enable Camera"}
-      </button>
+        {/* Error */}
+        {error && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "12px 16px",
+              background: "var(--rust-50)",
+              border: "1px solid var(--rust-100)",
+              borderRadius: "var(--sr-radius-md)",
+              maxWidth: 360,
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            <AlertTriangle size={14} strokeWidth={1.5} style={{ color: "var(--rust-500)", flexShrink: 0, marginTop: 2 }} />
+            <span style={{ fontSize: 13, color: "var(--rust-600)", lineHeight: 1.45 }}>{error}</span>
+          </div>
+        )}
+
+        {/* CTA */}
+        <button
+          onClick={requestCamera}
+          disabled={requesting}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            width: "100%",
+            maxWidth: 360,
+            minHeight: 52,
+            padding: "14px 28px",
+            borderRadius: "var(--sr-radius-lg)",
+            border: "none",
+            background: requesting ? "var(--clay-200)" : "var(--clay-600)",
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 700,
+            fontFamily: "var(--sr-font-sans)",
+            cursor: requesting ? "not-allowed" : "pointer",
+            transition: "background 120ms",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          <Camera size={18} strokeWidth={1.75} />
+          {requesting ? "Requesting…" : "Enable Camera"}
+        </button>
+      </div>
     </div>
   );
 }

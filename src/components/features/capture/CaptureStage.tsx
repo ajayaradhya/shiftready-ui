@@ -124,7 +124,7 @@ export function CaptureStage({ stream, onUserTap }: Props) {
       style={{
         position: "relative",
         width: "100%",
-        height: "calc(100dvh - 64px)",
+        height: "100dvh",
         background: "#000",
         overflow: "hidden",
         cursor: "crosshair",

@@ -14,6 +14,11 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const isConversationDetail = /\/messages\/[^/]+$/.test(pathname);
+  // Immersive "new sale" wizards own the whole viewport — no shell header,
+  // sidebar, or bottom tab bar competing with their sticky action bars.
+  const isImmersive =
+    pathname.startsWith("/seller-central/capture") ||
+    pathname.startsWith("/seller-central/create");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -37,6 +42,17 @@ export default function SellersLayout({ children }: { children: React.ReactNode 
   }, [user, loading, router]);
 
   if (!user && !loading) return null;
+
+  // Full-bleed immersive wizard: skip all shell chrome, hand the page 100dvh.
+  if (isImmersive) {
+    return (
+      <SaleContextProvider>
+        <main id="main-content" className="min-h-screen relative" style={{ background: "var(--sr-bg-app)" }}>
+          {children}
+        </main>
+      </SaleContextProvider>
+    );
+  }
 
   return (
     <SaleContextProvider>

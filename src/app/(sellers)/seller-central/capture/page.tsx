@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CapturePermissionsGate } from "@/components/features/capture/CapturePermissionsGate";
 import { CaptureOverlay } from "@/components/features/capture/CaptureOverlay";
@@ -376,6 +377,30 @@ function CapturePageContent() {
             stream={stream}
             onUserTap={handleUserTap}
           />
+
+          {/* Exit capture — replaces the global nav that's hidden in immersive mode */}
+          <button
+            onClick={() => router.push("/seller-central")}
+            aria-label="Exit capture"
+            style={{
+              position: "fixed",
+              top: "calc(12px + env(safe-area-inset-top, 0px))",
+              left: 12,
+              zIndex: 20,
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(10px)",
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
 
           <CaptureOverlay toasts={toasts} />
 

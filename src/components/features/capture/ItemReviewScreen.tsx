@@ -85,7 +85,7 @@ export function ItemReviewScreen({
   return (
     <div
       style={{
-        minHeight: "calc(100dvh - 64px)",
+        height: "100dvh",
         background: "var(--sr-bg-app)",
         display: "flex",
         flexDirection: "column",
@@ -95,8 +95,10 @@ export function ItemReviewScreen({
       <div
         style={{
           padding: "24px 20px 16px",
+          paddingTop: "calc(24px + env(safe-area-inset-top, 0px))",
           borderBottom: "1px solid var(--sr-border-subtle)",
           background: "var(--sr-bg-card)",
+          flexShrink: 0,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
@@ -411,6 +413,7 @@ export function ItemReviewScreen({
           display: "flex",
           flexDirection: "column",
           gap: 12,
+          flexShrink: 0,
         }}
       >
         {/* Optional sale title */}

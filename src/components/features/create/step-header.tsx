@@ -11,14 +11,17 @@ export function StepHeader({ stepActive }: Props) {
   const router = useRouter();
 
   return (
-    <div style={{
-      height: 64, background: "rgba(245,240,232,0.92)",
-      borderBottom: "1px solid var(--sr-border-subtle)",
-      display: "flex", alignItems: "center",
-      padding: "0 32px",
-      backdropFilter: "blur(12px)",
-      position: "sticky", top: 64, zIndex: 9,
-    }}>
+    <div
+      className="px-4 sm:px-8"
+      style={{
+        height: 64, background: "rgba(245,240,232,0.92)",
+        borderBottom: "1px solid var(--sr-border-subtle)",
+        display: "flex", alignItems: "center",
+        backdropFilter: "blur(12px)",
+        position: "sticky", top: 0, zIndex: 9,
+        paddingTop: "env(safe-area-inset-top, 0px)",
+      }}
+    >
       <button
         onClick={() => router.back()}
         aria-label="Back"

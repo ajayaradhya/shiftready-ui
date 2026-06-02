@@ -43,10 +43,11 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
   const analyzedItems = capturedItems.filter((i) => i.name);
 
   return (
-    <div style={{ background: "var(--sr-bg-app)", minHeight: "100dvh", fontFamily: "var(--sr-font-sans)" }}>
+    <div style={{ background: "var(--sr-bg-app)", height: "100dvh", display: "flex", flexDirection: "column", fontFamily: "var(--sr-font-sans)" }}>
       <StepHeader stepActive={1} stepLabel="Organising capture" />
 
-      <div style={{ maxWidth: 680, width: "100%", margin: "0 auto", padding: "48px 20px 64px", display: "flex", flexDirection: "column", gap: 28 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      <div style={{ maxWidth: 680, width: "100%", margin: "0 auto", padding: "48px 20px 32px", display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* Heading */}
         <div style={{ textAlign: "center" }}>
@@ -184,8 +185,21 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
           ))}
         </div>
 
-        {/* CTA */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      </div>
+      </div>
+      {/* /scroll body */}
+
+      {/* Sticky footer — primary CTA always visible */}
+      <div
+        style={{
+          flexShrink: 0,
+          borderTop: "1px solid var(--sr-border-subtle)",
+          background: "var(--sr-bg-card)",
+          padding: "14px 20px",
+          paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 8 }}>
           <button
             onClick={onInventory}
             style={{
