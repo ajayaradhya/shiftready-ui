@@ -11,9 +11,10 @@ import { InventoryActions } from "@/components/features/inventory/inventory-acti
 import { SaleDetailsPanel } from "@/components/features/inventory/sale-details-panel";
 import {
   MousePointerClick, Plus, Sparkles,
-  Pencil, Eye, Box, DollarSign, MapPin, Calendar,
+  Pencil, Eye, Box, MapPin, Calendar, Trash2,
 } from "lucide-react";
 import { formatAUD } from "@/lib/format";
+import { useIsMobile } from "@/hooks/use-media-query";
 import {
   publishSale, unpublishSale, updateSale,
   createBundle, deleteBundle, renameBundle, patchBundle,
@@ -104,6 +105,76 @@ function NewBundleTile({ onSubmit }: { onSubmit: (name: string) => void }) {
   );
 }
 
+function MobileBundleStrip({
+  bundles, selectedId, onSelect, onAddBundle,
+}: {
+  bundles: { id: string; name: string; items: unknown[]; suggestedPrice?: number | null }[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onAddBundle: (name: string) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+
+  function submit() {
+    const t = name.trim();
+    if (t) onAddBundle(t);
+    setAdding(false);
+    setName("");
+  }
+
+  return (
+    <div
+      className="custom-scrollbar -mx-4"
+      style={{ display: "flex", gap: 8, overflowX: "auto", padding: "2px 16px 10px", marginBottom: 14, scrollSnapType: "x proximity" }}
+    >
+      {bundles.map((b) => {
+        const sel = b.id === selectedId;
+        return (
+          <button
+            key={b.id}
+            onClick={() => onSelect(b.id)}
+            style={{
+              flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2,
+              padding: "8px 12px", borderRadius: "var(--sr-radius-md)", scrollSnapAlign: "start",
+              border: `1.5px solid ${sel ? "var(--clay-400)" : "var(--sr-border-subtle)"}`,
+              background: sel ? "var(--clay-50)" : "var(--sr-bg-card)",
+              minWidth: 100, maxWidth: 168, cursor: "pointer", textAlign: "left",
+              transition: "border-color 160ms, background 160ms",
+            }}
+          >
+            <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 14, fontWeight: 500, color: sel ? "var(--clay-700)" : "var(--ink-800)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 144 }}>
+              {b.name}
+            </span>
+            <span style={{ fontSize: 11, color: "var(--sr-text-muted)", whiteSpace: "nowrap" }}>
+              {b.items.length} · {formatAUD(b.suggestedPrice ?? 0)}
+            </span>
+          </button>
+        );
+      })}
+      {adding ? (
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setAdding(false); setName(""); } }}
+          onBlur={submit}
+          placeholder="Room name…"
+          maxLength={80}
+          style={{ flexShrink: 0, minWidth: 130, padding: "8px 12px", borderRadius: "var(--sr-radius-md)", border: "1.5px solid var(--clay-300)", background: "var(--cream-50)", fontFamily: "var(--sr-font-serif)", fontSize: 14, color: "var(--ink-800)", outline: "none" }}
+        />
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 5, padding: "8px 14px", borderRadius: "var(--sr-radius-md)", border: "1.5px dashed var(--cream-400)", background: "transparent", color: "var(--ink-500)", cursor: "pointer", fontSize: 13, fontWeight: 500 }}
+        >
+          <Plus size={14} /> New
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function SellerCentralInventoryPage() {
   const { eventId } = useParams() as { eventId: string };
   const searchParams = useSearchParams();
@@ -115,6 +186,9 @@ export default function SellerCentralInventoryPage() {
   const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [addItemDrawerBundleId, setAddItemDrawerBundleId] = useState<string | null>(null);
+  const [bundleRenaming, setBundleRenaming] = useState(false);
+  const [bundleRenameVal, setBundleRenameVal] = useState("");
+  const isMobile = useIsMobile();
 
   const { summary, isProcessing, isPricing, isLoading, status, isLive, error } =
     useInventory(eventId);
@@ -226,6 +300,14 @@ export default function SellerCentralInventoryPage() {
     return () => setProcessing(false);
   }, [isGlobalLoading, setProcessing]);
 
+  // On mobile, auto-select the first bundle so items are visible without a long
+  // scroll past large bundle cards / empty-state hint.
+  useEffect(() => {
+    if (isMobile && !selectedBundleId && (summary?.bundles?.length ?? 0) > 0) {
+      setSelectedBundleId(summary!.bundles[0].id);
+    }
+  }, [isMobile, selectedBundleId, summary]);
+
   if (isLoading && !summary) {
     return (
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
@@ -316,6 +398,7 @@ export default function SellerCentralInventoryPage() {
               isLive={isLive}
               isDeleting={deleteMutation.isPending}
               isRepublishing={republishMutation.isPending}
+              wasPublished={!!summary?.suburb}
               onDelete={() => deleteMutation.mutate()}
               onRepublish={() => republishMutation.mutate()}
             />
@@ -363,7 +446,6 @@ export default function SellerCentralInventoryPage() {
           </span>
           <span style={{ color: "var(--cream-400)" }}>·</span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <DollarSign size={12} style={{ color: "var(--ink-400)" }} />
             <span style={{ color: "var(--sr-text-primary)", fontWeight: 600 }}>{formatAUD(totalValue)}</span>
             {" "}listing value
           </span>
@@ -393,33 +475,42 @@ export default function SellerCentralInventoryPage() {
         />
       )}
 
-      {/* Bundle tray - 4-col grid */}
+      {/* Bundle tray - compact horizontal strip on mobile, 4-col grid on desktop */}
       {summary?.bundles && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px] mb-8">
-          {summary.bundles.map((bundle, idx) => (
-            <BundleCard
-              key={bundle.id}
-              bundle={bundle}
-              index={idx}
-              active={selectedBundleId === bundle.id}
-              isLive={isLive}
-              eventId={eventId}
-              onClick={() => setSelectedBundleId(selectedBundleId === bundle.id ? null : bundle.id)}
-              onAddItem={() => {
-                setSelectedBundleId(bundle.id);
-                setAddItemDrawerBundleId(bundle.id);
-              }}
-              onDelete={() => delBundleMutation.mutate(bundle.id)}
-              onRenameSubmit={(name) => renameBundleMutation.mutate({ bundleId: bundle.id, name })}
-              onDiscountChange={(pct) => patchBundleMutation.mutate({ bundleId: bundle.id, updates: { bundle_discount_percent: pct } })}
-            />
-          ))}
-          <NewBundleTile onSubmit={(name) => addBundleMutation.mutate(name)} />
-        </div>
+        isMobile ? (
+          <MobileBundleStrip
+            bundles={summary.bundles}
+            selectedId={selectedBundleId}
+            onSelect={(id) => setSelectedBundleId(id)}
+            onAddBundle={(name) => addBundleMutation.mutate(name)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px] mb-8">
+            {summary.bundles.map((bundle, idx) => (
+              <BundleCard
+                key={bundle.id}
+                bundle={bundle}
+                index={idx}
+                active={selectedBundleId === bundle.id}
+                isLive={isLive}
+                eventId={eventId}
+                onClick={() => setSelectedBundleId(selectedBundleId === bundle.id ? null : bundle.id)}
+                onAddItem={() => {
+                  setSelectedBundleId(bundle.id);
+                  setAddItemDrawerBundleId(bundle.id);
+                }}
+                onDelete={() => delBundleMutation.mutate(bundle.id)}
+                onRenameSubmit={(name) => renameBundleMutation.mutate({ bundleId: bundle.id, name })}
+                onDiscountChange={(pct) => patchBundleMutation.mutate({ bundleId: bundle.id, updates: { bundle_discount_percent: pct } })}
+              />
+            ))}
+            <NewBundleTile onSubmit={(name) => addBundleMutation.mutate(name)} />
+          </div>
+        )
       )}
 
-      {/* Connector */}
-      {selectedBundle && (
+      {/* Connector (desktop only) */}
+      {selectedBundle && !isMobile && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 24 }}>
           <svg width="20" height="24" viewBox="0 0 20 24" fill="none">
             <path d="M10 0v24" stroke="var(--sr-border-default)" strokeWidth="1.5" strokeDasharray="4 3" />
@@ -431,15 +522,69 @@ export default function SellerCentralInventoryPage() {
       {selectedBundle ? (
         <div style={{ animation: "fadeSlide 280ms ease" }}>
           {/* Slim bundle context bar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "12px 18px", background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)" }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", overflowWrap: "anywhere" }}>
-                {selectedBundle.name}
-              </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 16, padding: "12px 18px", background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {bundleRenaming ? (
+                <input
+                  autoFocus
+                  value={bundleRenameVal}
+                  onChange={(e) => setBundleRenameVal(e.target.value)}
+                  maxLength={80}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const t = bundleRenameVal.trim();
+                      if (t && t !== selectedBundle.name) renameBundleMutation.mutate({ bundleId: selectedBundle.id, name: t });
+                      setBundleRenaming(false);
+                    }
+                    if (e.key === "Escape") setBundleRenaming(false);
+                  }}
+                  onBlur={() => {
+                    const t = bundleRenameVal.trim();
+                    if (t && t !== selectedBundle.name) renameBundleMutation.mutate({ bundleId: selectedBundle.id, name: t });
+                    setBundleRenaming(false);
+                  }}
+                  style={{ width: "100%", fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, color: "var(--ink-800)", background: "transparent", border: "none", borderBottom: "2px solid var(--clay-300)", outline: "none", padding: "0 0 2px" }}
+                />
+              ) : (
+                <div
+                  style={{ fontFamily: "var(--sr-font-serif)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", overflowWrap: "anywhere" }}
+                  onDoubleClick={() => { setBundleRenameVal(selectedBundle.name); setBundleRenaming(true); }}
+                  title="Double-click to rename"
+                >
+                  {selectedBundle.name}
+                </div>
+              )}
               <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 1 }}>
                 {selectedBundle.items.length} items · {formatAUD(selectedBundle.suggestedPrice ?? 0)} listing value
               </div>
             </div>
+
+            {/* Mobile action cluster - desktop has hover controls on the bundle cards */}
+            {isMobile && !bundleRenaming && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                <button
+                  aria-label="Add item"
+                  onClick={() => setAddItemDrawerBundleId(selectedBundle.id)}
+                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
+                >
+                  <Plus size={15} />
+                </button>
+                <button
+                  aria-label="Rename bundle"
+                  onClick={() => { setBundleRenameVal(selectedBundle.name); setBundleRenaming(true); }}
+                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  aria-label="Delete bundle"
+                  onClick={() => { if (confirm(`Delete "${selectedBundle.name}" and its ${selectedBundle.items.length} item(s)?`)) delBundleMutation.mutate(selectedBundle.id); }}
+                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--rust-500)", cursor: "pointer" }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Items grid */}
@@ -502,7 +647,7 @@ export default function SellerCentralInventoryPage() {
                 {isLive ? "Sale is visible on the marketplace." : "All bundles reviewed - publish to the marketplace."}
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div className="flex flex-col items-stretch gap-3 w-full sm:flex-row sm:items-center sm:gap-4 sm:w-auto">
               <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
                 <em style={{ fontFamily: "var(--sr-font-serif)", fontSize: 30, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em", fontStyle: "italic", overflowWrap: "anywhere" }}>
                   {formatAUD(totalValue)}

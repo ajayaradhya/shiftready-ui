@@ -73,7 +73,7 @@ export function InventoryActions({
   };
 
   return (
-    <div className="flex items-center gap-4 ml-6 border-l border-outline-variant/20 pl-6">
+    <div className="flex flex-col items-stretch gap-3 w-full sm:flex-row sm:items-center sm:gap-4 sm:ml-6 sm:border-l sm:border-outline-variant/20 sm:pl-6 sm:w-auto">
       {/* Publish details dialog */}
       <Dialog
         open={isPublishDialogOpen}
@@ -236,7 +236,7 @@ export function InventoryActions({
       </Dialog>
 
       <div
-        className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
+        className={`flex items-center gap-2 px-3 py-1 rounded-full border self-start sm:self-auto ${
           isLive
             ? "bg-tertiary/10 border-tertiary/20 text-tertiary"
             : "bg-primary/10 border-primary/20 text-primary"
@@ -249,11 +249,12 @@ export function InventoryActions({
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         {canArchive && (
           <Button
             variant="outline"
             size="md"
+            className="flex-1 sm:flex-none"
             onClick={() => setIsConfirmingArchive(true)}
             disabled={isArchiving}
             aria-busy={isArchiving}
@@ -270,6 +271,7 @@ export function InventoryActions({
           <Button
             variant="primary"
             size="md"
+            className="flex-1 sm:flex-none"
             onClick={() => setIsPublishDialogOpen(true)}
             disabled={isPublishing || !emailVerified || uncategorisedCount > 0}
             aria-busy={isPublishing}
@@ -292,6 +294,7 @@ export function InventoryActions({
           <Button
             variant="outline"
             size="md"
+            className="flex-1 sm:flex-none"
             onClick={() => setIsConfirmingUnpublish(true)}
           >
             <Power size={14} aria-hidden />

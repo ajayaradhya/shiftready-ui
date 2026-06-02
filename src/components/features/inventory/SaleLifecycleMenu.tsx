@@ -24,6 +24,9 @@ interface SaleLifecycleMenuProps {
   isLive: boolean;
   isDeleting: boolean;
   isRepublishing: boolean;
+  /** True only if the sale was published before (address already set). A fresh
+   *  ready_for_review sale is published via the publish bar, not "Republish". */
+  wasPublished?: boolean;
   onDelete: () => void;
   onRepublish: () => void;
 }
@@ -32,12 +35,13 @@ export function SaleLifecycleMenu({
   status,
   isDeleting,
   isRepublishing,
+  wasPublished = false,
   onDelete,
   onRepublish,
 }: SaleLifecycleMenuProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const canRepublish = status === "ready_for_review";
+  const canRepublish = status === "ready_for_review" && wasPublished;
   const canDelete = ["pending_upload", "failed"].includes(status);
   const isBusy = isDeleting || isRepublishing;
 
