@@ -1008,7 +1008,7 @@ export default function SaleDetailClient({
                         ✓ Your listing
                       </p>
                       <Link
-                        href={`/seller-central/inventory/${sale.id}?title=${encodeURIComponent(sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale"))}`}
+                        href={`/seller-central/inventory/${sale.eventId}?title=${encodeURIComponent(sale.title || (sale.suburb ? `${sale.suburb} Moving Sale` : "Moving Sale"))}`}
                         style={{
                           width: "100%",
                           display: "flex",

@@ -81,6 +81,9 @@
   will-change: transform;
 }
 .beltLane:hover .beltTrack { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .beltTrack { animation: none; }
+}
 .beltLaneReverse .beltTrack { animation-direction: reverse; animation-duration: 80s; }
 .beltLaneSlow .beltTrack { animation-duration: 95s; }
 

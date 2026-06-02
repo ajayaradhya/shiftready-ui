@@ -1003,7 +1003,7 @@ function PreferencesSection() {
 
       <SCard label="Availability">
         <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--sr-text-primary)", margin: "0 0 3px" }}>Pickup schedule</p>
-        <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>When you're generally available for buyers to collect items.</p>
+        <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>When you&apos;re generally available for buyers to collect items.</p>
         <SField label="Days">
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {PICKUP_DAYS.map(d => (
@@ -1028,7 +1028,7 @@ function PreferencesSection() {
       <SCard label="Offers">
         <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--sr-text-primary)", margin: "0 0 3px" }}>Minimum offer threshold</p>
         <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>
-          Offers below this percentage of your listing price will be automatically declined. Buyers won't see the threshold.
+          Offers below this percentage of your listing price will be automatically declined. Buyers won&apos;t see the threshold.
         </p>
         <SField label="Minimum accepted offer" hint={offerHint}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -1108,7 +1108,7 @@ function PrivacySection() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: "var(--sr-text-primary)" }}>Show profile on marketplace</div>
-            <div style={{ fontSize: 11.5, color: "var(--sr-text-muted)", marginTop: 2, lineHeight: 1.4 }}>When disabled, your name and bio won't appear on sale listings - items are still purchasable.</div>
+            <div style={{ fontSize: 11.5, color: "var(--sr-text-muted)", marginTop: 2, lineHeight: 1.4 }}>When disabled, your name and bio won&apos;t appear on sale listings - items are still purchasable.</div>
           </div>
           <Toggle on={profileVisible} onChange={setProfileVisible}/>
         </div>
