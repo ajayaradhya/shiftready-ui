@@ -1287,7 +1287,7 @@ export default function SettingsPage() {
         </nav>
 
         {/* Content */}
-        <div key={activeId} className="sec-anim" style={{ flex: 1, minWidth: 0 }}>
+        <div key={activeId} className="sec-anim" style={{ flex: 1, minWidth: 0, width: "100%" }}>
           {sections[activeId]}
         </div>
 
