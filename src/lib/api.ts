@@ -863,6 +863,18 @@ export async function withdrawItem(
   );
 }
 
+export async function reserveItem(
+  eventId: string,
+  bundleId: string,
+  itemId: string,
+  payload: { buyer_label?: string | null; notes?: string | null }
+): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(
+    `${API_BASE}/sales/${eventId}/bundles/${bundleId}/items/${itemId}/seller-reserve`,
+    { method: "POST", body: JSON.stringify(payload) }
+  );
+}
+
 export async function releaseItemReservation(
   eventId: string,
   bundleId: string,

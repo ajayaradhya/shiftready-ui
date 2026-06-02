@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock } from "lucide-react";
+import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock, Bookmark } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus } from "@/lib/types";
-import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation } from "@/lib/api";
+import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation, reserveItem } from "@/lib/api";
 import { MarkSoldDialog } from "./MarkSoldDialog";
 import { ItemPhotoStrip } from "./item-photo-strip";
 import { formatAUD } from "@/lib/format";
@@ -98,6 +98,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   const isWithdrawn = itemSaleStatus === "withdrawn";
   const isActive = saleStatus === "live" || saleStatus === "partially_sold";
   const canMarkSold = isActive && (itemSaleStatus === "available" || itemSaleStatus === "reserved");
+  const canReserve = isActive && itemSaleStatus === "available";
   const canWithdraw = isActive && (itemSaleStatus === "available" || itemSaleStatus === "reserved");
   const canRelist = isActive && isWithdrawn;
   const canRelease = isActive && isReserved;
@@ -118,6 +119,12 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     mutationFn: () => releaseItemReservation(eventId, bundleId, item.id),
     onSuccess: () => { invalidate(); toast.success("Reservation released"); },
     onError: (err: Error) => toast.error(err.message || "Release failed"),
+  });
+
+  const reserveMutation = useMutation({
+    mutationFn: () => reserveItem(eventId, bundleId, item.id, {}),
+    onSuccess: () => { invalidate(); toast.success(`"${item.name}" marked as reserved`); },
+    onError: (err: Error) => toast.error(err.message || "Reserve failed"),
   });
 
   const [pendingReprice, setPendingReprice] = useState<{
@@ -314,6 +321,13 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           {/* Sale status badge */}
           {itemSaleStatus !== "available" && (
             <span
+              title={
+                isSold
+                  ? "Item has been sold and payment recorded"
+                  : isReserved
+                  ? "Item is being held for a buyer — use 'Mark as sold' once pickup is complete"
+                  : "Item is hidden from the marketplace and not available for purchase"
+              }
               style={{
                 padding: "2px 8px",
                 borderRadius: "var(--sr-radius-sm)",
@@ -322,6 +336,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 fontWeight: 600,
                 textTransform: "uppercase" as const,
                 letterSpacing: "0.1em",
+                cursor: "help",
                 ...(isSold
                   ? { background: "var(--moss-50)", color: "var(--moss-700)", border: "1px solid var(--moss-100)" }
                   : isReserved
@@ -365,6 +380,9 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 >
                   {canMarkSold && (
                     <DropMenuItem icon={<ShoppingBag size={12} />} label="Mark as sold" onClick={() => { setShowMarkSold(true); setMenuOpen(false); }} />
+                  )}
+                  {canReserve && (
+                    <DropMenuItem icon={<Bookmark size={12} />} label="Mark as reserved" onClick={() => { reserveMutation.mutate(); setMenuOpen(false); }} />
                   )}
                   {canRelease && (
                     <DropMenuItem icon={<Unlock size={12} />} label="Release reservation" onClick={() => { releaseMutation.mutate(); setMenuOpen(false); }} />
@@ -747,6 +765,14 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 label="Mark sold"
                 icon={<ShoppingBag size={11} />}
                 onClick={() => setShowMarkSold(true)}
+              />
+            )}
+            {canReserve && (
+              <FooterBtn
+                label="Reserve"
+                icon={<Bookmark size={11} />}
+                onClick={() => reserveMutation.mutate()}
+                loading={reserveMutation.isPending}
               />
             )}
             {canRelist && (
