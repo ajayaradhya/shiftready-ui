@@ -52,6 +52,11 @@ export function formatTimeAU(date: Date | string | null | undefined): string {
   return _timeFmt.format(d);
 }
 
+/** "1 item" / "2 items" */
+export function plural(n: number, singular: string, pluralForm?: string): string {
+  return n === 1 ? `${n} ${singular}` : `${n} ${pluralForm ?? singular + "s"}`;
+}
+
 /** Convert E.164 AU number to display format: +61412345678 → 0412 345 678 */
 export function formatPhoneAU(e164: string | null | undefined): string {
   if (!e164) return "";
