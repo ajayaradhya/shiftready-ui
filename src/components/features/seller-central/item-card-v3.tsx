@@ -79,6 +79,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   const [pricingStale, setPricingStale] = useState(false);
   const [retailFocused, setRetailFocused] = useState(false);
   const [listingFocused, setListingFocused] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
 
   const PRICING_FIELDS = new Set<keyof InventoryItem>(["name", "brand", "condition", "actual_year_of_purchase", "actual_original_price"]);
 
@@ -91,6 +92,8 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
       if (Object.keys(updates).some((k) => PRICING_FIELDS.has(k as keyof InventoryItem))) {
         setPricingStale(true);
       }
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1500);
     },
     onError: (err: Error) => toast.error(err.message || "Failed to save changes"),
   });
@@ -271,6 +274,11 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           </div>
         )}
         <div style={{ flex: 1 }} />
+        {savedFlash && (
+          <span style={{ fontSize: 10, color: "var(--moss-600)", display: "inline-flex", alignItems: "center", gap: 3, fontWeight: 500 }}>
+            <Check size={9} /> Saved
+          </span>
+        )}
         {itemSaleStatus !== "available" && (
           <span
             title={isSold ? "Item has been sold and payment recorded" : isReserved ? "Item is being held for a buyer — use 'Mark as sold' once pickup is complete" : "Item is hidden from the marketplace and not available for purchase"}
@@ -608,8 +616,8 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
 
           {/* Price + status */}
           <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 15, fontWeight: 600, color: "var(--clay-600)", letterSpacing: "-0.01em" }}>
-              {listing != null ? formatAUD(listing) : <span style={{ color: "var(--sr-text-muted)" }}>—</span>}
+            <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 15, fontWeight: 600, color: listing ? "var(--clay-600)" : "var(--sr-text-muted)", letterSpacing: "-0.01em" }}>
+              {listing ? formatAUD(listing) : <span style={{ fontSize: 12, fontWeight: 400, fontStyle: "italic" }}>No price</span>}
             </span>
             {statusLabel
               ? <span style={{ fontSize: 10, color: statusColor, fontWeight: 500 }}>{statusLabel}</span>
@@ -647,7 +655,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 <button
                   onClick={() => setSheetOpen(false)}
                   aria-label="Close"
-                  style={{ width: 28, height: 28, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "var(--cream-200)", color: "var(--ink-500)", cursor: "pointer", flexShrink: 0 }}
+                  style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "var(--cream-200)", color: "var(--ink-500)", cursor: "pointer", flexShrink: 0 }}
                 >
                   <X size={14} />
                 </button>

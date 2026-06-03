@@ -551,6 +551,14 @@ export default function SellerCentralInventoryPage() {
                   {statusInfo.label}
                 </span>
               )}
+              {/* In-app preview — router.push, not window.open */}
+              <button
+                onClick={() => router.push(`/market/sale/${eventId}`)}
+                aria-label="Preview listing"
+                style={{ flexShrink: 0, width: 32, height: 32, display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-sm)", background: "transparent", color: "var(--ink-500)", cursor: "pointer" }}
+              >
+                <Eye size={14} />
+              </button>
               {/* Kebab: lifecycle actions */}
               <SaleLifecycleMenu
                 status={status ?? ""}
@@ -793,21 +801,21 @@ export default function SellerCentralInventoryPage() {
                 <button
                   aria-label="Add item"
                   onClick={() => setAddItemDrawerBundleId(selectedBundle.id)}
-                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
+                  style={{ width: 40, height: 40, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
                 >
                   <Plus size={15} />
                 </button>
                 <button
                   aria-label="Rename bundle"
                   onClick={() => { setBundleRenameVal(selectedBundle.name); setBundleRenaming(true); }}
-                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
+                  style={{ width: 40, height: 40, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--ink-600)", cursor: "pointer" }}
                 >
                   <Pencil size={14} />
                 </button>
                 <button
                   aria-label="Delete bundle"
                   onClick={() => setBundleDeleteConfirm(true)}
-                  style={{ width: 34, height: 34, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--rust-500)", cursor: "pointer" }}
+                  style={{ width: 40, height: 40, borderRadius: "var(--sr-radius-sm)", display: "grid", placeItems: "center", border: "1px solid var(--sr-border-subtle)", background: "var(--cream-50)", color: "var(--rust-500)", cursor: "pointer" }}
                 >
                   <Trash2 size={14} />
                 </button>

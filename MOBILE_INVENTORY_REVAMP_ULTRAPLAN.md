@@ -143,4 +143,4 @@ Ship 0 + 1 first (fast, visible). 2 is the structural change. 3 makes it genuine
 - Phase 1: ✅ Done (compact mobile header, single status, meta strip)
 - Phase 2: ✅ Done (compact item rows + bottom sheet on mobile)
 - Phase 3: ✅ Done (sticky bundle strip, sticky mobile CTA bar)
-- Phase 4: Pending
+- Phase 4: ✅ Done (in-app preview router.push, "Saved ✓" flash on blur-save, $0→"No price" degraded state, 40px tap targets on bundle actions + sheet close)
