@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock, Bookmark } from "lucide-react";
+import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock, Bookmark, ChevronRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus } from "@/lib/types";
 import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation, reserveItem } from "@/lib/api";
@@ -46,12 +47,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleIndex = 0, saleStatus }: ItemCardV3Props) {
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
 
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [movePanelOpen, setMovePanelOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Inline name edit
@@ -74,6 +77,8 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   );
 
   const [pricingStale, setPricingStale] = useState(false);
+  const [retailFocused, setRetailFocused] = useState(false);
+  const [listingFocused, setListingFocused] = useState(false);
 
   const PRICING_FIELDS = new Set<keyof InventoryItem>(["name", "brand", "condition", "actual_year_of_purchase", "actual_original_price"]);
 
@@ -210,15 +215,17 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   });
 
   const conf = item.confidence ?? 0;
-  const confPct = Math.round(conf * 100);
-  const isHighConf = conf >= 0.85;
-  const isMedConf = conf >= 0.7 && conf < 0.85;
   const isWarn = conf < 0.7;
 
   const retail = item.actual_original_price ?? item.predicted_original_price;
   const listing = item.actual_listing_price ?? item.predicted_listing_price;
 
   const frameImg = item.images?.find((i) => i.source === "frame_extract") ?? null;
+  const coverImg =
+    item.images?.find((i) => i.is_cover)?.url ??
+    frameImg?.url ??
+    item.images?.[0]?.url ??
+    null;
   const otherBundles = allBundles.filter((b) => b.id !== bundleId);
 
   function saveField(field: keyof InventoryItem, value: unknown, original: unknown) {
@@ -240,6 +247,458 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   const dimmed = deleteMutation.isPending || moveMutation.isPending;
   const greyed = isSold || isWithdrawn;
 
+  // ── Shared card body (used in desktop card + mobile sheet) ───
+  const cardBody = (
+    <>
+      {/* Capture bar */}
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "10px 14px", background: "var(--cream-50)",
+          borderBottom: "1px solid var(--sr-border-subtle)",
+        }}
+      >
+        {frameImg?.url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={frameImg.url} alt="" style={{ width: 44, height: 33, borderRadius: 4, objectFit: "cover", flexShrink: 0, border: "1px solid var(--sr-border-subtle)" }} />
+        ) : (
+          <div style={{ width: 44, height: 33, borderRadius: 4, flexShrink: 0, background: "var(--cream-200)", border: "1px solid var(--cream-300)", display: "grid", placeItems: "center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" strokeWidth="1.5">
+              <rect x="3" y="7" width="18" height="14" rx="2" />
+              <circle cx="12" cy="14" r="3" />
+              <path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" />
+            </svg>
+          </div>
+        )}
+        <div style={{ flex: 1 }} />
+        {itemSaleStatus !== "available" && (
+          <span
+            title={isSold ? "Item has been sold and payment recorded" : isReserved ? "Item is being held for a buyer — use 'Mark as sold' once pickup is complete" : "Item is hidden from the marketplace and not available for purchase"}
+            style={{
+              padding: "2px 8px", borderRadius: "var(--sr-radius-sm)",
+              fontFamily: "var(--sr-font-mono)", fontSize: 9.5, fontWeight: 600,
+              textTransform: "uppercase" as const, letterSpacing: "0.1em", cursor: "help",
+              ...(isSold
+                ? { background: "var(--moss-50)", color: "var(--moss-700)", border: "1px solid var(--moss-100)" }
+                : isReserved
+                ? { background: "var(--honey-50)", color: "var(--honey-700)", border: "1px solid var(--honey-100)" }
+                : { background: "var(--cream-200)", color: "var(--ink-500)", border: "1px solid var(--cream-300)" }),
+            }}
+          >
+            {isSold ? "Sold" : isReserved ? "Reserved" : "Withdrawn"}
+          </span>
+        )}
+        <div ref={menuRef} style={{ position: "relative" }}>
+          <button
+            aria-label="Item options" aria-haspopup="menu" aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+            style={{ color: "var(--sr-text-muted)", cursor: "pointer", width: 26, height: 26, display: "grid", placeItems: "center", border: "1px solid transparent", borderRadius: "var(--sr-radius-sm)", background: "transparent", transition: "background 80ms" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-200)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          >
+            <MoreHorizontal size={14} />
+          </button>
+          {menuOpen && (
+            <>
+              <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setMenuOpen(false)} />
+              <div role="menu" style={{ position: "absolute", right: 0, top: 30, zIndex: 50, background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)", boxShadow: "var(--sr-shadow-md)", minWidth: 168, padding: "4px 0" }}>
+                {canMarkSold && <DropMenuItem icon={<ShoppingBag size={12} />} label="Mark as sold" onClick={() => { setShowMarkSold(true); setMenuOpen(false); }} />}
+                {canReserve && <DropMenuItem icon={<Bookmark size={12} />} label="Mark as reserved" onClick={() => { reserveMutation.mutate(); setMenuOpen(false); }} />}
+                {canRelease && <DropMenuItem icon={<Unlock size={12} />} label="Release reservation" onClick={() => { releaseMutation.mutate(); setMenuOpen(false); }} />}
+                {canRelist && <DropMenuItem icon={<RotateCcw size={12} />} label="Relist item" onClick={() => { relistMutation.mutate(); setMenuOpen(false); }} />}
+                {(canMarkSold || canRelease || canRelist) && <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />}
+                {!isSold && !isWithdrawn && (
+                  <>
+                    <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
+                    <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
+                  </>
+                )}
+                {canWithdraw && (
+                  <>
+                    <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                    <DropMenuItem icon={<EyeOff size={12} />} label="Withdraw item" onClick={() => { withdrawMutation.mutate(); setMenuOpen(false); }} danger />
+                  </>
+                )}
+                {!canMarkSold && !canRelease && !canRelist && !canWithdraw && (
+                  <>
+                    <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
+                    <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
+                    <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
+                  </>
+                )}
+                <DropMenuItem icon={<Trash2 size={12} />} label="Delete item" onClick={() => { setShowDeleteConfirm(true); setMenuOpen(false); }} danger />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Photo strip */}
+      <ItemPhotoStrip noBleed eventId={eventId} bundleId={bundleId} itemId={item.id} images={item.images ?? []} />
+
+      {/* Body */}
+      <div style={{ padding: "14px 18px 16px" }}>
+        {/* Name row */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, minWidth: 0 }}>
+          {nameEditing ? (
+            <input
+              autoFocus value={nameVal}
+              onChange={(e) => setNameVal(e.target.value)}
+              onBlur={saveName}
+              onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameVal(item.name); setNameEditing(false); } }}
+              maxLength={120}
+              style={{ flex: 1, minWidth: 0, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", background: "transparent", border: "none", borderBottom: "2px solid var(--clay-300)", outline: "none", lineHeight: 1.3, padding: "0 0 2px" }}
+            />
+          ) : (
+            <span
+              role="button" tabIndex={0}
+              style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere", fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--ink-800)", lineHeight: 1.3, cursor: "text" }}
+              onDoubleClick={() => setNameEditing(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setNameEditing(true); } }}
+              aria-label={`Item name: ${item.name}. Press Enter to rename.`}
+            >
+              {item.name}
+            </span>
+          )}
+        </div>
+
+        {/* Flags */}
+        {(item.is_fragile || item.disassembly_required || (item.quantity && item.quantity > 1)) && (
+          <div style={{ display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
+            {item.is_fragile && <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--rust-50)", border: "1px solid var(--rust-100)", color: "var(--rust-500)" }}>Fragile</span>}
+            {item.disassembly_required && <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--honey-50)", border: "1px solid var(--honey-100)", color: "var(--honey-700)" }}>Disassembly req.</span>}
+            {item.quantity && item.quantity > 1 && <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--cream-100)", border: "1px solid var(--cream-300)", color: "var(--ink-500)" }}>Qty: {item.quantity}</span>}
+          </div>
+        )}
+
+        {/* Description */}
+        <button onClick={() => setShowEditModal(true)} style={{ width: "100%", textAlign: "left", background: "var(--cream-50)", border: "1.5px dashed var(--cream-400)", borderRadius: "var(--sr-radius-md)", padding: "9px 12px", marginBottom: 12, cursor: "pointer", transition: "border-color 120ms, background 120ms" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-200)"; (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--cream-400)"; (e.currentTarget as HTMLElement).style.background = "var(--cream-50)"; }}
+        >
+          {item.description
+            ? <span style={{ fontSize: 12, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>{item.description}</span>
+            : <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic" }}>Add a description buyers will see…</span>
+          }
+        </button>
+
+        {/* 2×2 attrs grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, marginBottom: 14, background: "var(--sr-border-subtle)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)", overflow: "hidden" }}>
+          <AttrCell label="Brand">
+            <input value={brand} onChange={(e) => setBrand(e.target.value)} onBlur={() => saveField("brand", brand, item.brand ?? "")} placeholder="Unknown" style={attrInputStyle} />
+          </AttrCell>
+          <AttrCell label="Condition">
+            <select value={condition} onChange={(e) => setCondition(e.target.value)} onBlur={() => saveField("condition", condition, item.condition ?? "Good")} style={attrInputStyle}>
+              {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </AttrCell>
+          {(!category || ["furniture", "appliance", "electronics"].includes(category)) && (
+            <AttrCell label="Year">
+              <input type="number" value={year} onChange={(e) => setYear(e.target.value)}
+                onBlur={() => {
+                  const y = parseInt(year, 10);
+                  const original = item.actual_year_of_purchase ?? item.predicted_year_of_purchase;
+                  if (!isNaN(y) && y !== original) patchMutation.mutate({ actual_year_of_purchase: y });
+                }}
+                placeholder="Year" min={1900} max={new Date().getFullYear()} style={attrInputStyle}
+              />
+            </AttrCell>
+          )}
+          <AttrCell label="Category">
+            <select value={category} onChange={(e) => { setCategory(e.target.value); patchMutation.mutate({ category: (e.target.value as ItemCategory) || null }); }} style={attrInputStyle}>
+              <option value="">- select -</option>
+              {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </AttrCell>
+        </div>
+
+        {/* Pricing stale */}
+        {pricingStale && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "7px 10px", marginBottom: 10, background: "var(--honey-50)", border: "1px solid var(--honey-200)", borderRadius: "var(--sr-radius-sm)" }}>
+            <span style={{ fontSize: 11.5, color: "var(--honey-700)", flex: 1 }}>Item details changed - listing price may be outdated.</span>
+            <button onClick={() => repriceMutation.mutate()} disabled={repriceMutation.isPending}
+              style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--honey-300)", background: repriceMutation.isPending ? "var(--honey-100)" : "var(--honey-500)", color: repriceMutation.isPending ? "var(--honey-600)" : "#fff", fontSize: 11.5, fontWeight: 600, cursor: repriceMutation.isPending ? "default" : "pointer", transition: "background 100ms", flexShrink: 0 }}
+              onMouseEnter={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-600)"; }}
+              onMouseLeave={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-500)"; }}
+            >
+              <Sparkles size={10} />
+              {repriceMutation.isPending ? "Pricing…" : "Re-price"}
+            </button>
+          </div>
+        )}
+
+        {/* Pricing row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: "1px solid var(--sr-border-subtle)", paddingTop: 12, marginBottom: 12 }}>
+          <div style={{ paddingRight: 14 }}>
+            <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--sr-text-muted)", display: "block", marginBottom: 4 }}>Original Retail</span>
+            {retailFocused ? (
+              <input autoFocus type="number" min={0} value={retailVal} onChange={(e) => setRetailVal(e.target.value)}
+                onBlur={() => {
+                  setRetailFocused(false);
+                  const v = parseFloat(retailVal);
+                  const original = item.actual_original_price ?? item.predicted_original_price;
+                  if (!isNaN(v) && v >= 0 && v !== original) patchMutation.mutate({ actual_original_price: v });
+                  else if (retailVal === "" && original != null) patchMutation.mutate({ actual_original_price: 0 });
+                }}
+                placeholder="-" style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", width: "100%", padding: "2px 4px" }}
+              />
+            ) : (
+              <span role="button" tabIndex={0} onClick={() => setRetailFocused(true)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setRetailFocused(true); } }}
+                style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", display: "block", padding: "2px 4px", cursor: "text", minHeight: 24 }}
+              >
+                {retail != null ? formatAUD(retail) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>—</span>}
+              </span>
+            )}
+          </div>
+          <div style={{ paddingLeft: 14, borderLeft: "1px solid var(--sr-border-subtle)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+              <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--clay-600)" }}>Listing Value</span>
+              {item.pricing_reasoning && (
+                <button onClick={() => setReasoningOpen((o) => !o)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: reasoningOpen ? "var(--clay-600)" : "var(--clay-400)", cursor: "pointer", border: "none", background: "none", padding: 0, transition: "color 120ms" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--clay-600)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = reasoningOpen ? "var(--clay-600)" : "var(--clay-400)"; }}
+                >
+                  <Sparkles size={9} /> AI
+                </button>
+              )}
+            </div>
+            {listingFocused ? (
+              <input autoFocus type="number" min={0} value={listingVal} onChange={(e) => setListingVal(e.target.value)}
+                onBlur={() => {
+                  setListingFocused(false);
+                  const v = parseFloat(listingVal);
+                  const original = item.actual_listing_price ?? item.predicted_listing_price;
+                  if (!isNaN(v) && v >= 0 && v !== original) patchMutation.mutate({ actual_listing_price: v, pricing_reasoning: null });
+                  else if (listingVal === "" && original != null) patchMutation.mutate({ actual_listing_price: 0, pricing_reasoning: null });
+                }}
+                placeholder="-" style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', width: "100%", padding: "2px 4px" }}
+              />
+            ) : (
+              <span role="button" tabIndex={0} onClick={() => setListingFocused(true)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setListingFocused(true); } }}
+                style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', display: "block", padding: "2px 4px", cursor: "text", minHeight: 28 }}
+              >
+                {listing != null ? formatAUD(listing) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>—</span>}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* AI reasoning */}
+        {reasoningOpen && item.pricing_reasoning && (
+          <div style={{ marginBottom: 12, padding: "10px 12px", background: "linear-gradient(135deg, var(--clay-50), var(--cream-50))", border: "1px solid var(--clay-100)", borderRadius: "var(--sr-radius-md)", display: "flex", gap: 8, alignItems: "flex-start", animation: "fadeSlide 200ms ease" }}>
+            <Sparkles size={11} style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }} />
+            <p style={{ fontSize: 11.5, color: "var(--sr-text-secondary)", lineHeight: 1.55, margin: 0, fontStyle: "italic" }}>{item.pricing_reasoning}</p>
+          </div>
+        )}
+
+        {/* Sold banner */}
+        {isSold && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", marginBottom: 10, background: "var(--moss-50)", border: "1px solid var(--moss-100)", borderRadius: "var(--sr-radius-sm)" }}>
+            <Check size={11} style={{ color: "var(--moss-600)", flexShrink: 0 }} />
+            <span style={{ fontSize: 11.5, color: "var(--moss-700)" }}>
+              Sold{item.final_price != null && ` · ${formatAUD(item.final_price)}`}{item.buyer_label && ` to ${item.buyer_label}`}{item.sold_payment_method && ` · ${item.sold_payment_method}`}
+            </span>
+          </div>
+        )}
+
+        {/* Reserved banner */}
+        {isReserved && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", marginBottom: 10, background: "var(--honey-50)", border: "1px solid var(--honey-100)", borderRadius: "var(--sr-radius-sm)" }}>
+            <span style={{ fontSize: 11.5, color: "var(--honey-700)" }}>Reserved - use &ldquo;Mark as sold&rdquo; once pickup is done</span>
+          </div>
+        )}
+
+        {/* Footer actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", paddingTop: 10, borderTop: "1px solid var(--sr-border-subtle)" }}>
+          {canMarkSold && <FooterBtn label="Mark sold" icon={<ShoppingBag size={11} />} onClick={() => setShowMarkSold(true)} />}
+          {canReserve && <FooterBtn label="Reserve" icon={<Bookmark size={11} />} onClick={() => reserveMutation.mutate()} loading={reserveMutation.isPending} />}
+          {canRelist && <FooterBtn label="Relist" icon={<RotateCcw size={11} />} onClick={() => relistMutation.mutate()} loading={relistMutation.isPending} />}
+          {!isSold && !isWithdrawn && (
+            <>
+              <FooterBtn label="Move" icon={<ArrowRightLeft size={11} />} suffix={<ChevronDown size={10} style={{ transition: "transform 120ms", transform: movePanelOpen ? "rotate(180deg)" : "none" }} />} onClick={() => setMovePanelOpen((o) => !o)} active={movePanelOpen} />
+              <FooterBtn label="Details" icon={<Pencil size={11} />} onClick={() => setShowEditModal(true)} />
+              <FooterBtn label="Duplicate" icon={<Copy size={11} />} onClick={() => duplicateMutation.mutate()} loading={duplicateMutation.isPending} />
+            </>
+          )}
+          <div style={{ flex: 1 }} />
+          <FooterBtn label="Delete" icon={<Trash2 size={11} />} onClick={() => setShowDeleteConfirm(true)} danger />
+        </div>
+
+        {/* Move panel */}
+        {movePanelOpen && otherBundles.length > 0 && (
+          <div style={{ marginTop: 8, background: "var(--cream-50)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)", padding: "6px 0", animation: "fadeSlide 180ms ease" }}>
+            {otherBundles.map((b, i) => {
+              const pal = BUNDLE_PALETTES[i % BUNDLE_PALETTES.length];
+              return (
+                <button key={b.id} onClick={() => moveMutation.mutate(b.id)} disabled={moveMutation.isPending}
+                  style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 14px", background: "none", border: "none", cursor: moveMutation.isPending ? "default" : "pointer", fontSize: 13, color: "var(--sr-text-primary)", textAlign: "left", transition: "background 80ms" }}
+                  onMouseEnter={(e) => { if (!moveMutation.isPending) (e.currentTarget as HTMLElement).style.background = pal.bg; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: pal.dot, flexShrink: 0 }} />
+                  <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</span>
+                  <span style={{ fontSize: 11, color: "var(--sr-text-muted)" }}>{b.items.length} items</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {movePanelOpen && otherBundles.length === 0 && (
+          <div style={{ marginTop: 8, padding: "10px 14px", fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic", textAlign: "center" }}>No other bundles to move to</div>
+        )}
+      </div>
+    </>
+  );
+
+  // ── Mobile: compact row + bottom sheet ──────────────────────
+  if (isMobile) {
+    const statusLabel = isSold ? "Sold" : isReserved ? "Reserved" : isWithdrawn ? "Withdrawn" : null;
+    const statusColor = isSold
+      ? "var(--moss-600)"
+      : isReserved
+      ? "var(--honey-600)"
+      : "var(--ink-400)";
+
+    return (
+      <>
+        {/* Compact item row */}
+        <button
+          onClick={() => setSheetOpen(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 14px", width: "100%", textAlign: "left",
+            background: greyed ? "var(--cream-100)" : "var(--sr-bg-card)",
+            border: `1px solid ${isWarn && !greyed ? "var(--honey-200)" : "var(--sr-border-subtle)"}`,
+            borderRadius: "var(--sr-radius-lg)", cursor: "pointer",
+            opacity: greyed ? 0.65 : 1,
+            filter: greyed ? "saturate(0.4)" : "none",
+            fontFamily: "var(--sr-font-sans)",
+          }}
+        >
+          {/* Thumbnail */}
+          {coverImg ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverImg}
+              alt=""
+              style={{ width: 48, height: 48, borderRadius: 6, objectFit: "cover", flexShrink: 0, border: "1px solid var(--sr-border-subtle)" }}
+            />
+          ) : (
+            <div style={{ width: 48, height: 48, borderRadius: 6, background: "var(--cream-200)", display: "grid", placeItems: "center", flexShrink: 0, border: "1px solid var(--cream-300)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" strokeWidth="1.5">
+                <rect x="3" y="7" width="18" height="14" rx="2" />
+                <circle cx="12" cy="14" r="3" />
+                <path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" />
+              </svg>
+            </div>
+          )}
+
+          {/* Name + meta */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 14, fontWeight: 500, color: "var(--ink-800)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {item.name}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--sr-text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {[item.brand, item.category ? CATEGORY_LABELS[item.category] : null].filter(Boolean).join(" · ") || "Tap to add details"}
+            </div>
+          </div>
+
+          {/* Price + status */}
+          <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 15, fontWeight: 600, color: "var(--clay-600)", letterSpacing: "-0.01em" }}>
+              {listing != null ? formatAUD(listing) : <span style={{ color: "var(--sr-text-muted)" }}>—</span>}
+            </span>
+            {statusLabel
+              ? <span style={{ fontSize: 10, color: statusColor, fontWeight: 500 }}>{statusLabel}</span>
+              : <ChevronRight size={12} color="var(--ink-300)" />
+            }
+          </div>
+        </button>
+
+        {/* Bottom sheet */}
+        {sheetOpen && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 60 }}>
+            {/* Backdrop */}
+            <div
+              style={{ position: "absolute", inset: 0, background: "rgba(20,17,13,0.45)" }}
+              onClick={() => setSheetOpen(false)}
+            />
+            {/* Sheet panel */}
+            <div
+              style={{
+                position: "absolute", bottom: 0, left: 0, right: 0,
+                background: "#FFFDF8", borderRadius: "20px 20px 0 0",
+                maxHeight: "88dvh", display: "flex", flexDirection: "column",
+                animation: "slideUp 240ms ease",
+              }}
+            >
+              {/* Drag handle */}
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 2, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--cream-400)" }} />
+              </div>
+              {/* Sheet header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 18px 10px", flexShrink: 0, borderBottom: "1px solid var(--sr-border-subtle)" }}>
+                <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 500, color: "var(--ink-800)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: 8 }}>
+                  {item.name}
+                </span>
+                <button
+                  onClick={() => setSheetOpen(false)}
+                  aria-label="Close"
+                  style={{ width: 28, height: 28, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "var(--cream-200)", color: "var(--ink-500)", cursor: "pointer", flexShrink: 0 }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {/* Scrollable card content */}
+              <div style={{ overflowY: "auto", flex: 1 }} className="custom-scrollbar">
+                {cardBody}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dialogs */}
+        {showDeleteConfirm && (
+          <DeleteConfirmDialog
+            itemName={item.name}
+            onCancel={() => setShowDeleteConfirm(false)}
+            onConfirm={() => { deleteMutation.mutate(); setShowDeleteConfirm(false); }}
+          />
+        )}
+        {showEditModal && (
+          <ItemEditModal
+            item={item}
+            onClose={() => setShowEditModal(false)}
+            onSave={(updates) => { patchMutation.mutate(updates); setShowEditModal(false); }}
+          />
+        )}
+        {showMarkSold && (
+          <MarkSoldDialog
+            eventId={eventId}
+            bundleId={bundleId}
+            item={item}
+            onClose={() => setShowMarkSold(false)}
+          />
+        )}
+        {pendingReprice && (
+          <RepriceSuggestDialog
+            itemName={item.name}
+            oldPrice={item.actual_listing_price ?? item.predicted_listing_price ?? 0}
+            newPrice={pendingReprice.actual_listing_price}
+            reasoning={pendingReprice.pricing_reasoning}
+            saving={acceptRepriceMutation.isPending}
+            onAccept={() => acceptRepriceMutation.mutate(pendingReprice)}
+            onReject={() => setPendingReprice(null)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // ── Desktop: full inline card ────────────────────────────────
   return (
     <>
       <div
@@ -263,597 +722,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           (e.currentTarget as HTMLElement).style.boxShadow = "";
         }}
       >
-        {/* ── Capture bar ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "10px 14px",
-            background: "var(--cream-50)",
-            borderBottom: "1px solid var(--sr-border-subtle)",
-          }}
-        >
-          {/* Frame thumb */}
-          {frameImg?.url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={frameImg.url}
-              alt=""
-              style={{ width: 44, height: 33, borderRadius: 4, objectFit: "cover", flexShrink: 0, border: "1px solid var(--sr-border-subtle)" }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 44, height: 33, borderRadius: 4, flexShrink: 0,
-                background: "var(--cream-200)", border: "1px solid var(--cream-300)",
-                display: "grid", placeItems: "center",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" strokeWidth="1.5">
-                <rect x="3" y="7" width="18" height="14" rx="2" />
-                <circle cx="12" cy="14" r="3" />
-                <path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" />
-              </svg>
-            </div>
-          )}
-
-          {/* Conf pill */}
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "var(--sr-radius-sm)",
-              fontFamily: "var(--sr-font-mono)",
-              fontSize: 9.5,
-              fontWeight: 500,
-              textTransform: "uppercase" as const,
-              letterSpacing: "0.1em",
-              background: isHighConf ? "var(--moss-50)" : isMedConf ? "var(--honey-50)" : "var(--rust-50)",
-              color: isHighConf ? "var(--moss-700)" : isMedConf ? "var(--honey-700)" : "var(--rust-500)",
-              border: `1px solid ${isHighConf ? "var(--moss-100)" : isMedConf ? "var(--honey-100)" : "var(--rust-100)"}`,
-            }}
-          >
-            {confPct}% match
-          </span>
-
-          <div style={{ flex: 1 }} />
-
-          {/* Sale status badge */}
-          {itemSaleStatus !== "available" && (
-            <span
-              title={
-                isSold
-                  ? "Item has been sold and payment recorded"
-                  : isReserved
-                  ? "Item is being held for a buyer — use 'Mark as sold' once pickup is complete"
-                  : "Item is hidden from the marketplace and not available for purchase"
-              }
-              style={{
-                padding: "2px 8px",
-                borderRadius: "var(--sr-radius-sm)",
-                fontFamily: "var(--sr-font-mono)",
-                fontSize: 9.5,
-                fontWeight: 600,
-                textTransform: "uppercase" as const,
-                letterSpacing: "0.1em",
-                cursor: "help",
-                ...(isSold
-                  ? { background: "var(--moss-50)", color: "var(--moss-700)", border: "1px solid var(--moss-100)" }
-                  : isReserved
-                  ? { background: "var(--honey-50)", color: "var(--honey-700)", border: "1px solid var(--honey-100)" }
-                  : { background: "var(--cream-200)", color: "var(--ink-500)", border: "1px solid var(--cream-300)" }),
-              }}
-            >
-              {isSold ? "Sold" : isReserved ? "Reserved" : "Withdrawn"}
-            </span>
-          )}
-
-          {/* ··· menu */}
-          <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-              aria-label="Item options"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((o) => !o)}
-              style={{
-                color: "var(--sr-text-muted)", cursor: "pointer",
-                width: 26, height: 26, display: "grid", placeItems: "center",
-                border: "1px solid transparent", borderRadius: "var(--sr-radius-sm)",
-                background: "transparent", transition: "background 80ms",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--cream-200)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <MoreHorizontal size={14} />
-            </button>
-            {menuOpen && (
-              <>
-                <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setMenuOpen(false)} />
-                <div
-                  role="menu"
-                  style={{
-                    position: "absolute", right: 0, top: 30, zIndex: 50,
-                    background: "var(--sr-bg-card)", border: "1px solid var(--sr-border-subtle)",
-                    borderRadius: "var(--sr-radius-md)", boxShadow: "var(--sr-shadow-md)",
-                    minWidth: 168, padding: "4px 0",
-                  }}
-                >
-                  {canMarkSold && (
-                    <DropMenuItem icon={<ShoppingBag size={12} />} label="Mark as sold" onClick={() => { setShowMarkSold(true); setMenuOpen(false); }} />
-                  )}
-                  {canReserve && (
-                    <DropMenuItem icon={<Bookmark size={12} />} label="Mark as reserved" onClick={() => { reserveMutation.mutate(); setMenuOpen(false); }} />
-                  )}
-                  {canRelease && (
-                    <DropMenuItem icon={<Unlock size={12} />} label="Release reservation" onClick={() => { releaseMutation.mutate(); setMenuOpen(false); }} />
-                  )}
-                  {canRelist && (
-                    <DropMenuItem icon={<RotateCcw size={12} />} label="Relist item" onClick={() => { relistMutation.mutate(); setMenuOpen(false); }} />
-                  )}
-                  {(canMarkSold || canRelease || canRelist) && (
-                    <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
-                  )}
-                  {!isSold && !isWithdrawn && (
-                    <>
-                      <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
-                      <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
-                    </>
-                  )}
-                  {canWithdraw && (
-                    <>
-                      <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
-                      <DropMenuItem icon={<EyeOff size={12} />} label="Withdraw item" onClick={() => { withdrawMutation.mutate(); setMenuOpen(false); }} danger />
-                    </>
-                  )}
-                  {!canMarkSold && !canRelease && !canRelist && !canWithdraw && (
-                    <>
-                      <DropMenuItem icon={<Pencil size={12} />} label="Edit details" onClick={() => { setShowEditModal(true); setMenuOpen(false); }} />
-                      <DropMenuItem icon={<Copy size={12} />} label="Duplicate" onClick={() => { duplicateMutation.mutate(); setMenuOpen(false); }} />
-                      <div style={{ borderTop: "1px solid var(--sr-border-subtle)", margin: "4px 0" }} />
-                    </>
-                  )}
-                  <DropMenuItem icon={<Trash2 size={12} />} label="Delete item" onClick={() => { setShowDeleteConfirm(true); setMenuOpen(false); }} danger />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* ── Photo strip ── */}
-        <ItemPhotoStrip
-          noBleed
-          eventId={eventId}
-          bundleId={bundleId}
-          itemId={item.id}
-          images={item.images ?? []}
-        />
-
-        {/* ── Body ── */}
-        <div style={{ padding: "14px 18px 16px" }}>
-          {/* Name row */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, minWidth: 0 }}>
-            {nameEditing ? (
-              <input
-                autoFocus
-                value={nameVal}
-                onChange={(e) => setNameVal(e.target.value)}
-                onBlur={saveName}
-                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameVal(item.name); setNameEditing(false); } }}
-                maxLength={120}
-                style={{
-                  flex: 1, minWidth: 0, fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
-                  letterSpacing: "-0.01em", color: "var(--ink-800)", background: "transparent",
-                  border: "none", borderBottom: "2px solid var(--clay-300)", outline: "none",
-                  lineHeight: 1.3, padding: "0 0 2px",
-                }}
-              />
-            ) : (
-              <span
-                role="button"
-                tabIndex={0}
-                style={{
-                  flex: 1, minWidth: 0, overflowWrap: "anywhere", fontFamily: "var(--sr-font-serif)", fontSize: 14.5, fontWeight: 500,
-                  letterSpacing: "-0.01em", color: "var(--ink-800)", lineHeight: 1.3, cursor: "text",
-                }}
-                onDoubleClick={() => setNameEditing(true)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setNameEditing(true); } }}
-                aria-label={`Item name: ${item.name}. Press Enter to rename.`}
-              >
-                {item.name}
-              </span>
-            )}
-
-            {/* Category pill */}
-            <select
-              value={category}
-              onChange={(e) => {
-                setCategory(e.target.value);
-                patchMutation.mutate({ category: (e.target.value as ItemCategory) || null });
-              }}
-              style={{
-                fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const,
-                letterSpacing: "0.08em", padding: "2px 6px", borderRadius: "var(--sr-radius-sm)",
-                border: "1px solid var(--cream-300)", background: "var(--cream-100)",
-                color: "var(--ink-500)", cursor: "pointer", flexShrink: 0, outline: "none",
-                appearance: "none" as const, WebkitAppearance: "none" as const,
-              }}
-            >
-              <option value="">Category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Chips row */}
-          {(item.is_fragile || item.disassembly_required || (item.quantity && item.quantity > 1)) && (
-            <div style={{ display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
-              {item.is_fragile && (
-                <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--rust-50)", border: "1px solid var(--rust-100)", color: "var(--rust-500)" }}>
-                  Fragile
-                </span>
-              )}
-              {item.disassembly_required && (
-                <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--honey-50)", border: "1px solid var(--honey-100)", color: "var(--honey-700)" }}>
-                  Disassembly req.
-                </span>
-              )}
-              {item.quantity && item.quantity > 1 && (
-                <span style={{ padding: "2px 7px", borderRadius: "var(--sr-radius-sm)", fontSize: 10, fontFamily: "var(--sr-font-mono)", textTransform: "uppercase" as const, letterSpacing: "0.08em", background: "var(--cream-100)", border: "1px solid var(--cream-300)", color: "var(--ink-500)" }}>
-                  Qty: {item.quantity}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Description block */}
-          <button
-            onClick={() => setShowEditModal(true)}
-            style={{
-              width: "100%", textAlign: "left", background: "var(--cream-50)",
-              border: "1.5px dashed var(--cream-400)", borderRadius: "var(--sr-radius-md)",
-              padding: "9px 12px", marginBottom: 12, cursor: "pointer",
-              transition: "border-color 120ms, background 120ms",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-200)"; (e.currentTarget as HTMLElement).style.background = "var(--cream-100)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--cream-400)"; (e.currentTarget as HTMLElement).style.background = "var(--cream-50)"; }}
-          >
-            {item.description ? (
-              <span style={{ fontSize: 12, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>
-                {item.description}
-              </span>
-            ) : (
-              <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic" }}>
-                Add a description buyers will see…
-              </span>
-            )}
-          </button>
-
-          {/* 2×2 attrs grid */}
-          <div
-            style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1,
-              marginBottom: 14, background: "var(--sr-border-subtle)",
-              border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)", overflow: "hidden",
-            }}
-          >
-            <AttrCell label="Brand">
-              <input
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                onBlur={() => saveField("brand", brand, item.brand ?? "")}
-                placeholder="Unknown"
-                style={attrInputStyle}
-              />
-            </AttrCell>
-            <AttrCell label="Condition">
-              <select
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-                onBlur={() => saveField("condition", condition, item.condition ?? "Good")}
-                style={attrInputStyle}
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </AttrCell>
-            {(!category || ["furniture", "appliance", "electronics"].includes(category)) && (
-              <AttrCell label="Year">
-                <input
-                  type="number"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  onBlur={() => {
-                    const y = parseInt(year, 10);
-                    const original = item.actual_year_of_purchase ?? item.predicted_year_of_purchase;
-                    if (!isNaN(y) && y !== original) {
-                      patchMutation.mutate({ actual_year_of_purchase: y });
-                    }
-                  }}
-                  placeholder="Year"
-                  min={1900}
-                  max={new Date().getFullYear()}
-                  style={attrInputStyle}
-                />
-              </AttrCell>
-            )}
-            <AttrCell label="Category">
-              <select
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  patchMutation.mutate({ category: (e.target.value as ItemCategory) || null });
-                }}
-                style={attrInputStyle}
-              >
-                <option value="">- select -</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </AttrCell>
-          </div>
-
-          {/* Pricing stale banner */}
-          {pricingStale && (
-            <div
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                gap: 8, padding: "7px 10px", marginBottom: 10,
-                background: "var(--honey-50)", border: "1px solid var(--honey-200)",
-                borderRadius: "var(--sr-radius-sm)",
-              }}
-            >
-              <span style={{ fontSize: 11.5, color: "var(--honey-700)", flex: 1 }}>
-                Item details changed - listing price may be outdated.
-              </span>
-              <button
-                onClick={() => repriceMutation.mutate()}
-                disabled={repriceMutation.isPending}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "4px 10px", borderRadius: "var(--sr-radius-sm)",
-                  border: "1px solid var(--honey-300)", background: repriceMutation.isPending ? "var(--honey-100)" : "var(--honey-500)",
-                  color: repriceMutation.isPending ? "var(--honey-600)" : "#fff",
-                  fontSize: 11.5, fontWeight: 600, cursor: repriceMutation.isPending ? "default" : "pointer",
-                  transition: "background 100ms",
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-600)"; }}
-                onMouseLeave={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-500)"; }}
-              >
-                <Sparkles size={10} />
-                {repriceMutation.isPending ? "Pricing…" : "Re-price"}
-              </button>
-            </div>
-          )}
-
-          {/* Pricing row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: "1px solid var(--sr-border-subtle)", paddingTop: 12, marginBottom: 12 }}>
-            <div style={{ paddingRight: 14 }}>
-              <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--sr-text-muted)", display: "block", marginBottom: 4 }}>
-                Original Retail
-              </span>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-                <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontWeight: 500 }}>$</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={retailVal}
-                  onChange={(e) => setRetailVal(e.target.value)}
-                  onBlur={() => {
-                    const v = parseFloat(retailVal);
-                    const original = item.actual_original_price ?? item.predicted_original_price;
-                    if (!isNaN(v) && v >= 0 && v !== original) {
-                      patchMutation.mutate({ actual_original_price: v });
-                    } else if (retailVal === "" && original != null) {
-                      patchMutation.mutate({ actual_original_price: 0 });
-                    }
-                  }}
-                  placeholder="-"
-                  style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", width: "100%", padding: "2px 4px" }}
-                />
-              </div>
-            </div>
-            <div style={{ paddingLeft: 14, borderLeft: "1px solid var(--sr-border-subtle)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                <span style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, textTransform: "uppercase" as const, letterSpacing: "0.14em", color: "var(--clay-600)" }}>
-                  Listing Value
-                </span>
-                {item.pricing_reasoning && (
-                  <button
-                    onClick={() => setReasoningOpen((o) => !o)}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10,
-                      color: reasoningOpen ? "var(--clay-600)" : "var(--clay-400)", cursor: "pointer",
-                      border: "none", background: "none", padding: 0, transition: "color 120ms",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--clay-600)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = reasoningOpen ? "var(--clay-600)" : "var(--clay-400)"; }}
-                  >
-                    <Sparkles size={9} />
-                    AI
-                  </button>
-                )}
-              </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-                <span style={{ fontSize: 14, color: "var(--clay-500)", fontWeight: 600 }}>$</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={listingVal}
-                  onChange={(e) => setListingVal(e.target.value)}
-                  onBlur={() => {
-                    const v = parseFloat(listingVal);
-                    const original = item.actual_listing_price ?? item.predicted_listing_price;
-                    if (!isNaN(v) && v >= 0 && v !== original) {
-                      patchMutation.mutate({ actual_listing_price: v, pricing_reasoning: null });
-                    } else if (listingVal === "" && original != null) {
-                      patchMutation.mutate({ actual_listing_price: 0, pricing_reasoning: null });
-                    }
-                  }}
-                  placeholder="-"
-                  style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', width: "100%", padding: "2px 4px" }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* AI reasoning */}
-          {reasoningOpen && item.pricing_reasoning && (
-            <div
-              style={{
-                marginBottom: 12, padding: "10px 12px",
-                background: "linear-gradient(135deg, var(--clay-50), var(--cream-50))",
-                border: "1px solid var(--clay-100)", borderRadius: "var(--sr-radius-md)",
-                display: "flex", gap: 8, alignItems: "flex-start", animation: "fadeSlide 200ms ease",
-              }}
-            >
-              <Sparkles size={11} style={{ color: "var(--clay-500)", flexShrink: 0, marginTop: 2 }} />
-              <p style={{ fontSize: 11.5, color: "var(--sr-text-secondary)", lineHeight: 1.55, margin: 0, fontStyle: "italic" }}>
-                {item.pricing_reasoning}
-              </p>
-            </div>
-          )}
-
-          {/* Sold info banner */}
-          {isSold && (
-            <div
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 10px", marginBottom: 10,
-                background: "var(--moss-50)", border: "1px solid var(--moss-100)",
-                borderRadius: "var(--sr-radius-sm)",
-              }}
-            >
-              <Check size={11} style={{ color: "var(--moss-600)", flexShrink: 0 }} />
-              <span style={{ fontSize: 11.5, color: "var(--moss-700)" }}>
-                Sold
-                {item.final_price != null && ` · ${formatAUD(item.final_price)}`}
-                {item.buyer_label && ` to ${item.buyer_label}`}
-                {item.sold_payment_method && ` · ${item.sold_payment_method}`}
-              </span>
-            </div>
-          )}
-
-          {/* Reserved info banner */}
-          {isReserved && (
-            <div
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 10px", marginBottom: 10,
-                background: "var(--honey-50)", border: "1px solid var(--honey-100)",
-                borderRadius: "var(--sr-radius-sm)",
-              }}
-            >
-              <span style={{ fontSize: 11.5, color: "var(--honey-700)" }}>
-                Reserved - use &ldquo;Mark as sold&rdquo; once pickup is done
-              </span>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div
-            style={{
-              display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap",
-              paddingTop: 10, borderTop: "1px solid var(--sr-border-subtle)",
-            }}
-          >
-            {canMarkSold && (
-              <FooterBtn
-                label="Mark sold"
-                icon={<ShoppingBag size={11} />}
-                onClick={() => setShowMarkSold(true)}
-              />
-            )}
-            {canReserve && (
-              <FooterBtn
-                label="Reserve"
-                icon={<Bookmark size={11} />}
-                onClick={() => reserveMutation.mutate()}
-                loading={reserveMutation.isPending}
-              />
-            )}
-            {canRelist && (
-              <FooterBtn
-                label="Relist"
-                icon={<RotateCcw size={11} />}
-                onClick={() => relistMutation.mutate()}
-                loading={relistMutation.isPending}
-              />
-            )}
-            {!isSold && !isWithdrawn && (
-              <>
-                <FooterBtn
-                  label="Move"
-                  icon={<ArrowRightLeft size={11} />}
-                  suffix={<ChevronDown size={10} style={{ transition: "transform 120ms", transform: movePanelOpen ? "rotate(180deg)" : "none" }} />}
-                  onClick={() => setMovePanelOpen((o) => !o)}
-                  active={movePanelOpen}
-                />
-                <FooterBtn
-                  label="Details"
-                  icon={<Pencil size={11} />}
-                  onClick={() => setShowEditModal(true)}
-                />
-                <FooterBtn
-                  label="Duplicate"
-                  icon={<Copy size={11} />}
-                  onClick={() => duplicateMutation.mutate()}
-                  loading={duplicateMutation.isPending}
-                />
-              </>
-            )}
-            <div style={{ flex: 1 }} />
-            <FooterBtn
-              label="Delete"
-              icon={<Trash2 size={11} />}
-              onClick={() => setShowDeleteConfirm(true)}
-              danger
-            />
-          </div>
-
-          {/* Move panel (inline expansion) */}
-          {movePanelOpen && otherBundles.length > 0 && (
-            <div
-              style={{
-                marginTop: 8, background: "var(--cream-50)",
-                border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)",
-                padding: "6px 0", animation: "fadeSlide 180ms ease",
-              }}
-            >
-              {otherBundles.map((b, i) => {
-                const pal = BUNDLE_PALETTES[i % BUNDLE_PALETTES.length];
-                return (
-                  <button
-                    key={b.id}
-                    onClick={() => moveMutation.mutate(b.id)}
-                    disabled={moveMutation.isPending}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      width: "100%", padding: "8px 14px",
-                      background: "none", border: "none", cursor: moveMutation.isPending ? "default" : "pointer",
-                      fontSize: 13, color: "var(--sr-text-primary)", textAlign: "left",
-                      transition: "background 80ms",
-                    }}
-                    onMouseEnter={(e) => { if (!moveMutation.isPending) (e.currentTarget as HTMLElement).style.background = pal.bg; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
-                  >
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: pal.dot, flexShrink: 0 }} />
-                    <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</span>
-                    <span style={{ fontSize: 11, color: "var(--sr-text-muted)" }}>{b.items.length} items</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {movePanelOpen && otherBundles.length === 0 && (
-            <div style={{ marginTop: 8, padding: "10px 14px", fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic", textAlign: "center" }}>
-              No other bundles to move to
-            </div>
-          )}
-        </div>
+        {cardBody}
       </div>
 
       {/* Delete confirm */}

@@ -137,6 +137,10 @@
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0); opacity: 1; }
 }
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
 
 /* ── Global scrollbar — clay/cream theme ── */
 ::-webkit-scrollbar {
