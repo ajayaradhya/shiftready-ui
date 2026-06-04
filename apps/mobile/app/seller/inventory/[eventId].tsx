@@ -15,6 +15,7 @@ import {
 import { useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import {
   getSummary,
   patchItem,
@@ -23,7 +24,10 @@ import {
   unpublishSale,
   archiveSale,
   markItemSold,
+  markBundleSold,
   deleteItem,
+  getItemImageUploadUrls,
+  confirmItemImages,
   type PublishPayload,
 } from "@shiftready/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -97,6 +101,7 @@ function ItemEditSheet({ item, eventId, bundleId, onClose, onUpdated }: EditShee
   const [soldPrice, setSoldPrice] = useState(String(item.actual_listing_price ?? ""));
   const [payMethod, setPayMethod] = useState("Cash");
   const [mode, setMode] = useState<"edit" | "sold">("edit");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const patchMut = useMutation({
     mutationFn: () =>
@@ -140,6 +145,51 @@ function ItemEditSheet({ item, eventId, bundleId, onClose, onUpdated }: EditShee
       onClose();
     },
   });
+
+  const pickAndUploadPhoto = useCallback(async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permission needed", "Allow photo library access to upload photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.85,
+      allowsMultipleSelection: false,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    setUploadingPhoto(true);
+    try {
+      const filename = asset.fileName ?? `photo_${Date.now()}.jpg`;
+      const contentType = asset.mimeType ?? "image/jpeg";
+      const { urls } = await getItemImageUploadUrls(eventId, bundleId, item.id, [
+        { filename, content_type: contentType },
+      ]);
+      const { upload_url, image_id, gcs_path } = urls[0];
+      // Read file as blob then PUT to signed URL (RN fetch doesn't support file URIs as body directly)
+      const localBlob: Blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => resolve(xhr.response as Blob);
+        xhr.onerror = reject;
+        xhr.responseType = "blob";
+        xhr.open("GET", asset.uri);
+        xhr.send();
+      });
+      await fetch(upload_url, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: localBlob,
+      });
+      await confirmItemImages(eventId, bundleId, item.id, [{ image_id, gcs_path }]);
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      Alert.alert("Photo added", "Image uploaded successfully.");
+    } catch (err) {
+      Alert.alert("Upload failed", (err as Error).message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }, [eventId, bundleId, item.id, queryClient]);
 
   return (
     <KeyboardAvoidingView
@@ -258,6 +308,31 @@ function ItemEditSheet({ item, eventId, bundleId, onClose, onUpdated }: EditShee
               </View>
             </View>
 
+            <TouchableOpacity
+              onPress={pickAndUploadPhoto}
+              disabled={uploadingPhoto}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                borderWidth: 1,
+                borderColor: "#D6C9B0",
+                borderRadius: 10,
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                backgroundColor: "#fff",
+              }}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator size="small" color="#B5604A" />
+              ) : (
+                <Ionicons name="image-outline" size={18} color="#B5604A" />
+              )}
+              <Text style={{ fontSize: 13, fontWeight: "600", color: "#B5604A" }}>
+                {uploadingPhoto ? "Uploading…" : "Add photo from library"}
+              </Text>
+            </TouchableOpacity>
+
             <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
               <TouchableOpacity
                 onPress={() => patchMut.mutate()}
@@ -371,6 +446,146 @@ function ItemEditSheet({ item, eventId, bundleId, onClose, onUpdated }: EditShee
             </TouchableOpacity>
           </>
         )}
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+// --- Bundle Sold Sheet ---
+interface BundleSoldSheetProps {
+  bundle: RoomBundle;
+  eventId: string;
+  onClose: () => void;
+}
+
+function BundleSoldSheet({ bundle, eventId, onClose }: BundleSoldSheetProps) {
+  const queryClient = useQueryClient();
+  const [soldPrice, setSoldPrice] = useState("");
+  const [payMethod, setPayMethod] = useState("Cash");
+  const [scope, setScope] = useState<"bundle_as_unit" | "all_items">("all_items");
+
+  const soldMut = useMutation({
+    mutationFn: () =>
+      markBundleSold(eventId, bundle.id, {
+        scope,
+        final_price: soldPrice ? Number(soldPrice) : null,
+        payment_method: payMethod || null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+      onClose();
+    },
+    onError: (e: Error) => Alert.alert("Failed", e.message),
+  });
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1, justifyContent: "flex-end" }}
+    >
+      <View
+        style={{
+          backgroundColor: "#FAFAF7",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: 20,
+          gap: 12,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1c1917", flex: 1 }} numberOfLines={1}>
+            Mark bundle sold — {bundle.name}
+          </Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={22} color="#A09683" />
+          </TouchableOpacity>
+        </View>
+
+        <View>
+          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 6 }}>Scope</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {(["all_items", "bundle_as_unit"] as const).map((s) => (
+              <TouchableOpacity
+                key={s}
+                onPress={() => setScope(s)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  backgroundColor: scope === s ? "#6b21a8" : "#EDE8DC",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "600", color: scope === s ? "#fff" : "#57534e" }}>
+                  {s === "all_items" ? "All items" : "Bundle as unit"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View>
+          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>
+            {scope === "all_items" ? "Total price (AUD)" : "Bundle price (AUD)"}
+          </Text>
+          <TextInput
+            value={soldPrice}
+            onChangeText={setSoldPrice}
+            keyboardType="numeric"
+            placeholder="e.g. 200"
+            placeholderTextColor="#A09683"
+            style={{
+              borderWidth: 1,
+              borderColor: "#D6C9B0",
+              borderRadius: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 14,
+              color: "#1c1917",
+              backgroundColor: "#fff",
+            }}
+          />
+        </View>
+
+        <View>
+          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>Payment method</Text>
+          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            {["Cash", "Bank transfer", "PayID", "Other"].map((m) => (
+              <TouchableOpacity
+                key={m}
+                onPress={() => setPayMethod(m)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 99,
+                  backgroundColor: payMethod === m ? "#B5604A" : "#EDE8DC",
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "600", color: payMethod === m ? "#fff" : "#57534e" }}>
+                  {m}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => soldMut.mutate()}
+          disabled={soldMut.isPending}
+          style={{
+            backgroundColor: "#6b21a8",
+            borderRadius: 12,
+            paddingVertical: 13,
+            alignItems: "center",
+            marginTop: 4,
+          }}
+        >
+          {soldMut.isPending ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Confirm Bundle Sold</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -505,6 +720,7 @@ export default function InventoryScreen() {
     item: InventoryItem;
     bundleId: string;
   } | null>(null);
+  const [selectedBundle, setSelectedBundle] = useState<RoomBundle | null>(null);
   const [showPublish, setShowPublish] = useState(false);
 
   const {
@@ -658,6 +874,7 @@ export default function InventoryScreen() {
         renderSectionHeader={({ section }) => {
           const b = section.bundle as RoomBundle;
           const available = b.items.filter((i) => i.sale_status === "available").length;
+          const allSold = b.items.length > 0 && available === 0;
           return (
             <View
               style={{
@@ -666,14 +883,33 @@ export default function InventoryScreen() {
                 paddingVertical: 10,
                 borderBottomWidth: 1,
                 borderBottomColor: "#E0D5C0",
+                flexDirection: "row",
+                alignItems: "center",
               }}
             >
-              <Text style={{ fontWeight: "700", fontSize: 14, color: "#1c1917" }}>
-                {b.name}
-              </Text>
-              <Text style={{ fontSize: 12, color: "#78716c", marginTop: 2 }}>
-                {b.items.length} item{b.items.length !== 1 ? "s" : ""} · {available} available
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: "700", fontSize: 14, color: "#1c1917" }}>
+                  {b.name}
+                </Text>
+                <Text style={{ fontSize: 12, color: "#78716c", marginTop: 2 }}>
+                  {b.items.length} item{b.items.length !== 1 ? "s" : ""} · {available} available
+                </Text>
+              </View>
+              {!allSold && isLive && (
+                <TouchableOpacity
+                  onPress={() => setSelectedBundle(b)}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    backgroundColor: "#f3e8ff",
+                    borderRadius: 99,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: "#6b21a8" }}>
+                    Mark sold
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         }}
@@ -795,6 +1031,27 @@ export default function InventoryScreen() {
           onClose={() => setShowPublish(false)}
           onPublished={() => {}}
         />
+      </Modal>
+
+      {/* Bundle sold modal */}
+      <Modal
+        visible={!!selectedBundle}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedBundle(null)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
+          activeOpacity={1}
+          onPress={() => setSelectedBundle(null)}
+        />
+        {selectedBundle && (
+          <BundleSoldSheet
+            bundle={selectedBundle}
+            eventId={eventId!}
+            onClose={() => setSelectedBundle(null)}
+          />
+        )}
       </Modal>
     </View>
   );

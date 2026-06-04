@@ -128,7 +128,7 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `apps/mobile/app/notifications.tsx` — notification feed
   - `apps/mobile/app/purchases.tsx` — purchases/enquiry tracker
 
-### Phase 4 — Seller + capture (the native payoff) ✅ DONE (2026-06-05)
+### Phase 4 — Seller + capture (the native payoff) ✅ DONE (2026-06-05, remaining items 2026-06-05)
 - [x] **Sell tab** (5th tab, briefcase icon) — My Sales list with status badges, item count, total value, pull-to-refresh. New sale → capture.
 - [x] **Inventory cockpit** (`/seller/inventory/[eventId]`) — SectionList of bundles/items; status action banner (publish CTA / live/unpublish / processing spinner); item edit bottom sheet (name, price, AI reprice, mark sold, delete); publish modal (move_out_date, suburb, pincode); archive.
 - [x] **Live capture** (`/capture`) — `expo-camera` CameraView, tap-first shutter, `expo-image-manipulator` JPEG resize to 1200px, `POST /capture/frame` → Gemini identify, editable name in bottom sheet, thumbnail strip.
@@ -136,7 +136,10 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
 - [x] `captureFrameNative` added to `packages/api` (RN FormData URI format).
 - [x] `lib/capture-store.ts` module-level store passes items capture→review without context bloat.
 - [x] Profile "Seller Central" button wired → Sell tab.
-- [ ] **Remaining:** item photo upload from camera roll; haptics on shutter tap; wake-lock; bundle-level mark-sold from cockpit.
+- [x] Item photo upload from camera roll (`expo-image-picker` → signed PUT → `confirmItemImages`).
+- [x] Haptics on shutter tap (`expo-haptics` ImpactFeedbackStyle.Medium).
+- [x] Wake-lock during capture (`expo-keep-awake` activate/deactivate).
+- [x] Bundle-level mark-sold from cockpit (bundle section header "Mark sold" button → `BundleSoldSheet`).
 - **Key files:**
   - `apps/mobile/app/(tabs)/sell.tsx` — My Sales dashboard
   - `apps/mobile/app/seller/inventory/[eventId].tsx` — inventory cockpit

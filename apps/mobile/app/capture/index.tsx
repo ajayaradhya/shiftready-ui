@@ -10,10 +10,12 @@ import {
   Platform,
 } from "react-native";
 import { Image } from "expo-image";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { CameraView, useCameraPermissions, type CameraViewRef } from "expo-camera";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import * as Haptics from "expo-haptics";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { initCaptureSale, captureFrameNative } from "@shiftready/api";
@@ -33,6 +35,11 @@ export default function CaptureScreen() {
   const cameraRef = useRef<CameraViewRef>(null);
   const [permission, requestPermission] = useCameraPermissions();
 
+  useEffect(() => {
+    activateKeepAwakeAsync();
+    return () => { deactivateKeepAwake(); };
+  }, []);
+
   const [capturing, setCapturing] = useState(false);
   const [items, setItems] = useState<CapturedItem[]>([]);
   const [pendingItem, setPendingItem] = useState<CapturedItem | null>(null);
@@ -42,6 +49,7 @@ export default function CaptureScreen() {
 
   const doCapture = useCallback(async () => {
     if (capturing || !cameraRef.current) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCapturing(true);
     try {
       // Take photo

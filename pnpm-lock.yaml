@@ -44,12 +44,21 @@ importers:
       expo-camera:
         specifier: ~16.1.11
         version: 16.1.11(expo@53.0.27)(react-native-web@0.21.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
+      expo-haptics:
+        specifier: ~14.1.4
+        version: 14.1.4(expo@53.0.27)
       expo-image:
         specifier: ~2.3.0
         version: 2.3.2(expo@53.0.27)(react-native-web@0.21.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
       expo-image-manipulator:
         specifier: ~13.1.7
         version: 13.1.7(expo@53.0.27)
+      expo-image-picker:
+        specifier: ~16.1.4
+        version: 16.1.4(expo@53.0.27)
+      expo-keep-awake:
+        specifier: ~14.1.4
+        version: 14.1.4(expo@53.0.27)(react@19.2.4)
       expo-router:
         specifier: ~5.1.11
         version: 5.1.11(@types/react@19.2.16)(expo-constants@17.1.8(expo@53.0.27)(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4)))(expo-linking@7.0.5(expo@53.0.27)(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4))(expo@53.0.27)(react-native-reanimated@3.17.5(@babel/core@7.29.7)(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4))(react-native-safe-area-context@5.4.0(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4))(react-native-screens@4.11.1(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
@@ -3604,6 +3613,11 @@ packages:
       expo: '*'
       react: 19.2.4
 
+  expo-haptics@14.1.4:
+    resolution: {integrity: sha512-QZdE3NMX74rTuIl82I+n12XGwpDWKb8zfs5EpwsnGi/D/n7O2Jd4tO5ivH+muEG/OCJOMq5aeaVDqqaQOhTkcA==}
+    peerDependencies:
+      expo: '*'
+
   expo-image-loader@5.1.0:
     resolution: {integrity: sha512-sEBx3zDQIODWbB5JwzE7ZL5FJD+DK3LVLWBVJy6VzsqIA6nDEnSFnsnWyCfCTSvbGigMATs1lgkC2nz3Jpve1Q==}
     peerDependencies:
@@ -3611,6 +3625,11 @@ packages:
 
   expo-image-manipulator@13.1.7:
     resolution: {integrity: sha512-DBy/Xdd0E/yFind14x36XmwfWuUxOHI/oH97/giKjjPaRc2dlyjQ3tuW3x699hX6gAs9Sixj5WEJ1qNf3c8sag==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-picker@16.1.4:
+    resolution: {integrity: sha512-bTmmxtw1AohUT+HxEBn2vYwdeOrj1CLpMXKjvi9FKSoSbpcarT4xxI0z7YyGwDGHbrJqyyic3I9TTdP2J2b4YA==}
     peerDependencies:
       expo: '*'
 
@@ -10227,11 +10246,20 @@ snapshots:
       fontfaceobserver: 2.3.0
       react: 19.2.4
 
+  expo-haptics@14.1.4(expo@53.0.27):
+    dependencies:
+      expo: 53.0.27(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@4.0.1(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4)))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
+
   expo-image-loader@5.1.0(expo@53.0.27):
     dependencies:
       expo: 53.0.27(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@4.0.1(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4)))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
 
   expo-image-manipulator@13.1.7(expo@53.0.27):
+    dependencies:
+      expo: 53.0.27(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@4.0.1(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4)))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
+      expo-image-loader: 5.1.0(expo@53.0.27)
+
+  expo-image-picker@16.1.4(expo@53.0.27):
     dependencies:
       expo: 53.0.27(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@4.0.1(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4)))(react-native@0.79.6(@babel/core@7.29.7)(@types/react@19.2.16)(react@19.2.4))(react@19.2.4)
       expo-image-loader: 5.1.0(expo@53.0.27)

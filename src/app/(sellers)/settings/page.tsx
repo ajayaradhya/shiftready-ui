@@ -266,7 +266,7 @@ function MethodRow({ icon, label, sub, right }: { icon: React.ReactNode; label: 
 }
 
 const inputStyle: React.CSSProperties = {
-  background: "var(--cream-50)", border: "1px solid var(--sr-border-default)",
+  background: "var(--cream-50)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--sr-border-default)",
   borderRadius: "var(--sr-radius-md)", padding: "10px 14px",
   fontFamily: "var(--sr-font-sans)", fontSize: 14,
   color: "var(--sr-text-primary)", width: "100%",

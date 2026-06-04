@@ -54,6 +54,7 @@ lighthouse-market*.json
 test-results
 *node_modules*
 *.next
+*.turbo
 
 # Expo
 .expo/
