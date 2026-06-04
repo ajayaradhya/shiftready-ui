@@ -2,10 +2,10 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import {
   initializeAuth,
   getAuth,
-  getReactNativePersistence,
+  browserLocalPersistence,
   type Auth,
 } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -27,10 +27,23 @@ let _auth: Auth | null = null;
 if (isFirebaseConfigured) {
   if (getApps().length === 0) {
     _app = initializeApp(firebaseConfig);
-    // RN must use initializeAuth with AsyncStorage persistence (getAuth() doesn't persist).
-    _auth = initializeAuth(_app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
+    if (Platform.OS === "web") {
+      // Web: browser persistence (localStorage). getReactNativePersistence not in web bundle.
+      _auth = initializeAuth(_app, { persistence: browserLocalPersistence });
+    } else {
+      // Native: AsyncStorage persistence. getAuth() doesn't persist.
+      // Lazy require so web bundle never touches the RN-only export.
+      const {
+        getReactNativePersistence,
+      } = require("firebase/auth") as typeof import("firebase/auth") & {
+        getReactNativePersistence: (storage: unknown) => unknown;
+      };
+      const AsyncStorage =
+        require("@react-native-async-storage/async-storage").default;
+      _auth = initializeAuth(_app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+    }
   } else {
     _app = getApp();
     _auth = getAuth(_app);
