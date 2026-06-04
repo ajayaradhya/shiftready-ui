@@ -53,6 +53,7 @@ pnpm-debug.log*
 lighthouse-market*.json
 test-results
 *node_modules*
+*.next
 
 # Expo
 .expo/

@@ -9,4 +9,7 @@ config.resolver.nodeModulesPaths = [
   require("path").resolve(__dirname, "../../node_modules"),
 ];
 
-module.exports = withNativeWind(config, { input: "./global.css" });
+module.exports = withNativeWind(config, {
+  input: "./global.css",
+  configPath: "./tailwind.config.ts",
+});

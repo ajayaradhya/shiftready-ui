@@ -8,6 +8,7 @@
     "type-check": "turbo type-check",
     "test:e2e": "pnpm --filter @shiftready/web test:e2e"
   },
+  "packageManager": "pnpm@10.11.1",
   "devDependencies": {
     "turbo": "^2.5.4"
   },
