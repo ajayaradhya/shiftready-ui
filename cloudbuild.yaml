@@ -6,9 +6,10 @@ steps:
     args:
       - '-c'
       - |
-        npm ci
-        npm run lint
-        npm run type-check
+        corepack enable && corepack prepare pnpm@10 --activate
+        pnpm install --frozen-lockfile
+        pnpm --filter @shiftready/web lint
+        pnpm --filter @shiftready/web type-check
 
   # 2. Pull cache
   - name: 'gcr.io/cloud-builders/docker'
@@ -38,12 +39,12 @@ steps:
       '.'
     ]
 
-  # 3. Push to Artifact Registry
+  # 4. Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-image'
     args: ['push', '--all-tags', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_SERVICE_NAME}']
 
-  # 4. Deploy to Cloud Run
+  # 5. Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy'
     entrypoint: gcloud

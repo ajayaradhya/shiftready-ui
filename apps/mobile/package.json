@@ -1,0 +1,36 @@
+{
+  "name": "@shiftready/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild --clean"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@shiftready/api": "workspace:*",
+    "@shiftready/core": "workspace:*",
+    "@shiftready/types": "workspace:*",
+    "@tanstack/react-query": "^5.99.2",
+    "expo": "~53.0.9",
+    "expo-router": "~4.0.20",
+    "expo-status-bar": "~2.0.1",
+    "firebase": "^12.13.0",
+    "nativewind": "~4.0.36",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.10.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@types/react": "^19.0.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.0"
+  }
+}

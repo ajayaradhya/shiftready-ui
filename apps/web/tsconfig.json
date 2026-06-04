@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2017",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shiftready/types": ["../../packages/types/src/index.ts"],
+      "@shiftready/core": ["../../packages/core/src/index.ts"],
+      "@shiftready/api": ["../../packages/api/src/index.ts"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -28,7 +31,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "../../packages/types/src",
+    "../../packages/core/src",
+    "../../packages/api/src"
   ],
   "exclude": ["node_modules", "e2e", "playwright.config.ts"]
 }

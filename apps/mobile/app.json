@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "ShiftReady",
+    "slug": "shiftready",
+    "scheme": "shiftready",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "au.com.shiftready.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FAFAF7"
+      },
+      "package": "au.com.shiftready.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

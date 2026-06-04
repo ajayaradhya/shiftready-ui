@@ -1,0 +1,115 @@
+.wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* ── Chip button ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--sr-bg-card);
+  border: 1px solid var(--sr-border-subtle);
+  border-radius: var(--sr-radius-md);
+  font-family: var(--sr-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sr-text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 120ms, background 120ms, color 120ms;
+  user-select: none;
+}
+.chip:hover {
+  border-color: var(--sr-border-strong);
+  background: var(--cream-50);
+}
+.chipOpen {
+  border-color: var(--clay-400);
+  background: var(--cream-50);
+}
+.chipActive {
+  border-color: var(--clay-500);
+  background: var(--clay-50, #fdf4ee);
+  color: var(--clay-700);
+}
+.chipActive .caret {
+  color: var(--clay-500);
+}
+
+.prefix {
+  color: var(--sr-text-muted);
+  margin-right: 1px;
+}
+.caret {
+  color: var(--sr-text-muted);
+  display: flex;
+  align-items: center;
+  margin-left: 2px;
+}
+
+/* ── Dropdown panel ── */
+.panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 180px;
+  background: var(--sr-bg-card, #fffdf8);
+  border: 1px solid var(--sr-border-subtle);
+  border-radius: var(--sr-radius-md);
+  box-shadow: 0 4px 16px rgba(60, 40, 20, 0.10), 0 1px 4px rgba(60,40,20,0.06);
+  padding: 6px 0;
+  animation: fadeSlide 120ms ease;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.clearBtn {
+  width: 100%;
+  text-align: left;
+  padding: 7px 14px;
+  font-family: var(--sr-font-sans);
+  font-size: 12px;
+  color: var(--clay-500);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sr-border-subtle);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.clearBtn:hover { color: var(--clay-700); }
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  font-family: var(--sr-font-sans);
+  font-size: 13px;
+  color: var(--sr-text-primary);
+  cursor: pointer;
+  transition: background 80ms;
+}
+.option:hover {
+  background: var(--cream-100, #faf5ef);
+}
+.optionSelected {
+  color: var(--clay-700);
+  font-weight: 600;
+}
+.check {
+  color: var(--clay-500);
+  display: flex;
+  align-items: center;
+}

@@ -52,3 +52,8 @@ pnpm-debug.log*
 *.sw?
 lighthouse-market*.json
 test-results
+*node_modules*
+
+# Expo
+.expo/
+dist/
