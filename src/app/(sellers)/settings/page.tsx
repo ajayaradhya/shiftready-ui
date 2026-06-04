@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { SYDNEY_SUBURBS, suburbsForPostcode, isValidPostcode, type Suburb } from "@/lib/locations";
 import { useAuth } from "@/hooks/use-auth";
@@ -334,7 +335,7 @@ function SSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 }
 
 // ── Section: Profile ────────────────────────────────────────────────────────
-function ProfileSection({ userEmail }: { userEmail?: string | null }) {
+function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; photoURL?: string | null }) {
   const { data: settings } = useMySettings();
   const { profile, isLoading, update, isUpdating } = useUsername();
   const { check, available, isChecking } = useUsernameAvailability();
@@ -385,6 +386,7 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
     : null;
 
   const initials = (profile?.username ?? userEmail ?? "?").slice(0, 2).toUpperCase();
+  const [avatarError, setAvatarError] = useState(false);
 
   if (isLoading) return <div style={{ padding: 24, color: "var(--sr-text-muted)", fontSize: 13 }}>Loading…</div>;
 
@@ -404,14 +406,23 @@ function ProfileSection({ userEmail }: { userEmail?: string | null }) {
         }}>
           <div style={{
             width: 72, height: 72, borderRadius: "50%", flexShrink: 0,
-            background: "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
+            background: photoURL && !avatarError ? undefined : "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
             display: "grid", placeItems: "center",
             color: "var(--cream-50)", fontFamily: "var(--sr-font-serif)",
             fontSize: 26, fontWeight: 600, cursor: "pointer", position: "relative", overflow: "hidden",
           }}
             className="av-lg"
           >
-            {initials}
+            {photoURL && !avatarError ? (
+              <Image
+                src={photoURL}
+                alt={initials}
+                width={72}
+                height={72}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={() => setAvatarError(true)}
+              />
+            ) : initials}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-800)" }}>{displayName || profile?.username || "-"}</span>
@@ -1193,7 +1204,7 @@ export default function SettingsPage() {
   useEffect(() => { document.title = "Settings - ShiftReady"; }, []);
 
   const sections: Record<SectionId, React.ReactNode> = {
-    profile:       <ProfileSection userEmail={user?.email}/>,
+    profile:       <ProfileSection userEmail={user?.email} photoURL={user?.photoURL ?? null}/>,
     account:       <AccountSection userEmail={user?.email}/>,
     contact:       <ContactSection/>,
     notifications: <NotificationsSection/>,

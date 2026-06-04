@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Store, LayoutDashboard, MessageSquare, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,29 +32,33 @@ export function ProfileMenu() {
     router.push("/login");
   };
 
-  const AvatarInner = ({ size }: { size: number }) =>
-    user.photoURL ? (
-      <Image
-        src={user.photoURL}
-        alt={displayName}
-        width={size}
-        height={size}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).style.display = "none";
-        }}
-      />
-    ) : (
+  const AvatarInner = ({ size }: { size: number }) => {
+    const [imgError, setImgError] = useState(false);
+    if (user.photoURL && !imgError) {
+      return (
+        <Image
+          src={user.photoURL}
+          alt={displayName}
+          width={size}
+          height={size}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+    return (
       <span
-        className="font-bold leading-none text-[var(--clay-700)]"
+        className="font-bold leading-none"
         style={{
           fontFamily: "var(--sr-font-serif)",
           fontSize: size * 0.4,
+          color: "var(--clay-700)",
         }}
       >
-        {displayName.slice(0, 1).toUpperCase()}
+        {(displayName.replace(/^@/, "")).slice(0, 1).toUpperCase()}
       </span>
     );
+  };
 
   return (
     <DropdownMenu>
@@ -63,9 +68,10 @@ export function ProfileMenu() {
           className={cn(
             "w-11 h-11 rounded-full overflow-hidden flex-shrink-0 cursor-pointer",
             "grid place-items-center border border-[var(--sr-border-subtle)]",
-            "bg-[var(--clay-100)] hover:ring-2 hover:ring-[var(--clay-200)]",
+            "hover:ring-2 hover:ring-[var(--clay-300)]",
             "transition-all duration-150 outline-none",
           )}
+          style={{ background: user.photoURL ? undefined : "linear-gradient(135deg, var(--clay-200), var(--clay-400))" }}
         >
           <AvatarInner size={36} />
         </button>
@@ -78,7 +84,8 @@ export function ProfileMenu() {
           style={{ borderBottom: "1px solid var(--sr-border-subtle)" }}
         >
           <div
-            className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden grid place-items-center border border-[var(--sr-border-subtle)] bg-[var(--clay-100)]"
+            className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden grid place-items-center border border-[var(--sr-border-subtle)]"
+            style={{ background: user.photoURL ? undefined : "linear-gradient(135deg, var(--clay-200), var(--clay-400))" }}
           >
             <AvatarInner size={36} />
           </div>
