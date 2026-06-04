@@ -6,6 +6,9 @@ import {
   updateNotifications,
   updatePreferences,
   updatePrivacy,
+  getAvatarUploadUrl,
+  confirmAvatar,
+  removeAvatar,
 } from "@/lib/api";
 import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
@@ -67,5 +70,31 @@ export function useUpdatePrivacy() {
     mutationFn: (prefs: PrivacyPrefs) => updatePrivacy(prefs),
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
     onError: (err: Error) => toast.error(err.message || "Failed to save privacy settings"),
+  });
+}
+
+export function useUploadAvatar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const { upload_url, gcs_path } = await getAvatarUploadUrl();
+      await fetch(upload_url, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+      return confirmAvatar(gcs_path);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to upload avatar"),
+  });
+}
+
+export function useRemoveAvatar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: removeAvatar,
+    onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_KEY }),
+    onError: (err: Error) => toast.error(err.message || "Failed to remove avatar"),
   });
 }

@@ -128,11 +128,23 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `apps/mobile/app/notifications.tsx` — notification feed
   - `apps/mobile/app/purchases.tsx` — purchases/enquiry tracker
 
-### Phase 4 — Seller + capture (the native payoff)
-- [ ] Seller Central: sales list, inventory cockpit (bundles/items/pricing), publish/unpublish.
-- [ ] **Live capture with expo-camera:** tap-first → frame → `expo-image-manipulator` JPEG → `POST /capture/frame` → identify result; review screen → `finalize-v2`. Wake-lock, haptics on tap.
-- [ ] Mark-sold flows (item/bundle/sale), reprice, cover, item-photo upload.
-- **Exit:** a seller can capture, list, price, and sell from the phone.
+### Phase 4 — Seller + capture (the native payoff) ✅ DONE (2026-06-05)
+- [x] **Sell tab** (5th tab, briefcase icon) — My Sales list with status badges, item count, total value, pull-to-refresh. New sale → capture.
+- [x] **Inventory cockpit** (`/seller/inventory/[eventId]`) — SectionList of bundles/items; status action banner (publish CTA / live/unpublish / processing spinner); item edit bottom sheet (name, price, AI reprice, mark sold, delete); publish modal (move_out_date, suburb, pincode); archive.
+- [x] **Live capture** (`/capture`) — `expo-camera` CameraView, tap-first shutter, `expo-image-manipulator` JPEG resize to 1200px, `POST /capture/frame` → Gemini identify, editable name in bottom sheet, thumbnail strip.
+- [x] **Capture review** (`/capture/review`) — inline name edit, remove item, `POST /capture/finalize-v2` → navigate to inventory cockpit.
+- [x] `captureFrameNative` added to `packages/api` (RN FormData URI format).
+- [x] `lib/capture-store.ts` module-level store passes items capture→review without context bloat.
+- [x] Profile "Seller Central" button wired → Sell tab.
+- [ ] **Remaining:** item photo upload from camera roll; haptics on shutter tap; wake-lock; bundle-level mark-sold from cockpit.
+- **Key files:**
+  - `apps/mobile/app/(tabs)/sell.tsx` — My Sales dashboard
+  - `apps/mobile/app/seller/inventory/[eventId].tsx` — inventory cockpit
+  - `apps/mobile/app/capture/index.tsx` — camera capture screen
+  - `apps/mobile/app/capture/review.tsx` — review + finalize
+  - `apps/mobile/lib/capture-store.ts` — ephemeral capture state
+  - `packages/api/src/index.ts` — `captureFrameNative` added
+- **Exit:** a seller can capture items, review/rename them, finalize, view inventory, edit prices, publish to marketplace, and mark items sold.
 
 ### Phase 5 — Store readiness + polish
 - [ ] EAS Build profiles (dev/preview/prod); EAS Submit to App Store + Play.

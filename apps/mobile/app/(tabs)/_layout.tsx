@@ -83,6 +83,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="sell"
+        options={{
+          title: "Sell",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={{ default: "briefcase-outline", active: "briefcase" }}
+              focused={focused}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",

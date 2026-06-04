@@ -13,6 +13,8 @@ import {
   useUpdateNotifications,
   useUpdatePreferences,
   useUpdatePrivacy,
+  useUploadAvatar,
+  useRemoveAvatar,
 } from "@/hooks/use-settings";
 import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@/lib/types";
 
@@ -340,6 +342,9 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
   const { profile, isLoading, update, isUpdating } = useUsername();
   const { check, available, isChecking } = useUsernameAvailability();
   const profileMutation = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
+  const removeAvatarMutation = useRemoveAvatar();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState("");
   const [usernameInput, setUsernameInput] = useState("");
@@ -387,6 +392,21 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
 
   const initials = (profile?.username ?? userEmail ?? "?").slice(0, 2).toUpperCase();
   const [avatarError, setAvatarError] = useState(false);
+  const avatarSrc = settings?.avatarUrl ?? photoURL ?? null;
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarError(false);
+    uploadAvatar.mutate(file);
+    e.target.value = "";
+  };
+
+  const joinedLabel = (() => {
+    if (!settings?.joinedAt) return null;
+    const d = new Date(settings.joinedAt);
+    return `Member since ${d.toLocaleDateString("en-AU", { month: "long", year: "numeric" })}`;
+  })();
 
   if (isLoading) return <div style={{ padding: 24, color: "var(--sr-text-muted)", fontSize: 13 }}>Loading…</div>;
 
@@ -406,16 +426,16 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
         }}>
           <div style={{
             width: 72, height: 72, borderRadius: "50%", flexShrink: 0,
-            background: photoURL && !avatarError ? undefined : "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
+            background: avatarSrc && !avatarError ? undefined : "linear-gradient(135deg, var(--clay-300), var(--clay-600))",
             display: "grid", placeItems: "center",
             color: "var(--cream-50)", fontFamily: "var(--sr-font-serif)",
             fontSize: 26, fontWeight: 600, cursor: "pointer", position: "relative", overflow: "hidden",
           }}
             className="av-lg"
           >
-            {photoURL && !avatarError ? (
+            {avatarSrc && !avatarError ? (
               <Image
-                src={photoURL}
+                src={avatarSrc}
                 alt={initials}
                 width={72}
                 height={72}
@@ -427,12 +447,27 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-800)" }}>{displayName || profile?.username || "-"}</span>
             <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-mono)" }}>@{profile?.username ?? "-"}</span>
-            <span style={{ fontSize: 11, color: "var(--sr-text-muted)", marginTop: 4 }}>Member since January 2025</span>
+            {joinedLabel && <span style={{ fontSize: 11, color: "var(--sr-text-muted)", marginTop: 4 }}>{joinedLabel}</span>}
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              <button className="s-btn-secondary s-btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <IcCam /> Upload photo
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarFile}/>
+              <button
+                className="s-btn-secondary s-btn-sm"
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadAvatar.isPending}
+              >
+                <IcCam /> {uploadAvatar.isPending ? "Uploading…" : "Upload photo"}
               </button>
-              <button className="s-btn-ghost s-btn-sm" style={{ color: "var(--sr-text-muted)" }}>Remove</button>
+              {avatarSrc && !avatarError && (
+                <button
+                  className="s-btn-ghost s-btn-sm"
+                  style={{ color: "var(--sr-text-muted)" }}
+                  onClick={() => removeAvatarMutation.mutate()}
+                  disabled={removeAvatarMutation.isPending}
+                >
+                  {removeAvatarMutation.isPending ? "Removing…" : "Remove"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -455,7 +490,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
           Your unique handle on ShiftReady. 4–20 characters, letters and numbers only, must start with a letter.
         </p>
 
-        <SField label="Handle" hint="Last changed 3 days ago · next change available in 4 days" hintType="warn">
+        <SField label="Handle" hint={profile?.usernameChangedAt ? `Last changed ${new Date(profile.usernameChangedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}` : undefined}>
           <div style={{
             display: "flex", alignItems: "center",
             background: "var(--cream-50)", border: "1px solid var(--sr-border-default)",
@@ -502,7 +537,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
                 !/^[a-zA-Z]/.test(usernameInput) ? "Username must start with a letter" :
                 usernameInput === profile?.username ? "Same as your current username" :
                 available === false ? "That username is already taken" :
-                `You can change your username again on ${new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}`
+                "Check username availability first"
               }
               style={{ cursor: "not-allowed" }}
             >

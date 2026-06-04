@@ -632,6 +632,21 @@ export async function updatePrivacy(prefs: PrivacyPrefs): Promise<{ status: stri
   });
 }
 
+export async function getAvatarUploadUrl(): Promise<{ upload_url: string; gcs_path: string }> {
+  return apiRequest<{ upload_url: string; gcs_path: string }>(`${API_BASE}/users/me/avatar/upload-url`, { method: "POST" });
+}
+
+export async function confirmAvatar(gcs_path: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/avatar/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ gcs_path }),
+  });
+}
+
+export async function removeAvatar(): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${API_BASE}/users/me/avatar`, { method: "DELETE" });
+}
+
 // --- Messaging ---
 
 export async function startConversation(

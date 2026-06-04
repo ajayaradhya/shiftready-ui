@@ -65,17 +65,21 @@ export default function ProfileScreen() {
         </View>
 
         {/* Seller Central entry */}
-        <View className="rounded-xl bg-surface-container p-4 border border-outline-variant">
+        <TouchableOpacity
+          className="rounded-xl bg-surface-container p-4 border border-outline-variant"
+          onPress={() => router.push("/(tabs)/sell")}
+          activeOpacity={0.7}
+        >
           <Text className="text-sm font-semibold text-on-surface mb-2">Selling</Text>
           <Text className="text-sm text-on-surface-variant mb-3">
             Manage your sales, inventory, and listings.
           </Text>
           <View className="rounded-lg bg-primary px-4 py-2.5 items-center">
             <Text className="text-on-primary font-medium text-sm">
-              Seller Central — Phase 4
+              Go to My Sales →
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Sign out */}
         <TouchableOpacity

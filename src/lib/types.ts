@@ -343,6 +343,7 @@ export interface UserSettings {
   suburb: string | null;
   state: string | null;
   joinedAt: string | null;
+  avatarUrl: string | null;
   notifPrefs: NotifPrefs;
   sellerPrefs: SellerPrefs;
   privacyPrefs: PrivacyPrefs;
