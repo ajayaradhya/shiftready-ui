@@ -41,6 +41,9 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="sale/[eventId]" options={{ animation: "slide_from_right" }} />
               <Stack.Screen name="item/[eventId]/[bundleId]/[itemId]" options={{ animation: "slide_from_right" }} />
+              <Stack.Screen name="conversation/[convId]" options={{ animation: "slide_from_right" }} />
+              <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
+              <Stack.Screen name="purchases" options={{ animation: "slide_from_right" }} />
               <Stack.Screen name="+not-found" />
             </Stack>
           </AuthProvider>

@@ -109,12 +109,24 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `apps/mobile/app/item/[eventId]/[bundleId]/[itemId].tsx` — item detail + lightbox (new)
 - **Exit:** a buyer can browse + view + save entirely on device.
 
-### Phase 3 — Buyer interactive
-- [ ] Messages: conversation list + thread; native `WebSocket` for live (`use-messages`/`use-messages-ws` ported).
-- [ ] Offers / counter / accept / withdraw; deal-agreed banner; phone reveal.
-- [ ] Notifications feed + **expo-notifications** push (register token → backend Phase; tap → deep link).
-- [ ] Purchases tracker.
-- **Exit:** full buyer loop (browse → message → offer → deal) on device with push.
+### Phase 3 — Buyer interactive ✅ DONE (2026-06-05)
+- [x] Messages tab: full conversation list with unread badges; WS live updates via `useMessagesWs`.
+- [x] Thread screen (`/conversation/[convId]`): inverted FlatList, send text, offer card (accept/counter/withdraw), deal-agreed header chip, phone reveal banner.
+- [x] Offer modal: cross-platform TextInput sheet (no Alert.prompt).
+- [x] Notifications screen (`/notifications`): in-app feed, mark read / mark all read.
+- [x] Purchases screen (`/purchases`): enquiry tracker sorted by deal status.
+- [x] "Message seller" button in item detail; `startConversation` → navigate to thread.
+- [x] Unread badge on Messages tab from `useUnreadCount` in tabs layout.
+- [x] Profile links to Notifications (with unread count chip) and My Purchases.
+- [x] All hooks ported: `use-conversations`, `use-messages`, `use-messages-ws`, `use-send-message`, `use-offers`, `use-notifications`.
+- **Note:** expo-notifications push (device token → backend) deferred to Phase 4; backend push endpoint not yet built.
+- **Exit:** full buyer loop (browse → message → offer → deal) on device with live WS.
+- **Key files:**
+  - `apps/mobile/hooks/` — 6 new hooks (use-conversations, use-messages, use-messages-ws, use-send-message, use-offers, use-notifications)
+  - `apps/mobile/app/(tabs)/messages.tsx` — conversation list (full)
+  - `apps/mobile/app/conversation/[convId].tsx` — thread + offer flow
+  - `apps/mobile/app/notifications.tsx` — notification feed
+  - `apps/mobile/app/purchases.tsx` — purchases/enquiry tracker
 
 ### Phase 4 — Seller + capture (the native payoff)
 - [ ] Seller Central: sales list, inventory cockpit (bundles/items/pricing), publish/unpublish.

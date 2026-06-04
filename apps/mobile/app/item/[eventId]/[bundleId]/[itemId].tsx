@@ -1,13 +1,13 @@
 import { useState, useRef } from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity, Alert,
   Image, ActivityIndicator, Modal, Dimensions, FlatList,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getPublicItem, saveItem, unsaveItem } from "@shiftready/api";
+import { getPublicItem, saveItem, unsaveItem, startConversation } from "@shiftready/api";
 import { formatAUD, formatDateAU } from "@shiftready/core";
 import { useAuth } from "@/contexts/auth-context";
 import type { PublicItemImage } from "@shiftready/types";
@@ -179,6 +179,7 @@ export default function ItemDetailScreen() {
 
   const [savedOptimistic, setSavedOptimistic] = useState<boolean | null>(null);
   const isSaved = savedOptimistic !== null ? savedOptimistic : (item?.is_saved ?? false);
+  const [messaging, setMessaging] = useState(false);
 
   async function toggleSave() {
     if (!user || !item) return;
@@ -194,6 +195,23 @@ export default function ItemDetailScreen() {
   }
 
   const isSoldItem = item?.sale_status === "sold";
+
+  async function handleMessage() {
+    if (!user || !item?.seller_id) return;
+    setMessaging(true);
+    try {
+      const res = await startConversation(item.seller_id, undefined, {
+        saleEventId: eventId,
+        bundleId,
+        itemId,
+      });
+      router.push({ pathname: "/conversation/[convId]", params: { convId: res.conversationId } });
+    } catch {
+      Alert.alert("Error", "Could not start conversation.");
+    } finally {
+      setMessaging(false);
+    }
+  }
 
   return (
     <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
@@ -342,17 +360,33 @@ export default function ItemDetailScreen() {
             </View>
           ) : null}
 
-          {/* CTA */}
-          <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+          {/* CTAs */}
+          <View style={{ paddingHorizontal: 16, marginTop: 24, gap: 10 }}>
+            {user && item.seller_id && item.seller_id !== user.uid && !isSoldItem && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handleMessage}
+                disabled={messaging}
+                style={{
+                  backgroundColor: "#B5604A", borderRadius: 12,
+                  paddingVertical: 14, alignItems: "center",
+                  opacity: messaging ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+                  {messaging ? "Opening chat…" : "Message seller"}
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => router.push({ pathname: "/sale/[eventId]", params: { eventId } })}
               style={{
-                backgroundColor: "#B5604A", borderRadius: 12,
+                borderWidth: 1, borderColor: "#C8B99A", borderRadius: 12,
                 paddingVertical: 14, alignItems: "center",
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
+              <Text style={{ color: "#4F4838", fontWeight: "600", fontSize: 15 }}>
                 View full sale
               </Text>
             </TouchableOpacity>
