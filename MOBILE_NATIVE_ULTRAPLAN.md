@@ -97,11 +97,16 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `apps/mobile/app/_layout.tsx` — root layout: QueryClient + AuthProvider + `configure()`
   - `packages/api/src/index.ts` — added `configure({ apiBaseUrl })` export; `_apiBase` is now mutable
 
-### Phase 2 — Buyer read-only (fastest value, lowest risk)
-- [ ] Market browse (RSC landing → RN list/sections; reuse `use-landing`/`use-sales`).
-- [ ] Sale detail (bundles + deals + verified seller).
-- [ ] Item detail + image lightbox (`expo-image`, signed `thumb_url`/`medium_url`).
-- [ ] Saved list.
+### Phase 2 — Buyer read-only ✅ DONE (2026-06-04)
+- [x] Market browse — sale cards (horizontal) + item feed (vertical); `getLandingData()`.
+- [x] Sale detail — cover image, meta chips (suburb/date/urgency), bundles + items list with sold/reserved badges; save/unsave.
+- [x] Item detail — paginated image gallery, full-screen lightbox modal, detail table, context section, save/unsave.
+- [x] Saved list — saved sales + saved items; unauthenticated empty state with login CTA.
+- **Key files:**
+  - `apps/mobile/app/(tabs)/index.tsx` — market browse (updated)
+  - `apps/mobile/app/(tabs)/saved.tsx` — saved list (updated)
+  - `apps/mobile/app/sale/[eventId].tsx` — sale detail (new)
+  - `apps/mobile/app/item/[eventId]/[bundleId]/[itemId].tsx` — item detail + lightbox (new)
 - **Exit:** a buyer can browse + view + save entirely on device.
 
 ### Phase 3 — Buyer interactive
