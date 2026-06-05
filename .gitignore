@@ -55,6 +55,7 @@ test-results
 *node_modules*
 *.next
 *.turbo
+.turbo/
 
 # Expo
 .expo/
