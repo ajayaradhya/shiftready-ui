@@ -158,12 +158,26 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `packages/api/src/index.ts` — `captureFrameNative` added
 - **Exit:** a seller can capture items, review/rename them, finalize, view inventory, edit prices, publish to marketplace, and mark items sold.
 
-### Phase 5 — Store readiness + polish
-- [ ] EAS Build profiles (dev/preview/prod); EAS Submit to App Store + Play.
-- [ ] App icons, splash, store listings, screenshots, privacy nutrition labels (camera, push, auth).
-- [ ] Forced-update gate (`min-version`), Sentry RN, OTA via EAS Update.
-- [ ] Deep links / universal links (share a sale → opens app).
-- [ ] Beta: TestFlight + Play internal testing; collect feedback; submit for review.
+### Phase 5 — Store readiness + polish ✅ IN PROGRESS (2026-06-05)
+- [x] **`eas.json`** — dev/preview/production build profiles + EAS Submit config (`apps/mobile/eas.json`).
+- [x] **`app.json`** — EAS Update (`expo-updates`, OTA), splash/icon config, push notification plugin, iOS `associatedDomains`, Android `intentFilters` for universal/app links.
+- [x] **`expo-notifications`** + **`expo-updates`** added to `package.json`.
+- [x] **`@sentry/react-native`** added; Sentry init in root layout (disabled in dev, `EXPO_PUBLIC_SENTRY_DSN`).
+- [x] **Push token registration** — `lib/push.ts`: `registerPushToken()` / `unregisterPushToken()`; called on auth state change in `auth-context.tsx`.
+- [x] **OTA update check** — `lib/updates.ts`: `checkForOTAUpdate()` on app launch in root layout.
+- [x] **Backend push token** — `POST /users/me/push-token` + `DELETE /users/me/push-token` (users router + user_repo `add/remove/get_push_tokens`).
+- [x] **Push fan-out** — `app/services/push.py` (`PushService` via Expo Push API); wired into `MessagingService` for message.new / offer.new / offer.countered / offer.accepted events.
+- [x] **Universal links** — `apps/web/public/.well-known/apple-app-site-association` + `assetlinks.json`; `next.config.js` serves both with `Content-Type: application/json`.
+- [ ] **Fill-in steps** (manual, need accounts/assets):
+  - Run `eas init` in `apps/mobile/` → replace `FILL_IN_EAS_PROJECT_ID` in `app.json` (two places).
+  - Create app icon (`./assets/icon.png` 1024×1024) + splash (`./assets/splash.png`) + adaptive icon (`./assets/adaptive-icon.png` 1024×1024) + notification icon (`./assets/notification-icon.png` 96×96 white-on-transparent).
+  - Fill `eas.json` submit block: `appleId`, `ascAppId`, `appleTeamId`, `google-play-service-account.json`.
+  - Fill `apple-app-site-association`: replace `FILL_IN_APPLE_TEAM_ID`.
+  - Fill `assetlinks.json`: replace SHA256 fingerprint (from `eas credentials` after first Android build).
+  - Add `EXPO_PUBLIC_SENTRY_DSN` to `.env.local` (from Sentry project settings).
+  - Run `pnpm --filter @shiftready/mobile install` to pull `expo-notifications`, `expo-updates`, `@sentry/react-native`.
+- [ ] App Store + Play Console: create app listings, store screenshots, privacy nutrition labels (camera, push, auth).
+- [ ] Beta: EAS Build `preview` profile → TestFlight + Play internal testing; collect feedback; submit for review.
 - **Exit:** approved on both stores.
 
 ---

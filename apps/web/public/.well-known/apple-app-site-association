@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "FILL_IN_APPLE_TEAM_ID.au.com.shiftready.app",
+        "paths": [
+          "/sale/*",
+          "/item/*"
+        ]
+      }
+    ]
+  }
+}

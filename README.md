@@ -44,24 +44,29 @@ Tap-to-capture inventory · AI extraction + pricing · buyer marketplace · offe
 
 ## Overview
 
-ShiftReady UI is the user-facing surface of the ShiftReady platform. Two audiences share the app:
+ShiftReady UI is a **Turborepo monorepo** containing the web app and native mobile app for the ShiftReady platform. Two audiences share both surfaces:
 
 - **Sellers** — initiate a sale, capture inventory live or upload a walkthrough video, review and edit AI-extracted bundles, set a move-out deadline, publish to the marketplace, and message buyers.
 - **Buyers** — browse the marketplace, save items, message sellers, make structured offers, and reveal seller contact info once a deal is agreed.
 
-The UI is a fully client-rendered Next.js 16 App Router app backed by [`shiftready-backend`](../shiftready-backend) over REST + WebSockets. Firebase handles authentication; TanStack Query handles data fetching and cache invalidation.
+**Web (`apps/web/`):** Next.js 16 App Router app backed by [`shiftready-backend`](../shiftready-backend) over REST + WebSockets. Firebase handles authentication; TanStack Query handles data fetching.
+
+**Mobile (`apps/mobile/`):** Expo 53 / React Native 0.79.6 app sharing the same backend API. Five-tab bottom nav for buyers and sellers.
 
 ---
 
 ## Key Features
 
-- **Tap-to-capture** — single-tap item capture with on-device camera; Gemini identifies name/brand/price in the background.
+- **Tap-to-capture** — single-tap item capture with on-device camera (web + native); Gemini identifies name/brand/price in the background.
 - **Two-mode `ProcessingScreen`** — `live` (real captured items with thumbnails) or `batch` (animated discovery ticker for video uploads).
 - **Inventory cockpit** — bundle/item CRUD, per-item photo gallery (upload, cover, lightbox, delete), append additional video.
 - **Urgency pricing review** — Gemini-suggested prices with seller-editable overrides; reasoning displayed inline.
 - **Marketplace** — buyer-side browse, sale detail, item detail, saved items, purchases, help.
 - **Messages v2** — single thread per buyer-seller pair, structured offer/counter/accept, pinned item card, post-deal phone reveal.
-- **Modern shell** — slim header, icon-rail sidebar with hover-expand, profile popover, slide-over notifications, ⌘K command palette, mobile bottom tab bar.
+- **Modern shell (web)** — slim header, icon-rail sidebar with hover-expand, profile popover, slide-over notifications, ⌘K command palette, mobile bottom tab bar.
+- **Native mobile** — Expo app with 5-tab bottom nav (Market, Saved, Messages, Sell, Profile); unread badge on Messages tab.
+- **Google SSO** — Google sign-in available on both web and mobile.
+- **Expanded settings** — Profile (avatar, display name, bio), Account (Google SSO), Contact & Pickup (phone, suburb), Notifications (per-event toggles), Preferences (payment methods, pickup schedule, min offer threshold), Privacy (messaging filter, profile visibility, blocked users).
 - **Real-time** — WebSocket-driven pipeline status and message delivery; polling fallback during AI processing.
 
 ---
@@ -190,14 +195,19 @@ sequenceDiagram
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 16.2 (App Router, Standalone output) |
-| UI | React 19 · Tailwind v4 (`@theme` block) · Radix UI · lucide-react · sonner |
+| Monorepo | Turborepo 2 · pnpm 10 |
+| Web framework | Next.js 16.2 (App Router, Standalone output) |
+| Mobile framework | Expo 53 · React Native 0.79.6 · Expo Router 5 |
+| UI (web) | React 19 · Tailwind v4 (`@theme` block) · Radix UI · lucide-react · sonner |
+| UI (mobile) | NativeWind v4 · Ionicons · Expo Image · Reanimated 3 |
 | State / Data | TanStack Query v5 · React Context |
-| Forms | react-hook-form + zod |
-| Auth | Firebase 12 (Client SDK) |
-| Capture | Browser MediaDevices + canvas frame extraction |
+| Forms (web) | react-hook-form + zod |
+| Auth | Firebase 12 (Client SDK) · Google SSO (`GoogleAuthProvider`) |
+| Capture (web) | Browser MediaDevices + canvas frame extraction |
+| Capture (mobile) | Expo Camera + Image Manipulator |
 | Command palette | cmdk |
 | Class utilities | clsx + tailwind-merge (`cn()`) |
+| Shared packages | `@shiftready/api` · `@shiftready/core` · `@shiftready/types` |
 | Tooling | TypeScript 5 · ESLint 9 · Prettier 3 · prettier-plugin-tailwindcss |
 | Deployment | Cloud Run · Cloud Build · Artifact Registry |
 
@@ -207,41 +217,59 @@ sequenceDiagram
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 20+ · pnpm 10+ (`npm install -g pnpm`)
 - A running [`shiftready-backend`](../shiftready-backend) on `http://localhost:8080`
 
 ### Install
 
 ```bash
-npm install
+pnpm install        # install all workspace deps
+# or
+make install
 ```
 
 ### Configure
 
 ```bash
-cp .env.local.example .env.local
+# Web
+cp apps/web/.env.local.example apps/web/.env.local
+
+# Mobile
+cp apps/mobile/.env.example apps/mobile/.env.local
 ```
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend base URL. Local: `http://localhost:8080` |
-| `NEXT_PUBLIC_FIREBASE_*` | Firebase Web SDK config (see `.env.local.example`) |
+| Variable | App | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | web | Backend base URL. Local: `http://localhost:8080` |
+| `NEXT_PUBLIC_FIREBASE_*` | web | Firebase Web SDK config |
+| `EXPO_PUBLIC_API_URL` | mobile | Backend base URL. Local: `http://localhost:8080` |
 
 ### Run
 
 ```bash
-npm run dev        # http://localhost:3000
+# Web dev server
+make web-dev        # http://localhost:3000
+# or: pnpm dev
+
+# Mobile (Expo Go)
+make mobile-start
+# or: pnpm --filter @shiftready/mobile start
+
+# Native builds
+make mobile-android
+make mobile-ios
 ```
 
 ### Useful scripts
 
 ```bash
-npm run build         # production build (standalone)
-npm run start         # serve the production build
-npm run lint          # ESLint
-npm run type-check    # tsc --noEmit
-npm run format        # Prettier write
-npm run format:check  # Prettier check
+make web-build        # production build (standalone)
+make web-lint         # ESLint
+pnpm type-check       # tsc --noEmit
+pnpm --filter @shiftready/web format       # Prettier write
+pnpm --filter @shiftready/web format:check
+make mobile-prebuild  # expo prebuild --clean (regenerate native projects)
+make clean            # nuke node_modules + reinstall
 ```
 
 ### Full-stack session
@@ -259,56 +287,51 @@ claude --add-dir ../shiftready-ui
 ## Project Structure
 
 ```
-src/
-├── app/                              # Next.js App Router
-│   ├── layout.tsx                    # Providers + Shell (Sidebar + Header)
-│   ├── page.tsx                      # Landing
-│   ├── not-found.tsx                 # Custom 404
-│   ├── (auth)/                       # login · register (no shell)
-│   ├── (sellers)/                    # Authenticated seller routes
-│   │   ├── dashboard/                # Sales list
-│   │   ├── seller-central/           # Hub · capture · live-stream · create
-│   │   ├── inventory/[eventId]/      # Inventory review cockpit
-│   │   ├── messages/                 # Seller-side messaging
-│   │   ├── settings/                 # Profile · username · phone
-│   │   └── dev/                      # Dev-only tools
-│   ├── (market)/                     # Buyer-facing marketplace
-│   │   └── market/                   # Browse · sale · item · saved · purchases · messages · help
-│   └── (public)/
-│       └── sale/[eventId]/           # Anonymous public sale view
-├── components/
-│   ├── providers.tsx                 # QueryClientProvider + AuthProvider
-│   ├── shell/
-│   │   ├── header.tsx                # Slim 48px header w/ ⌘K trigger
-│   │   ├── sidebar.tsx               # Icon-rail w/ hover-expand
-│   │   ├── command-palette.tsx       # ⌘K (cmdk)
-│   │   ├── notifications-panel.tsx   # Right slide-over
-│   │   ├── profile-menu.tsx          # Radix popover
-│   │   ├── bottom-tab-bar.tsx        # Mobile tabs
-│   │   └── shortcuts-cheatsheet.tsx
-│   ├── ui/                           # Radix-wrapped primitives (button, dialog, sheet, ...)
-│   └── features/
-│       ├── capture/                  # CaptureStage, ItemConfirmCard, ItemReviewScreen, ...
-│       ├── create/                   # upload-screen, processing-screen, video-uploader
-│       ├── inventory/                # cards, photo strip, video panel, AppendVideoModal
-│       ├── seller-central/           # sale-row, bundle-card, item-card-v2
-│       ├── dashboard/                # sale-card
-│       ├── marketplace/              # buyer-side cards + lists
-│       └── messages/                 # thread, offer card, deal banner, phone reveal
-├── hooks/                            # TanStack Query + WS hooks (see list below)
-└── lib/
-    ├── api.ts                        # All API calls — single apiRequest<T> wrapper
-    ├── types.ts                      # Domain types (InventoryItem, SaleSummary, ...)
-    ├── schemas.ts                    # Zod schemas
-    ├── firebase.ts                   # Client SDK init
-    ├── sale-context.tsx              # Context: current sale across cockpit routes
-    ├── marketplace-filters.ts
-    ├── constants.ts
-    ├── utils.ts                      # cn() + helpers
-    └── capture/                      # camera + frame helpers
+shiftready-ui/
+├── Makefile                          # Unified dev commands (web + mobile)
+├── apps/
+│   ├── web/                          # @shiftready/web — Next.js 16
+│   │   └── src/
+│   │       ├── app/
+│   │       │   ├── layout.tsx        # Providers + Shell
+│   │       │   ├── page.tsx          # Landing
+│   │       │   ├── (auth)/           # login · register (no shell)
+│   │       │   ├── (sellers)/        # Authenticated seller routes
+│   │       │   │   ├── seller-central/ # Hub · capture · create
+│   │       │   │   ├── inventory/[eventId]/
+│   │       │   │   ├── messages/
+│   │       │   │   ├── settings/     # Profile · Account · Contact · Notifs · Prefs · Privacy
+│   │       │   │   └── dev/
+│   │       │   ├── (market)/         # Buyer marketplace
+│   │       │   └── (public)/         # Anonymous sale view
+│   │       ├── components/
+│   │       │   ├── shell/            # header, sidebar, command-palette, notifications-panel, profile-menu, bottom-tab-bar
+│   │       │   ├── ui/               # Radix primitives
+│   │       │   └── features/         # capture · create · inventory · seller-central · marketplace · messages
+│   │       ├── hooks/                # TanStack Query + WS hooks
+│   │       └── lib/
+│   │           ├── api.ts            # All API calls — single apiRequest<T> wrapper
+│   │           ├── types.ts          # Domain types
+│   │           ├── firebase.ts       # Client SDK (Email/Password + Google SSO)
+│   │           └── capture/          # Camera + frame helpers
+│   └── mobile/                       # @shiftready/mobile — Expo 53
+│       └── app/
+│           ├── (auth)/               # login · register
+│           ├── (tabs)/               # Market · Saved · Messages · Sell · Profile
+│           ├── capture/              # Camera capture flow
+│           ├── sale/[eventId]/
+│           ├── item/[eventId]/[bundleId]/[itemId]/
+│           ├── conversation/[convId]/
+│           ├── seller/inventory/[eventId]/
+│           ├── notifications/
+│           └── purchases/
+└── packages/                         # Shared workspace packages
+    ├── api/                          # @shiftready/api — shared API client
+    ├── core/                         # @shiftready/core — SYDNEY_SUBURBS, suburb lookup utils
+    └── types/                        # @shiftready/types — shared domain types
 ```
 
-### Hooks at a glance
+### Web Hooks at a glance
 
 | Hook | Purpose |
 |---|---|
@@ -324,7 +347,8 @@ src/
 | `use-saved` | Saved items |
 | `use-pin` | Pinned item card in chat |
 | `use-phone` | Post-deal phone reveal |
-| `use-settings` / `use-username` | Profile + username |
+| `use-settings` | Full settings CRUD (`useMySettings`, `useUpdateProfile`, `useUpdateLocation`, `useUpdateNotifications`, `useUpdatePreferences`, `useUpdatePrivacy`) |
+| `use-username` | `useUsername`, `useUsernameAvailability` |
 | `use-landing` | Public landing data |
 
 ---
@@ -489,11 +513,13 @@ gcloud builds submit --config=cloudbuild.yaml
 
 1. Branch from `master`.
 2. Match folder conventions:
-   - New page → `src/app/<route>/page.tsx`
-   - New API call → add to `src/lib/api.ts` (single export per call) + type in `src/lib/types.ts`
-   - New data hook → `src/hooks/` using TanStack Query
-   - New feature component → `src/components/features/<feature>/`
-3. Run `npm run lint && npm run type-check && npm run build` before pushing.
+   - New web page → `apps/web/src/app/<route>/page.tsx`
+   - New API call → add to `apps/web/src/lib/api.ts` (single export per call) + type in `src/lib/types.ts`
+   - New data hook → `apps/web/src/hooks/` using TanStack Query
+   - New feature component → `apps/web/src/components/features/<feature>/`
+   - New mobile screen → `apps/mobile/app/<route>/` using Expo Router
+   - New shared type → `packages/types/`
+3. Run `pnpm lint && pnpm type-check && make web-build` before pushing.
 4. PR must include a screenshot or short clip if the change is user-visible.
 
 Coding conventions:

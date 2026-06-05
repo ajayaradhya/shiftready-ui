@@ -5,6 +5,18 @@ const { withSentryConfig } = require("@sentry/nextjs");
 const nextConfig = {
   output: "standalone",
   transpilePackages: ["@shiftready/types", "@shiftready/core", "@shiftready/api"],
+  async headers() {
+    return [
+      {
+        source: "/.well-known/apple-app-site-association",
+        headers: [{ key: "Content-Type", value: "application/json" }],
+      },
+      {
+        source: "/.well-known/assetlinks.json",
+        headers: [{ key: "Content-Type", value: "application/json" }],
+      },
+    ];
+  },
   images: {
     minimumCacheTTL: 86400,
     remotePatterns: [

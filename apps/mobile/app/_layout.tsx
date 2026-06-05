@@ -4,15 +4,25 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as Sentry from "@sentry/react-native";
 import { configure } from "@shiftready/api";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { queryClient } from "@/lib/query-client";
+import { configurePushHandler } from "@/lib/push";
+import { checkForOTAUpdate } from "@/lib/updates";
 
-// Inject backend base URL for the mobile platform.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  tracesSampleRate: 0.2,
+});
+
 configure({
   apiBaseUrl:
     (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080") + "/api/v1",
 });
+
+configurePushHandler();
 
 function AuthGate() {
   const { user, loading } = useAuth();
@@ -30,6 +40,10 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    checkForOTAUpdate();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

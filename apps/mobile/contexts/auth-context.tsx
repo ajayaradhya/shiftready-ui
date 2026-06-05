@@ -21,6 +21,7 @@ import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { _setIdToken, setTokenRefresher } from "@shiftready/api";
+import { registerPushToken, unregisterPushToken } from "@/lib/push";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -110,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         _setIdToken(token);
         setIdToken(token);
         setUser(toAuthUser(firebaseUser));
+        registerPushToken().catch(() => {});
       } else {
         _setIdToken(null);
         setIdToken(null);
@@ -157,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    await unregisterPushToken().catch(() => {});
     if (isFirebaseConfigured && auth) await firebaseSignOut(auth);
     _setIdToken(null);
     setIdToken(null);

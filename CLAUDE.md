@@ -4,10 +4,14 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## Project Overview
 
-**ShiftReady UI** — Next.js 16 / React 19 seller dashboard + public marketplace for the ShiftReady relocation platform.
+**ShiftReady UI** — Turborepo monorepo containing the web app and native mobile app for the ShiftReady relocation platform.
 
-- **Frontend** (`shiftready-ui/`, this repo): seller dashboard (live capture, inventory review, pricing, publishing, messaging) + buyer marketplace.
+- **Web** (`apps/web/`): Next.js 16 / React 19 seller dashboard + buyer marketplace.
+- **Mobile** (`apps/mobile/`): Expo 53 / React Native 0.79.6 native app.
+- **Shared packages**: `@shiftready/api` · `@shiftready/core` · `@shiftready/types`.
 - **Backend** (`../shiftready-backend/`): FastAPI on Cloud Run. Sibling directory.
+
+Package manager: **pnpm 10** with Turborepo. Run `pnpm install` at root.
 
 Launch with both repos editable:
 
@@ -20,51 +24,78 @@ claude --add-dir ../shiftready-ui
 ## Commands
 
 ```bash
-npm run dev          # http://localhost:3000
-npm run build        # production build (standalone)
-npm run start        # serve production build
-npm run lint
-npm run type-check   # tsc --noEmit
-npm run format
-npm run format:check
+# Root — via Makefile or pnpm
+make web-dev          # http://localhost:3000 (or: pnpm dev)
+make web-build        # production build
+make web-lint         # lint web workspace
+make mobile-start     # Expo dev server (Metro / Expo Go)
+make mobile-android   # build + run on Android
+make mobile-ios       # build + run on iOS (macOS only)
+make install          # install all workspace deps (pnpm install)
+make clean            # nuke node_modules + reinstall
+
+# Web via pnpm directly
+pnpm --filter @shiftready/web dev
+pnpm --filter @shiftready/web build
+pnpm lint
+pnpm type-check       # tsc --noEmit
+
+# Mobile via pnpm directly
+pnpm --filter @shiftready/mobile start
+pnpm --filter @shiftready/mobile android
+pnpm --filter @shiftready/mobile ios
+pnpm --filter @shiftready/mobile prebuild   # expo prebuild --clean
 ```
 
 Backend must be running on port 8080 for API calls to work locally.
 
 ## Architecture
 
-### App Router Layout Groups
+### Monorepo Structure
 
 ```
-src/app/
-├── layout.tsx                     # Providers + Shell (sidebar + header)
-├── page.tsx                       # Landing
-├── not-found.tsx                  # Custom 404
-├── (auth)/                        # login, register — bare layout, no shell
-├── (sellers)/                     # Authenticated seller routes — shared shell
-│   ├── dashboard/                 # Sales list
-│   ├── seller-central/            # Hub · capture · live-stream · create
-│   ├── inventory/[eventId]/       # Inventory review cockpit
-│   ├── messages/                  # Seller-side messaging
-│   ├── settings/                  # Profile · username · phone
-│   └── dev/                       # Dev-only tools
-├── (market)/                      # Buyer-facing marketplace
-│   └── market/                    # Browse · sale · item · saved · purchases · messages · help
-└── (public)/
-    └── sale/[eventId]/            # Anonymous public sale view
+shiftready-ui/
+├── apps/
+│   ├── web/                       # Next.js 16 App Router (@shiftready/web)
+│   │   └── src/app/
+│   │       ├── layout.tsx         # Providers + Shell
+│   │       ├── page.tsx           # Landing
+│   │       ├── (auth)/            # login · register — bare layout
+│   │       ├── (sellers)/         # Authenticated seller routes
+│   │       │   ├── seller-central/ # Hub · capture · create
+│   │       │   ├── inventory/[eventId]/
+│   │       │   ├── messages/
+│   │       │   └── settings/      # Profile · Account · Contact · Notifs · Prefs · Privacy
+│   │       ├── (market)/          # Buyer marketplace
+│   │       └── (public)/          # Anonymous sale view
+│   └── mobile/                    # Expo / React Native (@shiftready/mobile)
+│       └── app/
+│           ├── (auth)/            # login · register
+│           ├── (tabs)/            # Market · Saved · Messages · Sell · Profile
+│           ├── capture/           # Camera capture flow
+│           ├── sale/[eventId]/    # Sale detail
+│           ├── item/[eventId]/[bundleId]/[itemId]/
+│           ├── conversation/[convId]/
+│           ├── seller/inventory/[eventId]/
+│           ├── notifications/
+│           └── purchases/
+└── packages/                      # Shared workspace packages
+    ├── @shiftready/api             # Shared API client (configure({ apiBaseUrl }))
+    ├── @shiftready/core            # Shared utilities (SYDNEY_SUBURBS, suburbsForPostcode, etc.)
+    └── @shiftready/types           # Shared TypeScript types (NotifPrefs, SellerPrefs, PrivacyPrefs, …)
 ```
 
-### Component Structure
+### Web Component Structure (`apps/web/src/`)
 
 ```
-src/components/
+components/
 ├── providers.tsx                  # QueryClientProvider + AuthProvider + ReactQueryDevtools
 ├── shell/
 │   ├── header.tsx                 # Slim 48px header (⌘K trigger)
 │   ├── sidebar.tsx                # Icon-rail w/ hover-expand
 │   ├── command-palette.tsx        # ⌘K (cmdk)
 │   ├── notifications-panel.tsx    # Right slide-over
-│   ├── profile-menu.tsx           # Radix popover
+│   ├── profile-menu.tsx           # Radix popover (includes Google SSO status)
 │   ├── bottom-tab-bar.tsx         # Mobile tabs
 │   └── shortcuts-cheatsheet.tsx
 ├── ui/                            # Radix primitives (button, dialog, sheet, dropdown, tooltip, badge, input, label)
@@ -83,7 +114,7 @@ src/components/
     └── messages/                  # thread, offer card, deal banner, phone reveal, pinned item card
 ```
 
-### Hooks (`src/hooks/`)
+### Web Hooks (`apps/web/src/hooks/`)
 
 | Hook | Purpose |
 |---|---|
@@ -99,20 +130,42 @@ src/components/
 | `use-saved` | Saved items |
 | `use-pin` | Pinned item in chat |
 | `use-phone` | Post-deal phone reveal |
-| `use-settings` / `use-username` | Profile + username |
+| `use-settings` | Full settings CRUD: `useMySettings`, `useUpdateProfile`, `useUpdateLocation`, `useUpdateNotifications`, `useUpdatePreferences`, `useUpdatePrivacy` |
+| `use-username` | `useUsername`, `useUsernameAvailability` |
 | `use-landing` | Public landing data |
 
-### Lib (`src/lib/`)
+### Mobile Hooks (`apps/mobile/hooks/`)
 
-- `api.ts` — **ALL API calls live here.** Single `apiRequest<T>()` wrapper. Module-level `_idToken` set by `AuthProvider`, auto-injected as `Authorization: Bearer ...`.
+| Hook | Purpose |
+|---|---|
+| `use-conversations` | Thread list + `useUnreadCount` (tab badge) |
+| `use-messages` / `use-send-message` / `use-messages-ws` | Threads, send, real-time |
+| `use-offers` | Structured offer flow |
+| `use-notifications` | In-app notification feed |
+
+### Web Lib (`apps/web/src/lib/`)
+
+- `api.ts` — **ALL web API calls live here.** Single `apiRequest<T>()` wrapper. Module-level `_idToken` set by `AuthProvider`, auto-injected as `Authorization: Bearer ...`.
 - `types.ts` — `InventoryItem`, `RoomBundle`, `SaleSummary`, `InventoryImage`, message + offer types.
 - `schemas.ts` — Zod schemas for forms.
-- `firebase.ts` — Firebase Client SDK init.
+- `firebase.ts` — Firebase Client SDK init (supports Google SSO via `GoogleAuthProvider`).
 - `sale-context.tsx` — Context for current sale across cockpit routes.
 - `marketplace-filters.ts` — search/filter state.
 - `constants.ts` — shared constants.
 - `utils.ts` — `cn()` = clsx + tailwind-merge.
 - `capture/` — camera + frame helpers (canvas → JPEG blob), `CapturedItem` / `PendingDetection` / `CaptureToast` types, `dataUrlToFile`, `blobToFile`.
+
+### Shared Packages (`packages/`)
+
+- `@shiftready/api` — shared API client. Call `configure({ apiBaseUrl })` once at app startup. Used by both web and mobile.
+- `@shiftready/core` — shared utilities: `SYDNEY_SUBURBS`, `suburbsForPostcode(postcode)`, `isValidPostcode(str)`, suburb type definitions.
+- `@shiftready/types` — shared TypeScript interfaces: `NotifPrefs`, `SellerPrefs`, `PrivacyPrefs`, and other cross-platform domain types.
+
+### Mobile Lib (`apps/mobile/lib/`)
+
+- `capture-store.ts` — Zustand (or similar) store for capture session state.
+- `query-client.ts` — shared `QueryClient` instance for the mobile app.
+- `firebase.ts` — Firebase Client SDK init for mobile.
 
 ## Key Flows
 
@@ -152,6 +205,21 @@ src/components/
 - Per-message sale/item context (pinned item card at top).
 - Message types: `text`, `offer`, `counter`, `accept`.
 - On offer accept → item `RESERVED`, transaction created, deal-agreed banner, phone reveal unlocked.
+
+## Settings Page (`/settings`)
+
+Six-section settings page at `apps/web/src/app/(sellers)/settings/page.tsx`. Left-nav SPA-style — no page reload between sections.
+
+| Section | Key features |
+|---|---|
+| **Profile** | Avatar (upload/remove), display name, seller bio, username (availability check, 7-day cooldown) |
+| **Account** | Email + password change, Google SSO status (connected badge) |
+| **Contact & Pickup** | Australian mobile number (E.164), auto-share toggle, suburb/state combobox (`@shiftready/core` suburb data) |
+| **Notifications** | Per-event toggles for selling (msg, offer, counter, deal, ready, viewed) and buying (buy_msg, buy_offer, price_drop) — auto-saves on toggle |
+| **Preferences** | Payment methods (cash/bank/PayID/Afterpay), pickup days + times (pills), min offer threshold (slider 40–95%) |
+| **Privacy** | Messaging filter (anyone/verified/active buyers), profile visibility toggle, blocked users list |
+
+All sections backed by `useMySettings()` from `hooks/use-settings.ts` → `GET /users/me/settings`.
 
 ## ProcessingScreen
 
@@ -220,20 +288,32 @@ Use `apiRequest<ReturnType>`, named export, add TypeScript interface for request
 
 ## Authentication
 
-- Firebase Client SDK (`lib/firebase.ts`).
+**Web:**
+- Firebase Client SDK (`lib/firebase.ts`). Email/password + Google SSO (`GoogleAuthProvider`).
 - `AuthProvider` (in `providers.tsx`) maintains user + ID token.
 - Token auto-injected in every `apiRequest` via module-level `_idToken`.
 - WebSocket auth via `?token=` query param.
 - Backend dev bypass active locally when `K_SERVICE` absent (use `dev_*` tokens).
 
+**Mobile:**
+- Firebase Client SDK (`apps/mobile/lib/firebase.ts`).
+- `AuthProvider` (`apps/mobile/contexts/auth-context.tsx`) — user + loading state.
+- `AuthGate` in root layout redirects unauthenticated users to `/(auth)/login`.
+
 ## Environment Variables
 
+**Web (`apps/web/.env.local`):**
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8080    # local backend
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+**Mobile (`apps/mobile/.env.local`):**
+```
+EXPO_PUBLIC_API_URL=http://localhost:8080   # local backend
 ```
 
 Production `NEXT_PUBLIC_*` values are baked at Docker build time via `--build-arg`. Changing the backend URL requires a fresh Cloud Build run.
