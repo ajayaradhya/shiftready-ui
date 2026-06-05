@@ -4,3 +4,8 @@
 
 expo-env.d.ts
 # @end expo-cli
+
+# Firebase config files — contain API keys, never commit
+google-services.json
+GoogleService-Info.plist
+.env.local

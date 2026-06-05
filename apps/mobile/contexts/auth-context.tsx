@@ -7,16 +7,22 @@ import {
   type ReactNode,
 } from "react";
 import {
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onIdTokenChanged,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  signInWithCredential,
   signOut as firebaseSignOut,
   updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
 import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { _setIdToken, setTokenRefresher } from "@shiftready/api";
+
+WebBrowser.maybeCompleteAuthSession();
 
 setTokenRefresher(async () => {
   if (auth?.currentUser) return auth.currentUser.getIdToken(true);
@@ -38,6 +44,7 @@ interface AuthContextValue {
   idToken: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   register: (displayName: string, email: string, password: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
@@ -114,6 +121,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  const [_googleRequest, googleResponse, promptGoogleAsync] =
+    Google.useIdTokenAuthRequest({
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    });
+
+  useEffect(() => {
+    if (googleResponse?.type === "success") {
+      const { id_token } = googleResponse.params;
+      if (id_token && auth) {
+        signInWithCredential(auth, GoogleAuthProvider.credential(id_token)).catch(
+          (err) => console.error("Google credential sign-in failed:", err)
+        );
+      }
+    }
+  }, [googleResponse]);
+
+  const signInWithGoogle = useCallback(async () => {
+    if (!promptGoogleAsync) throw new Error("Google Sign-In not available.");
+    const result = await promptGoogleAsync();
+    if (result.type === "error") {
+      throw new Error(result.error?.message ?? "Google Sign-In failed.");
+    }
+  }, [promptGoogleAsync]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     if (!auth) throw new Error("Firebase is not configured.");
     try {
@@ -151,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, idToken, loading, signIn, signOut, register, sendVerificationEmail }}
+      value={{ user, idToken, loading, signIn, signInWithGoogle, signOut, register, sendVerificationEmail }}
     >
       {children}
     </AuthContext.Provider>

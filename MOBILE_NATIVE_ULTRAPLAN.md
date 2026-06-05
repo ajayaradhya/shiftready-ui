@@ -84,18 +84,27 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
 - [x] Shared tsconfig/eslint/prettier/tailwind-token config package.
 - **Exit:** web runs and deploys exactly as before, now sourcing logic from `packages/`.
 
-### Phase 1 — Expo app shell + auth ✅ DONE (2026-06-04)
+### Phase 1 — Expo app shell + auth ✅ DONE (2026-06-04; Google SSO added 2026-06-05)
 - [x] `apps/mobile` Expo Router app; NativeWind v4 with cream/clay tokens.
 - [x] Firebase Auth (RN persistence via `initializeAuth` + `getReactNativePersistence(AsyncStorage)`). Login / register / logout. `dev_*` local bypass parity.
 - [x] Bottom-tab navigation: Market / Saved / Messages / Profile + seller entry stub.
 - [x] Wire `packages/api` via `configure({ apiBaseUrl })` at root layout; `getMe()` called in Profile tab.
-- **Exit:** logged-in user lands on a tabbed shell hitting the real backend.
+- [x] **Google SSO** — `expo-auth-session/providers/google` + `Google.useIdTokenAuthRequest` in `AuthProvider`; response `id_token` → `signInWithCredential(GoogleAuthProvider.credential(...))`; "Continue with Google" button on login + register screens. Requires three env vars (see below).
+- **Exit:** logged-in user lands on a tabbed shell hitting the real backend. Email/password and Google SSO both work.
 - **Key files:**
   - `apps/mobile/` — Expo Router app root
   - `apps/mobile/lib/firebase.ts` — RN Firebase init with AsyncStorage persistence
-  - `apps/mobile/contexts/auth-context.tsx` — mirrors web auth-context, no Google Sign-In (mobile phase)
+  - `apps/mobile/contexts/auth-context.tsx` — `signInWithGoogle` via `useIdTokenAuthRequest`; `WebBrowser.maybeCompleteAuthSession()` at module level
   - `apps/mobile/app/_layout.tsx` — root layout: QueryClient + AuthProvider + `configure()`
   - `packages/api/src/index.ts` — added `configure({ apiBaseUrl })` export; `_apiBase` is now mutable
+- **Google SSO env vars** (add to `.env.local` and Firebase Console):
+  - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` — Google Cloud Console → Credentials → iOS OAuth client (bundle: `au.com.shiftready.app`)
+  - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` — Google Cloud Console → Credentials → Android OAuth client (package: `au.com.shiftready.app`)
+  - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` — Firebase Console → Auth → Google → Web SDK configuration → Web client ID
+- **Google SSO setup steps:**
+  1. Firebase Console → Authentication → Sign-in method → enable Google.
+  2. Google Cloud Console → Credentials → create iOS client (bundle `au.com.shiftready.app`) + Android client (package + SHA-1 fingerprint from EAS / keytool).
+  3. Add all three client IDs to `.env.local`. For development with Expo Go, only `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` is required (native clients are used in EAS builds).
 
 ### Phase 2 — Buyer read-only ✅ DONE (2026-06-04)
 - [x] Market browse — sale cards (horizontal) + item feed (vertical); `getLandingData()`.

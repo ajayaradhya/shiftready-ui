@@ -13,11 +13,12 @@ import { Link } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSignIn() {
     if (!email || !password) {
@@ -32,6 +33,18 @@ export default function LoginScreen() {
       setError((e as Error).message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -94,12 +107,35 @@ export default function LoginScreen() {
           <TouchableOpacity
             className="items-center rounded-xl bg-primary py-3.5"
             onPress={handleSignIn}
-            disabled={loading}
+            disabled={loading || googleLoading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="text-on-primary font-semibold text-base">Sign in</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View className="my-5 flex-row items-center gap-3">
+            <View className="flex-1 h-px bg-outline-variant" />
+            <Text className="text-on-surface-variant text-xs">or</Text>
+            <View className="flex-1 h-px bg-outline-variant" />
+          </View>
+
+          {/* Google Sign-In */}
+          <TouchableOpacity
+            className="items-center flex-row justify-center rounded-xl border border-outline-variant bg-surface py-3.5 gap-2"
+            onPress={handleGoogleSignIn}
+            disabled={loading || googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#4285F4" />
+            ) : (
+              <>
+                <Text className="font-bold text-base" style={{ color: "#4285F4" }}>G</Text>
+                <Text className="text-on-surface font-medium text-base">Continue with Google</Text>
+              </>
             )}
           </TouchableOpacity>
 

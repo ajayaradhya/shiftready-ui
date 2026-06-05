@@ -9,13 +9,24 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "au.com.shiftready.app"
+      "bundleIdentifier": "au.com.shiftready.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.12644234558-orb0ugl96ef5t7t5hhpkm3u2qrb311qs"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAFAF7"
       },
-      "package": "au.com.shiftready.app"
+      "package": "au.com.shiftready.app",
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
@@ -26,7 +37,8 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
