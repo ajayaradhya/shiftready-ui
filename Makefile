@@ -6,9 +6,8 @@
 install:          ## Install all workspace deps (pnpm)
 	pnpm install
 
-clean:            ## Remove node_modules + build caches, then reinstall
-	pnpm -r exec rm -rf node_modules .next .turbo .expo dist || true
-	rm -rf node_modules
+clean:            ## Remove node_modules + build caches, then reinstall (cross-platform)
+	node scripts/clean.mjs
 	pnpm install
 
 # ----- Web (apps/web, Next.js) -----
