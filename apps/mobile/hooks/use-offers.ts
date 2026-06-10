@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendOffer, acceptOffer, counterOffer, withdrawOffer } from "@shiftready/api";
-import type { Message } from "@shiftready/types";
+﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { sendOffer, acceptOffer, counterOffer, withdrawOffer } from "@myrio/api";
+import type { Message } from "@myrio/types";
 import { Alert } from "react-native";
 
 function appendMessage(qc: ReturnType<typeof useQueryClient>, convId: string, msg: Message) {

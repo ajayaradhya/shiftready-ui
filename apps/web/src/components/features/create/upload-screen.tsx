@@ -5,7 +5,7 @@ import { FolderOpen, Shield, Video } from "lucide-react";
 import Link from "next/link";
 import { StepHeader } from "./step-header";
 import type { UploadStatus } from "@/hooks/use-upload";
-import { ACCEPTED_VIDEO_TYPES } from "@shiftready/core";
+import { ACCEPTED_VIDEO_TYPES } from "@myrio/core";
 
 interface Props {
   status: UploadStatus;

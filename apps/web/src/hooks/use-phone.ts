@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { revealPhone, sharePhone, updateMyPhone } from "@shiftready/api";
+import { revealPhone, sharePhone, updateMyPhone } from "@myrio/api";
 import { toast } from "sonner";
 
 export function useRevealPhone(convId: string) {

@@ -1,5 +1,5 @@
-{
-  "name": "@shiftready/mobile",
+﻿{
+  "name": "@myrio/mobile",
   "version": "0.1.0",
   "private": true,
   "main": "expo-router/entry",
@@ -13,9 +13,9 @@
     "@expo/metro-runtime": "~4.0.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@sentry/react-native": "^6.6.0",
-    "@shiftready/api": "workspace:*",
-    "@shiftready/core": "workspace:*",
-    "@shiftready/types": "workspace:*",
+    "@myrio/api": "workspace:*",
+    "@myrio/core": "workspace:*",
+    "@myrio/types": "workspace:*",
     "@tanstack/react-query": "^5.99.2",
     "expo": "~53.0.9",
     "expo-auth-session": "^56.0.13",

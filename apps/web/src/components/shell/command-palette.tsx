@@ -11,8 +11,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { useSalesList } from "@/hooks/use-sales";
 import { useAuth } from "@/hooks/use-auth";
-import { searchMarketplace } from "@shiftready/api";
-import type { MarketplaceItem } from "@shiftready/types";
+import { searchMarketplace } from "@myrio/api";
+import type { MarketplaceItem } from "@myrio/types";
 
 // â”€â”€ Recent ring buffer (localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

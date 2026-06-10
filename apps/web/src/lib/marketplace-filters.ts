@@ -1,7 +1,7 @@
 ﻿// â”€â”€ Suburbs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Full Greater Sydney suburb list now lives in src/lib/locations.ts (dataset-backed).
 
-import { SYDNEY_SUBURB_NAMES } from "@shiftready/core";
+import { SYDNEY_SUBURB_NAMES } from "@myrio/core";
 
 export const NSW_SUBURBS_UNIQUE = SYDNEY_SUBURB_NAMES;
 

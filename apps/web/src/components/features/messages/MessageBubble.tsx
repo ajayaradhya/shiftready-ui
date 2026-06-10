@@ -1,6 +1,6 @@
-﻿import type { Message } from "@shiftready/types";
+﻿import type { Message } from "@myrio/types";
 import { SaleContextChip } from "./SaleContextChip";
-import { formatTimeAU } from "@shiftready/core";
+import { formatTimeAU } from "@myrio/core";
 
 interface MessageBubbleProps {
   message: Message;

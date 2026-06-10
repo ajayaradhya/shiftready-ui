@@ -1,12 +1,12 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSummary, getStatus } from "@shiftready/api";
-import { SaleSummary } from "@shiftready/types";
+import { getSummary, getStatus } from "@myrio/api";
+import { SaleSummary } from "@myrio/types";
 import { useEffect, useRef, useCallback } from "react";
 import { useWebSocket, type WsMessage } from "./use-websocket";
 import { useAuth } from "@/contexts/auth-context";
-import { FALLBACK_POLLING_MS } from "@shiftready/core";
+import { FALLBACK_POLLING_MS } from "@myrio/core";
 
 export function useInventory(eventId: string) {
   const { idToken } = useAuth();

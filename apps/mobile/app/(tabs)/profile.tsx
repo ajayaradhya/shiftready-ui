@@ -1,7 +1,7 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+﻿import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { getMe } from "@shiftready/api";
+import { getMe } from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNotifUnreadCount } from "@/hooks/use-notifications";

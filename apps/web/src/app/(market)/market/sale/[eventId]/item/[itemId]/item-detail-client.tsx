@@ -20,9 +20,9 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import { getPublicItem, getPublicSale, startConversation, saveItem, unsaveItem, setPin } from "@shiftready/api";
+import { getPublicItem, getPublicSale, startConversation, saveItem, unsaveItem, setPin } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
-import type { PublicItemImage } from "@shiftready/types";
+import type { PublicItemImage } from "@myrio/types";
 
 function fmt(n: number) {
   return n.toLocaleString("en-AU", {

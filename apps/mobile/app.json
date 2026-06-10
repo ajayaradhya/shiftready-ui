@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "ShiftReady",
-    "slug": "shiftready",
-    "scheme": "shiftready",
+    "name": "Myrio",
+    "slug": "myrio",
+    "scheme": "myrio",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -28,21 +28,21 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "au.com.shiftready.app",
+      "bundleIdentifier": "au.com.myrio.app",
       "googleServicesFile": "./GoogleService-Info.plist",
       "associatedDomains": [
-        "applinks:shiftready.au",
-        "applinks:www.shiftready.au"
+        "applinks:myrio.com.au",
+        "applinks:www.myrio.com.au"
       ],
       "infoPlist": {
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.12644234558-orb0ugl96ef5t7t5hhpkm3u2qrb311qs"
+              "FILL_IN_REVERSED_OAUTH_CLIENT_ID"
             ]
           }
         ],
-        "NSUserNotificationUsageDescription": "ShiftReady sends you alerts for new messages, offers, and deal updates.",
+        "NSUserNotificationUsageDescription": "Myrio sends you alerts for new messages, offers, and deal updates.",
         "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
@@ -51,7 +51,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF7"
       },
-      "package": "au.com.shiftready.app",
+      "package": "au.com.myrio.app",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
@@ -65,12 +65,12 @@
           "data": [
             {
               "scheme": "https",
-              "host": "shiftready.au",
+              "host": "myrio.com.au",
               "pathPrefix": "/sale"
             },
             {
               "scheme": "https",
-              "host": "www.shiftready.au",
+              "host": "www.myrio.com.au",
               "pathPrefix": "/sale"
             }
           ],
@@ -83,7 +83,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "ShiftReady needs camera access to capture items for your sale.",
+          "cameraPermission": "Myrio needs camera access to capture items for your sale.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }

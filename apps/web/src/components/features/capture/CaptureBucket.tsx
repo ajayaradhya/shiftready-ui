@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Package, X, Trash2, RotateCcw, Loader2, WifiOff, ChevronLeft, Pencil } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 
 interface Props {
   items: CapturedItem[];

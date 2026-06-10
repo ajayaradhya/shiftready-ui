@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   FlatList,
@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useConversations } from "@/hooks/use-conversations";
 import { useMessagesWs } from "@/hooks/use-messages-ws";
-import type { ConversationSummary } from "@shiftready/types";
+import type { ConversationSummary } from "@myrio/types";
 
 function formatRelative(ts: string | null) {
   if (!ts) return "";

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Message } from "@shiftready/types";
+import type { Message } from "@myrio/types";
 
 const WS_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080")
   .replace(/^http/, "ws");

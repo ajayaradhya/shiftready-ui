@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Check, X, DollarSign } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatAUD } from "@shiftready/core";
-import { markItemSold } from "@shiftready/api";
-import type { InventoryItem } from "@shiftready/types";
+import { formatAUD } from "@myrio/core";
+import { markItemSold } from "@myrio/api";
+import type { InventoryItem } from "@myrio/types";
 import { toast } from "sonner";
 
 const PAYMENT_METHODS = [

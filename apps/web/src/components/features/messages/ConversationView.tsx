@@ -7,7 +7,7 @@ import { useSendMessage } from "@/hooks/use-send-message";
 import { useSetPin, useClearPin } from "@/hooks/use-pin";
 import { useAcceptOffer, useCounterOffer, useSendOffer, useWithdrawOffer } from "@/hooks/use-offers";
 import { useRevealPhone } from "@/hooks/use-phone";
-import { markConversationRead, blockConversation, unblockConversation } from "@shiftready/api";
+import { markConversationRead, blockConversation, unblockConversation } from "@myrio/api";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
 import { OfferCard } from "./OfferCard";
@@ -18,8 +18,8 @@ import { PinChangeSystemMessage } from "./PinChangeSystemMessage";
 import { PhoneRevealCard } from "./PhoneRevealCard";
 import { SharePhoneCard } from "./SharePhoneCard";
 import { FocusPicker } from "./FocusPicker";
-import type { ConversationSummary, PinRef } from "@shiftready/types";
-import { formatDateAU } from "@shiftready/core";
+import type { ConversationSummary, PinRef } from "@myrio/types";
+import { formatDateAU } from "@myrio/core";
 
 interface ConversationViewProps {
   convId: string;

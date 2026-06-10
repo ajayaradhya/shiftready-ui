@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSaved } from "@shiftready/api";
+import { getSaved } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useSaved() {

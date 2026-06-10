@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getNotifications,
   getNotifUnreadCount,
   markNotifRead,
   markAllNotifsRead,
-} from "@shiftready/api";
+} from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
 
 export function useNotifications() {

@@ -6,8 +6,8 @@ import {
   updateNotifications,
   updatePreferences,
   updatePrivacy,
-} from "@shiftready/api";
-import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@shiftready/types";
+} from "@myrio/api";
+import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@myrio/types";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 

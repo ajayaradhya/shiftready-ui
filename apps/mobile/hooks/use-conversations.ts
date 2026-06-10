@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUnreadCount, listConversations } from "@shiftready/api";
+﻿import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getUnreadCount, listConversations } from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
 
 export function useConversations() {

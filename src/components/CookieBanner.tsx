@@ -50,7 +50,7 @@ export function CookieBanner() {
       }}
     >
       <p style={{ margin: 0, flex: 1, color: "var(--cream-200)" }}>
-        We use analytics cookies to improve ShiftReady.{" "}
+        We use analytics cookies to improve Myrio.{" "}
         <Link href="/privacy" style={{ color: "var(--cream-100)", textDecoration: "underline" }}>
           Privacy policy
         </Link>

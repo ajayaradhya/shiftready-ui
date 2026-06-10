@@ -115,7 +115,7 @@ export function ShellSidebar({ variant }: ShellSidebarProps) {
           className="text-[17px] font-semibold leading-none"
           style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}
         >
-          ShiftReady
+          Myrio
         </span>
       </Link>
 

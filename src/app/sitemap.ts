@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myrio.com.au";
 
 interface ActiveSale {
   eventId: string;

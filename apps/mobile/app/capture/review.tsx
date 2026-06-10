@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   FlatList,
@@ -12,7 +12,7 @@ import {
 import { Image } from "expo-image";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { finalizeCaptureV2 } from "@shiftready/api";
+import { finalizeCaptureV2 } from "@myrio/api";
 import { captureStore, type CapturedItem } from "@/lib/capture-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";

@@ -216,7 +216,7 @@ function useInViewOnce(rootMargin = "200px") {
 }
 
 function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: LandingData | null; fetchedAt: number }) {
-  useEffect(() => { document.title = "Browse - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Browse - Myrio"; }, []);
   const searchParams = useSearchParams();
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -292,7 +292,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
 
         {/* ── SELLER HERO ── */}
         {!heroDismissed && (
-          <section className={s.sellerHero} aria-label="Sell with ShiftReady">
+          <section className={s.sellerHero} aria-label="Sell with Myrio">
             <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => { setHeroDismissed(true); localStorage.setItem("sr_seller_hero_dismissed", "1"); }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
                 <path d="m4 4 8 8M12 4l-8 8" />
@@ -462,15 +462,15 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
       <div className={s.footerBand}>
         <footer className={s.footer}>
           <div className={s.footerBrand}>
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={24} height={24} />
-            ShiftReady
+            <Image src="/logo-mark.svg" alt="Myrio" width={24} height={24} />
+            Myrio
           </div>
           <div className={s.footerLinks}>
             <Link href="#">About</Link>
             <Link href="#">How it works</Link>
             <Link href="#">Contact</Link>
           </div>
-          <div>© 2026 ShiftReady · Made in Australia</div>
+          <div>© 2026 Myrio · Made in Australia</div>
         </footer>
       </div>
     </div>

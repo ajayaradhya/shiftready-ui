@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Check, X, RotateCcw, Percent } from "lucide-react";
-import type { OfferPayload } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { OfferPayload } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 interface OfferCardProps {
   offer: OfferPayload;

@@ -1,6 +1,6 @@
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { getMessages } from "@shiftready/api";
-import type { Message } from "@shiftready/types";
+﻿import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { getMessages } from "@myrio/api";
+import type { Message } from "@myrio/types";
 import { useAuth } from "@/contexts/auth-context";
 
 export function useMessages(convId: string) {

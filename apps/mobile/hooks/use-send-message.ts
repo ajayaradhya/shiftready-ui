@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendMessage } from "@shiftready/api";
-import type { Message, MessageContext } from "@shiftready/types";
+﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { sendMessage } from "@myrio/api";
+import type { Message, MessageContext } from "@myrio/types";
 import { Alert } from "react-native";
 
 export function useSendMessage(convId: string) {

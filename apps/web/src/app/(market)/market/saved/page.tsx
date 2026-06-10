@@ -6,8 +6,8 @@ import Image from "next/image";
 import { Heart, LogIn, ChevronRight, Package, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSaved, useInvalidateSaved } from "@/hooks/use-saved";
-import { unsaveSale, unsaveItem } from "@shiftready/api";
-import type { SavedSale, SavedItem } from "@shiftready/types";
+import { unsaveSale, unsaveItem } from "@myrio/api";
+import type { SavedSale, SavedItem } from "@myrio/types";
 
 function fmt(n: number) {
   return n.toLocaleString("en-AU", {
@@ -319,7 +319,7 @@ export default function SavedPage() {
   const { data, isLoading, refetch } = useSaved();
   const invalidateSaved = useInvalidateSaved();
   const [removing, setRemoving] = useState<Set<string>>(new Set());
-  useEffect(() => { document.title = "Saved - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Saved - Myrio"; }, []);
 
   const handleRemoveSale = async (eventId: string) => {
     setRemoving((s) => new Set(s).add(eventId));

@@ -13,14 +13,14 @@ import {
   MousePointerClick, Plus, Sparkles,
   Pencil, Eye, Box, MapPin, Calendar, Trash2, Send, Power, Loader2,
 } from "lucide-react";
-import type { PublishPayload } from "@shiftready/api";
-import { formatAUD, plural } from "@shiftready/core";
+import type { PublishPayload } from "@myrio/api";
+import { formatAUD, plural } from "@myrio/core";
 import { useIsMobile } from "@/hooks/use-media-query";
 import {
   publishSale, unpublishSale, updateSale,
   createBundle, deleteBundle, renameBundle, patchBundle,
   archiveSale, deleteSale, republishSale,
-} from "@shiftready/api";
+} from "@myrio/api";
 import { useMutation, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SaleLifecycleMenu } from "@/components/features/inventory/SaleLifecycleMenu";
@@ -359,7 +359,7 @@ export default function SellerCentralInventoryPage() {
     useInventory(eventId);
   const activeMutations = useIsMutating();
 
-  useEffect(() => { document.title = "Inventory - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Inventory - Myrio"; }, []);
   useEffect(() => {
     if (error) toast.error("Could not reach the server. Retrying…");
   }, [error]);
@@ -394,7 +394,7 @@ export default function SellerCentralInventoryPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async (payload: import("@shiftready/api").PublishPayload) => {
+    mutationFn: async (payload: import("@myrio/api").PublishPayload) => {
       await publishSale(eventId, payload);
       if (!summary?.title || summary.title === "Your Moving Sale") {
         try {

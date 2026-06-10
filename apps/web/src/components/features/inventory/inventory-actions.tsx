@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { PublishPayload } from "@shiftready/api";
+import type { PublishPayload } from "@myrio/api";
 
 interface InventoryActionsProps {
   status: string;

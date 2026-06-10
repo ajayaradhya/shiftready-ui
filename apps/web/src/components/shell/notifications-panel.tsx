@@ -15,7 +15,7 @@ import {
   useMarkAllNotifsRead,
 } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
-import type { Notification, NotifType } from "@shiftready/types";
+import type { Notification, NotifType } from "@myrio/types";
 
 type Tab = "all" | "messages" | "offers" | "system";
 

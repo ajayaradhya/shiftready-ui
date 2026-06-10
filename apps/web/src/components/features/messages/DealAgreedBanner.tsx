@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Check } from "lucide-react";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 
 interface DealAgreedBannerProps {
   amount: number;

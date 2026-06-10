@@ -6,7 +6,7 @@ import {
   getNotifUnreadCount,
   markNotifRead,
   markAllNotifsRead,
-} from "@shiftready/api";
+} from "@myrio/api";
 import { useAuth } from "./use-auth";
 
 export function useNotifications() {

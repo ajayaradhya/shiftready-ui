@@ -192,7 +192,7 @@ function EmptyEnquiries() {
 export default function PurchasesPage() {
   const { user, loading: authLoading } = useAuth();
   const { data: convs, isLoading: convsLoading } = useConversations();
-  useEffect(() => { document.title = "Purchases - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Purchases - Myrio"; }, []);
 
   return (
     <div style={{ padding: "40px 32px", maxWidth: 800, margin: "0 auto" }}>

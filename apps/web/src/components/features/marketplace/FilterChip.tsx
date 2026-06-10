@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useRef, useEffect, useState } from "react";
-import type { FilterOption } from "@shiftready/core";
+import type { FilterOption } from "@myrio/core";
 import s from "./FilterChip.module.css";
 
 interface Props<T extends string> {

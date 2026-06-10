@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Check, X, DollarSign } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatAUD } from "@shiftready/core";
-import { markBundleSold } from "@shiftready/api";
-import type { RoomBundle } from "@shiftready/types";
+import { formatAUD } from "@myrio/core";
+import { markBundleSold } from "@myrio/api";
+import type { RoomBundle } from "@myrio/types";
 import { toast } from "sonner";
 
 const PAYMENT_METHODS = [

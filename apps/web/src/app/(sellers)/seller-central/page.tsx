@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Plus, Camera } from "lucide-react";
 import { useSalesList } from "@/hooks/use-sales";
 import { SaleRow } from "@/components/features/seller-central/sale-row";
-import { formatAUD, formatAUDCompact } from "@shiftready/core";
-import type { SaleStatus } from "@shiftready/types";
+import { formatAUD, formatAUDCompact } from "@myrio/core";
+import type { SaleStatus } from "@myrio/types";
 
 const LIVE_STATUSES: SaleStatus[] = ["live", "partially_sold"];
 
@@ -14,7 +14,7 @@ export default function SellerCentralPage() {
   const { data: rawSales, isLoading, error } = useSalesList();
   const sales = rawSales?.filter((s) => s.status !== "pending_upload");
 
-  useEffect(() => { document.title = "My Sales - ShiftReady"; }, []);
+  useEffect(() => { document.title = "My Sales - Myrio"; }, []);
 
   const totalItems = sales?.reduce((s, a) => s + a.itemCount, 0) ?? 0;
   const totalValue = sales?.reduce((s, a) => s + a.totalValue, 0) ?? 0;

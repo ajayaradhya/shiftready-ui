@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ShieldOff, ShieldCheck } from "lucide-react";
-import { blockConversation, unblockConversation } from "@shiftready/api";
+import { blockConversation, unblockConversation } from "@myrio/api";
 
 interface BlockButtonProps {
   convId: string;

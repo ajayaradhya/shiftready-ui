@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { HowTo } from "./how-to";
 import { StepHeader } from "./step-header";
-import { getStatus } from "@shiftready/api";
+import { getStatus } from "@myrio/api";
 import type { UploadedFile } from "@/hooks/use-upload";
 import type { CapturedItem } from "@/lib/capture/capture-types";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 
 const DEMO_ITEMS = [
   "Linen sofa", "Oak dining table", "Bosch washer", "Fiddle leaf fig",

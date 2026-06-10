@@ -1,7 +1,7 @@
-import * as Notifications from "expo-notifications";
+﻿import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
-import { apiRequest } from "@shiftready/api";
+import { apiRequest } from "@myrio/api";
 
 export function configurePushHandler(): void {
   Notifications.setNotificationHandler({

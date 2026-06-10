@@ -5,7 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { ConversationList } from "@/components/features/messages/ConversationList";
 
 export default function InboxPage() {
-  useEffect(() => { document.title = "Messages - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Messages - Myrio"; }, []);
   return (
     <div style={{ height: "calc(100dvh - 64px)", display: "flex", overflow: "hidden" }}>
       {/* Sidebar — full width on mobile, 320px on desktop */}

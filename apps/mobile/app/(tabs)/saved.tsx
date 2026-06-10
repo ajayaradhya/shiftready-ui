@@ -1,4 +1,4 @@
-import {
+﻿import {
   View, Text, ScrollView, TouchableOpacity,
   Image, ActivityIndicator,
 } from "react-native";
@@ -6,10 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getSaved } from "@shiftready/api";
-import { formatAUD } from "@shiftready/core";
+import { getSaved } from "@myrio/api";
+import { formatAUD } from "@myrio/core";
 import { useAuth } from "@/contexts/auth-context";
-import type { SavedSale, SavedItem } from "@shiftready/types";
+import type { SavedSale, SavedItem } from "@myrio/types";
 
 function titleCase(s: string) {
   return s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());

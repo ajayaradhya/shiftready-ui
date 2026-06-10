@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRight, X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InventoryItem, RoomBundle, ItemCategory } from "@shiftready/types";
-import { patchItem, deleteItem, moveItem } from "@shiftready/api";
+import type { InventoryItem, RoomBundle, ItemCategory } from "@myrio/types";
+import { patchItem, deleteItem, moveItem } from "@myrio/api";
 import { ItemPhotoStrip } from "./item-photo-strip";
 
 interface ItemCardV2Props {

@@ -21,7 +21,7 @@ export default function NotFound() {
         href="/"
         style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}
       >
-        <Image src="/logo-mark.svg" alt="ShiftReady" width={28} height={28} priority />
+        <Image src="/logo-mark.svg" alt="Myrio" width={28} height={28} priority />
         <span
           style={{
             fontFamily: "var(--sr-font-serif)",
@@ -31,7 +31,7 @@ export default function NotFound() {
             color: "var(--sr-text-primary)",
           }}
         >
-          ShiftReady
+          Myrio
         </span>
       </Link>
 

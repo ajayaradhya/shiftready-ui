@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   FlatList,
@@ -8,10 +8,10 @@ import {
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { listSales } from "@shiftready/api";
+import { listSales } from "@myrio/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/auth-context";
-import type { SaleListing, SaleStatus } from "@shiftready/types";
+import type { SaleListing, SaleStatus } from "@myrio/types";
 import { Ionicons } from "@expo/vector-icons";
 
 const STATUS_LABEL: Record<SaleStatus, string> = {

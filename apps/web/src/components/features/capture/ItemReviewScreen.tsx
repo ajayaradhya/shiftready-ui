@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Trash2, Plus, PackageCheck, Loader2, AlertCircle, WifiOff, Copy, Wand2 } from "lucide-react";
 import type { CapturedItem } from "@/lib/capture/capture-types";
-import { suggestSaleTitle } from "@shiftready/api";
-import { formatAUD } from "@shiftready/core";
+import { suggestSaleTitle } from "@myrio/api";
+import { formatAUD } from "@myrio/core";
 
 interface Props {
   items: CapturedItem[];

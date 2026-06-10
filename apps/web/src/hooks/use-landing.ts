@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { searchMarketplace } from "@shiftready/api";
-import type { MarketplaceSearchResult } from "@shiftready/types";
-import type { CategoryFilter, ConditionFilter, PriceRangeKey, SortKey } from "@shiftready/core";
-import { priceRangeToParams } from "@shiftready/core";
+import { searchMarketplace } from "@myrio/api";
+import type { MarketplaceSearchResult } from "@myrio/types";
+import type { CategoryFilter, ConditionFilter, PriceRangeKey, SortKey } from "@myrio/core";
+import { priceRangeToParams } from "@myrio/core";
 
 interface CommittedFilters {
   q: string;

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { SYDNEY_SUBURBS, suburbsForPostcode, isValidPostcode, type Suburb } from "@shiftready/core";
+import { SYDNEY_SUBURBS, suburbsForPostcode, isValidPostcode, type Suburb } from "@myrio/core";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsername, useUsernameAvailability } from "@/hooks/use-username";
 import { useUpdateMyPhone } from "@/hooks/use-phone";
@@ -14,7 +14,7 @@ import {
   useUpdatePreferences,
   useUpdatePrivacy,
 } from "@/hooks/use-settings";
-import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@shiftready/types";
+import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@myrio/types";
 
 // â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const IcUser = () => (
@@ -394,7 +394,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ marginBottom: 8 }}>
         <h2 style={{ fontFamily: "var(--sr-font-serif)", fontSize: 22, fontWeight: 500, letterSpacing: "-.02em", color: "var(--ink-800)", margin: "0 0 4px" }}>Profile</h2>
-        <p style={{ fontSize: 13, color: "var(--sr-text-muted)", lineHeight: 1.5, margin: 0 }}>Your public-facing identity on ShiftReady - shown on sale listings and in buyer conversations.</p>
+        <p style={{ fontSize: 13, color: "var(--sr-text-muted)", lineHeight: 1.5, margin: 0 }}>Your public-facing identity on Myrio - shown on sale listings and in buyer conversations.</p>
       </div>
 
       {/* Avatar + identity */}
@@ -452,7 +452,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
       <SCard>
         <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--sr-text-primary)", margin: "0 0 3px" }}>@Username</p>
         <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>
-          Your unique handle on ShiftReady. 4â€“20 characters, letters and numbers only, must start with a letter.
+          Your unique handle on Myrio. 4â€“20 characters, letters and numbers only, must start with a letter.
         </p>
 
         <SField label="Handle" hint="Last changed 3 days ago Â· next change available in 4 days" hintType="warn">
@@ -1201,7 +1201,7 @@ type SectionId = typeof NAV_SECTIONS[number]["id"];
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeId, setActiveId] = useState<SectionId>("profile");
-  useEffect(() => { document.title = "Settings - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Settings - Myrio"; }, []);
 
   const sections: Record<SectionId, React.ReactNode> = {
     profile:       <ProfileSection userEmail={user?.email} photoURL={user?.photoURL ?? null}/>,

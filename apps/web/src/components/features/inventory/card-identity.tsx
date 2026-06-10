@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { InventoryItem } from "@shiftready/types";
+import { InventoryItem } from "@myrio/types";
 
 interface CardIdentityProps {
   name: string;

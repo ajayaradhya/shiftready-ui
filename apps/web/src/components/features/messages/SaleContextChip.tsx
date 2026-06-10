@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import type { MessageContext } from "@shiftready/types";
+import type { MessageContext } from "@myrio/types";
 
 export function SaleContextChip({ context }: { context: MessageContext }) {
   return (

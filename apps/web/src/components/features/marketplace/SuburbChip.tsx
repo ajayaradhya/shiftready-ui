@@ -9,7 +9,7 @@ import {
   isValidPostcode,
   nearestSuburb,
   type Suburb,
-} from "@shiftready/core";
+} from "@myrio/core";
 import s from "./FilterChip.module.css";
 import ls from "./SuburbChip.module.css";
 

@@ -4,11 +4,11 @@ import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock, Bookmark, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus } from "@shiftready/types";
-import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation, reserveItem } from "@shiftready/api";
+import type { InventoryItem, RoomBundle, ItemCategory, SaleSummary, SaleStatus } from "@myrio/types";
+import { patchItem, deleteItem, moveItem, createItemFull, repriceItem, withdrawItem, relistItem, releaseItemReservation, reserveItem } from "@myrio/api";
 import { MarkSoldDialog } from "./MarkSoldDialog";
 import { ItemPhotoStrip } from "./item-photo-strip";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 import { toast } from "sonner";
 import { FocusTrap } from "@/components/ui/focus-trap";
 

@@ -11,8 +11,8 @@ import {
   confirmCover,
   deleteCover,
   type SaleUpdatePayload,
-} from "@shiftready/api";
-import type { SaleSummary } from "@shiftready/types";
+} from "@myrio/api";
+import type { SaleSummary } from "@myrio/types";
 
 interface Props {
   eventId: string;

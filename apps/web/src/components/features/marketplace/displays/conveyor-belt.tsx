@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { MarketplaceItem } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { MarketplaceItem } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import s from "./displays.module.css";
 
 function BeltItem({ item }: { item: MarketplaceItem }) {

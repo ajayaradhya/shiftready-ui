@@ -36,7 +36,7 @@ export function ReceiptRoll({
         <div className={s.receiptTop} aria-hidden />
 
         <div className={s.receiptHead}>
-          <div className={s.receiptLogo}>ShiftReady · Marketplace</div>
+          <div className={s.receiptLogo}>Myrio · Marketplace</div>
           <div className={s.receiptMeta}>
             {dateStr} · #{txnId} · {locationTag}
           </div>

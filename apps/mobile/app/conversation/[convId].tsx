@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { markConversationRead, revealPhone, listConversations } from "@shiftready/api";
+import { markConversationRead, revealPhone, listConversations } from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
 import { useMessages } from "@/hooks/use-messages";
 import { useMessagesWs } from "@/hooks/use-messages-ws";
@@ -25,8 +25,8 @@ import {
   useCounterOffer,
   useWithdrawOffer,
 } from "@/hooks/use-offers";
-import type { Message, ConversationSummary, OfferPayload } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { Message, ConversationSummary, OfferPayload } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 // ---------------------------------------------------------------------------
 // Helpers

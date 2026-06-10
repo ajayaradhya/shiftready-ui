@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Star } from "lucide-react";
-import type { InventoryImage } from "@shiftready/types";
+import type { InventoryImage } from "@myrio/types";
 import { FocusTrap } from "@/components/ui/focus-trap";
 
 interface LightboxProps {

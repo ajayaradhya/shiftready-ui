@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendMessage } from "@shiftready/api";
-import type { Message, MessageContext } from "@shiftready/types";
+import { sendMessage } from "@myrio/api";
+import type { Message, MessageContext } from "@myrio/types";
 import { toast } from "sonner";
 
 export function useSendMessage(convId: string) {

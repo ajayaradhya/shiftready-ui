@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X, Package, Search } from "lucide-react";
-import { formatAUD } from "@shiftready/core";
-import { getPublicSale } from "@shiftready/api";
-import type { PinRef } from "@shiftready/types";
+import { formatAUD } from "@myrio/core";
+import { getPublicSale } from "@myrio/api";
+import type { PinRef } from "@myrio/types";
 
 interface FocusPickerProps {
   saleEventId: string;

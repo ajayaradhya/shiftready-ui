@@ -1,12 +1,12 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { initSale, startProcessing } from "@shiftready/api";
+import { initSale, startProcessing } from "@myrio/api";
 import {
   ACCEPTED_VIDEO_TYPES,
   MAX_VIDEO_SIZE_BYTES,
   MAX_VIDEO_SIZE_MB,
-} from "@shiftready/core";
+} from "@myrio/core";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 

@@ -12,7 +12,7 @@ import { ItemReviewScreen } from "@/components/features/capture/ItemReviewScreen
 import { ProcessingScreen } from "@/components/features/create/processing-screen";
 import { useSaleContext } from "@/lib/sale-context";
 import { dataUrlToFile } from "@/lib/capture/capture-types";
-import { initCaptureSale, captureFrame, finalizeCaptureV2 } from "@shiftready/api";
+import { initCaptureSale, captureFrame, finalizeCaptureV2 } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
 import type { CapturePageState, CapturedItem } from "@/lib/capture/capture-types";
 
@@ -69,7 +69,7 @@ function CapturePageContent() {
   const appendTo = searchParams.get("appendTo");
   const isDev = searchParams.get("dev") === "1";
   const { setSale } = useSaleContext();
-  useEffect(() => { document.title = "Live Capture - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Live Capture - Myrio"; }, []);
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
   const [stream, setStream] = useState<MediaStream | null>(null);

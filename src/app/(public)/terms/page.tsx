@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service · ShiftReady",
+  title: "Terms of Service · Myrio",
 };
 
 const EFFECTIVE_DATE = "28 May 2026";
@@ -34,19 +34,19 @@ export default function TermsPage() {
         Terms of Service
       </h1>
       <p style={{ fontSize: 14, color: "var(--ink-400, #9C9080)", marginBottom: 48, lineHeight: 1.6 }}>
-        Please read these terms carefully before using ShiftReady. By creating an account or using
+        Please read these terms carefully before using Myrio. By creating an account or using
         the platform, you agree to be bound by these terms.
       </p>
 
-      <Section title="1. About ShiftReady">
+      <Section title="1. About Myrio">
         <p>
-          ShiftReady is operated by Ajay B L (ABN pending), 50 Blytheswood Ave, Warrawee NSW 2074.
-          ShiftReady provides a peer-to-peer marketplace platform that connects people moving home
+          Myrio is operated by Ajay B L (ABN pending), 50 Blytheswood Ave, Warrawee NSW 2074.
+          Myrio provides a peer-to-peer marketplace platform that connects people moving home
           (&ldquo;sellers&rdquo;) with buyers interested in purchasing their household items.
         </p>
         <p>
-          <strong>ShiftReady is not a party to any sale.</strong> All transactions are directly
-          between buyers and sellers. ShiftReady does not handle money, hold items, or take
+          <strong>Myrio is not a party to any sale.</strong> All transactions are directly
+          between buyers and sellers. Myrio does not handle money, hold items, or take
           responsibility for the outcome of any transaction.
         </p>
       </Section>
@@ -54,7 +54,7 @@ export default function TermsPage() {
       <Section title="2. Eligibility">
         <p>
           You must be at least <strong>18 years old</strong> to create an account and use
-          ShiftReady. By registering, you confirm you meet this requirement. We reserve the right
+          Myrio. By registering, you confirm you meet this requirement. We reserve the right
           to terminate accounts found to be in breach of this requirement.
         </p>
       </Section>
@@ -78,18 +78,18 @@ export default function TermsPage() {
       <Section title="4. Listings and content">
         <p>
           You are solely responsible for the accuracy of your listings, including item descriptions,
-          photos, and prices. ShiftReady uses AI (Google Gemini) to assist with identification and
+          photos, and prices. Myrio uses AI (Google Gemini) to assist with identification and
           pricing suggestions; these suggestions are not guarantees and should be reviewed by you
           before publishing.
         </p>
         <p>
-          By uploading content to ShiftReady you grant us a non-exclusive, royalty-free licence to
+          By uploading content to Myrio you grant us a non-exclusive, royalty-free licence to
           store, display, and process that content for the purpose of operating the platform.
         </p>
       </Section>
 
       <Section title="5. Prohibited items">
-        <p>The following items must not be listed on ShiftReady:</p>
+        <p>The following items must not be listed on Myrio:</p>
         <ul>
           <li>Firearms, weapons, and ammunition</li>
           <li>Alcohol (resale is regulated under NSW liquor laws)</li>
@@ -111,9 +111,9 @@ export default function TermsPage() {
 
       <Section title="6. Transactions and payment">
         <p>
-          ShiftReady does not process payments. Buyers and sellers agree on price via the in-app
+          Myrio does not process payments. Buyers and sellers agree on price via the in-app
           messaging system and arrange payment and pickup directly. Common methods include cash on
-          pickup or bank transfer. ShiftReady is not responsible for payment disputes.
+          pickup or bank transfer. Myrio is not responsible for payment disputes.
         </p>
         <p>
           Sellers are solely responsible for any tax obligations arising from their sales, including
@@ -131,13 +131,13 @@ export default function TermsPage() {
         </p>
         <p>
           For private (non-business) sales, buyers should satisfy themselves as to the condition of
-          items before purchase. ShiftReady provides no warranty on item condition.
+          items before purchase. Myrio provides no warranty on item condition.
         </p>
       </Section>
 
       <Section title="8. Disputes">
         <p>
-          ShiftReady does not mediate disputes between buyers and sellers. If you are unable to
+          Myrio does not mediate disputes between buyers and sellers. If you are unable to
           resolve a dispute directly, you may contact your state consumer protection agency (NSW
           Fair Trading: <a href="https://www.fairtrading.nsw.gov.au" target="_blank" rel="noreferrer" style={linkStyle}>fairtrading.nsw.gov.au</a>)
           or seek resolution through your financial institution if payment has been made.
@@ -153,13 +153,13 @@ export default function TermsPage() {
 
       <Section title="10. Limitation of liability">
         <p>
-          To the maximum extent permitted by law, ShiftReady is not liable for any indirect,
+          To the maximum extent permitted by law, Myrio is not liable for any indirect,
           incidental, or consequential loss arising from your use of the platform, including loss
           from any transaction between users.
         </p>
         <p>
           Our liability for any direct loss is limited to the greater of $100 AUD or the amount you
-          paid to ShiftReady in the 12 months preceding the claim.
+          paid to Myrio in the 12 months preceding the claim.
         </p>
       </Section>
 

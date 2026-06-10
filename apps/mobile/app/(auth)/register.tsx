@@ -64,7 +64,7 @@ export default function RegisterScreen() {
           <View className="mb-10">
             <Text className="text-3xl font-bold text-on-surface">Create account</Text>
             <Text className="mt-1 text-on-surface-variant text-base">
-              Join ShiftReady to buy and sell
+              Join Myrio to buy and sell
             </Text>
           </View>
 

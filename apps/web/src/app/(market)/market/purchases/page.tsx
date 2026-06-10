@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, MessageSquare, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversations } from "@/hooks/use-conversations";
-import type { ConversationSummary } from "@shiftready/types";
+import type { ConversationSummary } from "@myrio/types";
 
 function formatRelative(ts: string | null) {
   if (!ts) return "";
@@ -192,7 +192,7 @@ function EmptyEnquiries() {
 export default function PurchasesPage() {
   const { user, loading: authLoading } = useAuth();
   const { data: convs, isLoading: convsLoading } = useConversations();
-  useEffect(() => { document.title = "Purchases - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Purchases - Myrio"; }, []);
 
   return (
     <div style={{ padding: "40px 32px", maxWidth: 800, margin: "0 auto" }}>

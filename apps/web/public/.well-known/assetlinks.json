@@ -3,7 +3,7 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "au.com.shiftready.app",
+      "package_name": "au.com.myrio.app",
       "sha256_cert_fingerprints": [
         "FILL_IN_SHA256_CERT_FINGERPRINT_FROM_EAS_KEYSTORE"
       ]

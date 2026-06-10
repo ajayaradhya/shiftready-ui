@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ItemCategory, RoomBundle } from "@shiftready/types";
-import { createItemFull } from "@shiftready/api";
+import type { ItemCategory, RoomBundle } from "@myrio/types";
+import { createItemFull } from "@myrio/api";
 import { toast } from "sonner";
 
 interface AddItemDrawerProps {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { useConversations } from "@/hooks/use-conversations";
-import type { ConversationSummary } from "@shiftready/types";
+import type { ConversationSummary } from "@myrio/types";
 
 function formatRelative(ts: string | null) {
   if (!ts) return "";

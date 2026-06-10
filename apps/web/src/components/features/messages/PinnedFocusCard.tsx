@@ -2,8 +2,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ExternalLink, Package, ChevronDown, ChevronUp, X, Pin } from "lucide-react";
-import type { PinSnapshot, PinKind } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { PinSnapshot, PinKind } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 interface PinnedFocusCardProps {
   snapshot: PinSnapshot;

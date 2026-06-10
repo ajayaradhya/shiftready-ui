@@ -4,13 +4,13 @@ import Providers from "@/components/providers";
 import { GaScript } from "@/components/GaScript";
 import { CookieBanner } from "@/components/CookieBanner";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myrio.com.au";
 const GA_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   title: {
-    default: "ShiftReady",
-    template: "%s | ShiftReady",
+    default: "Myrio",
+    template: "%s | Myrio",
   },
   description:
     "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
@@ -19,19 +19,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ShiftReady",
+    title: "Myrio",
   },
   openGraph: {
     type: "website",
-    siteName: "ShiftReady",
-    title: "ShiftReady — AI-Powered Moving Sales",
+    siteName: "Myrio",
+    title: "Myrio — AI-Powered Moving Sales",
     description:
       "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "ShiftReady — AI-Powered Moving Sales",
+    title: "Myrio — AI-Powered Moving Sales",
     description:
       "AI-powered moving sale marketplace. Film a walkthrough, let Gemini price everything, sell before you move.",
   },

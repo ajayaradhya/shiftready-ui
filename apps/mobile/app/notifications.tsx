@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   FlatList,
@@ -12,7 +12,7 @@ import {
   useMarkNotifRead,
   useMarkAllNotifsRead,
 } from "@/hooks/use-notifications";
-import type { Notification } from "@shiftready/types";
+import type { Notification } from "@myrio/types";
 
 const NOTIF_ICONS: Record<string, string> = {
   "message.new": "💬",

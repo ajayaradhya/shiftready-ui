@@ -18,7 +18,7 @@ const createSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  ageConfirm: z.literal(true, { message: "You must be 18 or older to use ShiftReady." }),
+  ageConfirm: z.literal(true, { message: "You must be 18 or older to use Myrio." }),
   termsAccept: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
 });
 
@@ -211,7 +211,7 @@ export default function LoginPage() {
                 backdropFilter: "blur(8px)",
               }}>S</div>
               <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 20, fontWeight: 600, color: "rgba(255,255,255,.90)", letterSpacing: "-.015em" }}>
-                ShiftReady
+                Myrio
               </span>
             </div>
 
@@ -366,7 +366,7 @@ export default function LoginPage() {
             {/* Mobile-only logo */}
             <div className="sr-login-mobile-logo" style={{ display: "none", alignItems: "center", gap: 10, marginBottom: 32 }}>
               <div style={{ width: 28, height: 28, borderRadius: 7, background: "#CC785C", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--sr-font-serif)", fontSize: 16, fontWeight: 600 }}>S</div>
-              <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 600, color: "#1F1B17" }}>ShiftReady</span>
+              <span style={{ fontFamily: "var(--sr-font-serif)", fontSize: 18, fontWeight: 600, color: "#1F1B17" }}>Myrio</span>
             </div>
 
             {/* Heading */}
@@ -379,7 +379,7 @@ export default function LoginPage() {
               <p style={{ fontSize: 14, color: "#756B5A", lineHeight: 1.45, margin: 0 }}>
                 {tab === "signin"
                   ? "Sign in to browse and manage your moving sales."
-                  : "Join ShiftReady and start listing your items today."}
+                  : "Join Myrio and start listing your items today."}
               </p>
             </div>
 
@@ -486,7 +486,7 @@ export default function LoginPage() {
 
                 <button type="submit" disabled={signInForm.formState.isSubmitting} style={primaryBtnStyle(signInForm.formState.isSubmitting)}>
                   {signInForm.formState.isSubmitting && <Loader2 size={15} className="animate-spin" aria-hidden />}
-                  {signInForm.formState.isSubmitting ? "Signing in…" : "Sign in to ShiftReady"}
+                  {signInForm.formState.isSubmitting ? "Signing in…" : "Sign in to Myrio"}
                 </button>
 
                 <p style={{ textAlign: "center", fontSize: 13.5, color: "#756B5A", marginTop: 20, marginBottom: 0 }}>
