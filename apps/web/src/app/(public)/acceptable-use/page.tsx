@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Acceptable Use Policy · ShiftReady",
+  title: "Acceptable Use Policy · Myrio",
 };
 
 const EFFECTIVE_DATE = "28 May 2026";
@@ -34,7 +34,7 @@ export default function AcceptableUsePage() {
         Acceptable Use Policy
       </h1>
       <p style={{ fontSize: 14, color: "var(--ink-400, #9C9080)", marginBottom: 48, lineHeight: 1.6 }}>
-        This policy sets out what is and is not acceptable behaviour on ShiftReady. It applies to
+        This policy sets out what is and is not acceptable behaviour on Myrio. It applies to
         all users and supplements our{" "}
         <a href="/terms" style={linkStyle}>
           Terms of Service
@@ -43,7 +43,7 @@ export default function AcceptableUsePage() {
       </p>
 
       <Section title="1. Respectful communication">
-        <p>You must not use ShiftReady to:</p>
+        <p>You must not use Myrio to:</p>
         <ul>
           <li>Harass, threaten, or abuse other users, including via private messages.</li>
           <li>
@@ -95,7 +95,7 @@ export default function AcceptableUsePage() {
       <Section title="4. Platform integrity">
         <p>You must not:</p>
         <ul>
-          <li>Attempt to reverse-engineer, scrape, or extract data from ShiftReady at scale.</li>
+          <li>Attempt to reverse-engineer, scrape, or extract data from Myrio at scale.</li>
           <li>
             Introduce malware, exploits, or malicious code via uploaded content or messages.
           </li>
@@ -113,7 +113,7 @@ export default function AcceptableUsePage() {
           <em>Harassment</em>, and <em>Other</em>.
         </p>
         <p>
-          Urgent safety matters should also be reported to NSW Police. Do not use ShiftReady to
+          Urgent safety matters should also be reported to NSW Police. Do not use Myrio to
           report illegal activity to law enforcement — contact triple zero (000) for emergencies.
         </p>
       </Section>

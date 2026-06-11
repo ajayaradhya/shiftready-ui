@@ -1,8 +1,8 @@
 <div align="center">
 
-# ShiftReady UI
+# Myrio UI
 
-**Seller dashboard and public marketplace for ShiftReady — an AI-driven residential relocation platform.**
+**Seller dashboard and public marketplace for Myrio — an AI-driven residential relocation platform.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2-000000.svg?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=white)](https://react.dev/)
@@ -15,7 +15,7 @@
 
 Tap-to-capture inventory · AI extraction + pricing · buyer marketplace · offers + messaging.
 
-[Companion Backend](../shiftready-backend) · [Live Production](https://shiftready-api-12644234558.australia-southeast1.run.app) · [Report Issue](https://github.com/ajayaradhya/shiftready-ui/issues)
+[Companion Backend](../shiftready-backend) · [Live Production](https://myrio-api-p6osvytooa-ts.a.run.app) · [Report Issue](https://github.com/ajayaradhya/shiftready-ui/issues)
 
 </div>
 
@@ -44,7 +44,7 @@ Tap-to-capture inventory · AI extraction + pricing · buyer marketplace · offe
 
 ## Overview
 
-ShiftReady UI is a **Turborepo monorepo** containing the web app and native mobile app for the ShiftReady platform. Two audiences share both surfaces:
+Myrio UI is a **Turborepo monorepo** containing the web app and native mobile app for the Myrio platform. Two audiences share both surfaces:
 
 - **Sellers** — initiate a sale, capture inventory live or upload a walkthrough video, review and edit AI-extracted bundles, set a move-out deadline, publish to the marketplace, and message buyers.
 - **Buyers** — browse the marketplace, save items, message sellers, make structured offers, and reveal seller contact info once a deal is agreed.
@@ -207,7 +207,7 @@ sequenceDiagram
 | Capture (mobile) | Expo Camera + Image Manipulator |
 | Command palette | cmdk |
 | Class utilities | clsx + tailwind-merge (`cn()`) |
-| Shared packages | `@shiftready/api` · `@shiftready/core` · `@shiftready/types` |
+| Shared packages | `@myrio/api` · `@myrio/core` · `@myrio/types` |
 | Tooling | TypeScript 5 · ESLint 9 · Prettier 3 · prettier-plugin-tailwindcss |
 | Deployment | Cloud Run · Cloud Build · Artifact Registry |
 
@@ -253,7 +253,7 @@ make web-dev        # http://localhost:3000
 
 # Mobile (Expo Go)
 make mobile-start
-# or: pnpm --filter @shiftready/mobile start
+# or: pnpm --filter @myrio/mobile start
 
 # Native builds
 make mobile-android
@@ -266,8 +266,8 @@ make mobile-ios
 make web-build        # production build (standalone)
 make web-lint         # ESLint
 pnpm type-check       # tsc --noEmit
-pnpm --filter @shiftready/web format       # Prettier write
-pnpm --filter @shiftready/web format:check
+pnpm --filter @myrio/web format       # Prettier write
+pnpm --filter @myrio/web format:check
 make mobile-prebuild  # expo prebuild --clean (regenerate native projects)
 make clean            # nuke node_modules + reinstall
 ```
@@ -290,7 +290,7 @@ claude --add-dir ../shiftready-ui
 shiftready-ui/
 ├── Makefile                          # Unified dev commands (web + mobile)
 ├── apps/
-│   ├── web/                          # @shiftready/web — Next.js 16
+│   ├── web/                          # @myrio/web — Next.js 16
 │   │   └── src/
 │   │       ├── app/
 │   │       │   ├── layout.tsx        # Providers + Shell
@@ -314,7 +314,7 @@ shiftready-ui/
 │   │           ├── types.ts          # Domain types
 │   │           ├── firebase.ts       # Client SDK (Email/Password + Google SSO)
 │   │           └── capture/          # Camera + frame helpers
-│   └── mobile/                       # @shiftready/mobile — Expo 53
+│   └── mobile/                       # @myrio/mobile — Expo 53
 │       └── app/
 │           ├── (auth)/               # login · register
 │           ├── (tabs)/               # Market · Saved · Messages · Sell · Profile
@@ -326,9 +326,9 @@ shiftready-ui/
 │           ├── notifications/
 │           └── purchases/
 └── packages/                         # Shared workspace packages
-    ├── api/                          # @shiftready/api — shared API client
-    ├── core/                         # @shiftready/core — SYDNEY_SUBURBS, suburb lookup utils
-    └── types/                        # @shiftready/types — shared domain types
+    ├── api/                          # @myrio/api — shared API client
+    ├── core/                         # @myrio/core — SYDNEY_SUBURBS, suburb lookup utils
+    └── types/                        # @myrio/types — shared domain types
 ```
 
 ### Web Hooks at a glance
@@ -499,7 +499,7 @@ flowchart LR
 - `NEXT_PUBLIC_*` vars are **baked at build time** via Docker `--build-arg`. Changing the backend URL requires a new build — update the `_NEXT_PUBLIC_API_URL` substitution in the Cloud Build trigger.
 - Traffic auto-migrates on deploy.
 
-**Current production API:** https://shiftready-api-12644234558.australia-southeast1.run.app
+**Current production API:** https://myrio-api-p6osvytooa-ts.a.run.app
 
 ### Manual deploy
 
@@ -542,4 +542,4 @@ Coding conventions:
 
 ## License
 
-Proprietary — ShiftReady © 2026. All rights reserved.
+Proprietary — Myrio © 2026. All rights reserved.

@@ -30,7 +30,7 @@ export function LegalFooter() {
           marginRight: 4,
         }}
       >
-        ShiftReady · ABN pending
+        Myrio · ABN pending
       </span>
       {LINKS.map(({ label, href }) => (
         <Link

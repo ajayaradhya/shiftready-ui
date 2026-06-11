@@ -29,10 +29,10 @@ import {
   getItemImageUploadUrls,
   confirmItemImages,
   type PublishPayload,
-} from "@shiftready/api";
+} from "@myrio/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import type { SaleSummary, InventoryItem, RoomBundle, SaleStatus } from "@shiftready/types";
+import type { SaleSummary, InventoryItem, RoomBundle, SaleStatus } from "@myrio/types";
 
 const STATUS_LABEL: Partial<Record<SaleStatus, string>> = {
   pending_upload: "Pending",

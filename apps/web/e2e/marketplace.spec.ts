@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Marketplace — anonymous browse', () => {
   test('marketplace page loads', async ({ page }) => {
     await page.goto('/market');
-    await expect(page).toHaveTitle(/ShiftReady/i);
+    await expect(page).toHaveTitle(/Myrio/i);
     await expect(page.locator('body')).toBeVisible();
   });
 

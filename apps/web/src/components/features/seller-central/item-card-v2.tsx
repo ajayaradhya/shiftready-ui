@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRight, X, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InventoryItem, RoomBundle, ItemCategory } from "@shiftready/types";
-import { patchItem, deleteItem, moveItem } from "@shiftready/api";
+import type { InventoryItem, RoomBundle, ItemCategory } from "@myrio/types";
+import { patchItem, deleteItem, moveItem } from "@myrio/api";
 import { ItemPhotoStrip } from "./item-photo-strip";
 
 interface ItemCardV2Props {
@@ -221,7 +221,7 @@ export function ItemCardV2({ eventId, bundleId, item, allBundles = [] }: ItemCar
           </p>
         )}
 
-        {/* Attributes: Brand Â· Condition Â· Year */}
+        {/* Attributes: Brand · Condition · Year */}
         <div
           style={{
             display: "grid",
@@ -472,7 +472,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="Add a description buyers will seeâ€¦"
+              placeholder="Add a description buyers will see…"
               style={inputStyle}
             />
             <div style={{ fontSize: 10, color: "var(--sr-text-muted)", textAlign: "right", marginTop: 2 }}>{description.length}/500</div>
@@ -504,7 +504,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
               <input
                 value={dimensions}
                 onChange={(e) => setDimensions(e.target.value)}
-                placeholder="e.g. 180Ã—90Ã—75cm"
+                placeholder="e.g. 180×90×75cm"
                 style={inputStyle}
               />
             </Field>

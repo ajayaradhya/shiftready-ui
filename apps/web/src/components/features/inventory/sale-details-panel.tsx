@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
@@ -11,8 +11,8 @@ import {
   confirmCover,
   deleteCover,
   type SaleUpdatePayload,
-} from "@shiftready/api";
-import type { SaleSummary } from "@shiftready/types";
+} from "@myrio/api";
+import type { SaleSummary } from "@myrio/types";
 
 interface Props {
   eventId: string;
@@ -139,7 +139,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenC
               {summary.title || <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>No title set</span>}
             </div>
             <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 1 }}>
-              Sale details{displaySubtitle ? ` Â· ${displaySubtitle}` : ""}
+              Sale details{displaySubtitle ? ` · ${displaySubtitle}` : ""}
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenC
                   disabled={!isEditable}
                   maxLength={1000}
                   rows={2}
-                  placeholder="Tell buyers about the saleâ€¦"
+                  placeholder="Tell buyers about the sale…"
                   style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--sr-radius-sm)", border: "1px solid var(--sr-border-subtle)", background: isEditable ? "var(--cream-50)" : "transparent", fontSize: 13, color: "var(--ink-800)", outline: "none", resize: "vertical", fontFamily: "var(--sr-font-sans)", lineHeight: 1.5 }}
                   onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--clay-400)"; }}
                 />
@@ -300,7 +300,7 @@ export function SaleDetailsPanel({ eventId, summary, isEditable, isOpen, onOpenC
           </div>
 
           {patchMutation.isPending && (
-            <div style={{ fontSize: 11, color: "var(--sr-text-muted)" }}>Savingâ€¦</div>
+            <div style={{ fontSize: 11, color: "var(--sr-text-muted)" }}>Saving…</div>
           )}
         </div>
       )}

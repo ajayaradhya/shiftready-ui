@@ -60,7 +60,7 @@ export default function LoginScreen() {
         <View className="flex-1 justify-center px-6 py-12">
           {/* Wordmark */}
           <View className="mb-10">
-            <Text className="text-3xl font-bold text-on-surface">ShiftReady</Text>
+            <Text className="text-3xl font-bold text-on-surface">Myrio</Text>
             <Text className="mt-1 text-on-surface-variant text-base">
               Sign in to your account
             </Text>

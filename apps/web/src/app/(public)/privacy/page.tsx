@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · ShiftReady",
+  title: "Privacy Policy · Myrio",
 };
 
 const EFFECTIVE_DATE = "28 May 2026";
@@ -34,13 +34,13 @@ export default function PrivacyPolicyPage() {
         Privacy Policy
       </h1>
       <p style={{ fontSize: 14, color: "var(--ink-400, #9C9080)", marginBottom: 48, lineHeight: 1.6 }}>
-        ShiftReady is committed to protecting your privacy in accordance with the{" "}
+        Myrio is committed to protecting your privacy in accordance with the{" "}
         <em>Privacy Act 1988</em> (Cth) and the Australian Privacy Principles (APPs).
       </p>
 
       <Section title="1. Who we are">
         <p>
-          ShiftReady is operated by Ajay B L (ABN pending), located at 50 Blytheswood Ave, Warrawee
+          Myrio is operated by Ajay B L (ABN pending), located at 50 Blytheswood Ave, Warrawee
           NSW 2074. Contact:{" "}
           <a href="mailto:be.el.ajay@gmail.com" style={linkStyle}>
             be.el.ajay@gmail.com
@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
           .
         </p>
         <p>
-          ShiftReady is a peer-to-peer residential moving marketplace. We provide the platform;
+          Myrio is a peer-to-peer residential moving marketplace. We provide the platform;
           individual sellers and buyers are the parties to any sale.
         </p>
       </Section>
@@ -88,7 +88,7 @@ export default function PrivacyPolicyPage() {
       <Section title="3. How we use your information (APP 6)">
         <p>We use personal information to:</p>
         <ul>
-          <li>Operate and improve the ShiftReady platform.</li>
+          <li>Operate and improve the Myrio platform.</li>
           <li>
             Process listing content through Google Gemini AI to identify, describe, and price items.
           </li>

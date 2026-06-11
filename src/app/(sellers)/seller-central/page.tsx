@@ -14,7 +14,7 @@ export default function SellerCentralPage() {
   const { data: rawSales, isLoading, error } = useSalesList();
   const sales = rawSales?.filter((s) => s.status !== "pending_upload");
 
-  useEffect(() => { document.title = "My Sales - ShiftReady"; }, []);
+  useEffect(() => { document.title = "My Sales - Myrio"; }, []);
 
   const totalItems = sales?.reduce((s, a) => s + a.itemCount, 0) ?? 0;
   const totalValue = sales?.reduce((s, a) => s + a.totalValue, 0) ?? 0;

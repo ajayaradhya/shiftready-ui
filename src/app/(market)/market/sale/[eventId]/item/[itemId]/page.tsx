@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ItemDetailClient from "./item-detail-client";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myrio.com.au";
 
 interface ItemData {
   name?: string | null;
@@ -82,7 +82,7 @@ export async function generateMetadata({
   ].filter(Boolean);
   const description = parts.length
     ? parts.join(" · ")
-    : "Item for sale on ShiftReady.";
+    : "Item for sale on Myrio.";
   const url = `${SITE_URL}/market/sale/${eventId}/item/${itemId}?bundle=${bundleId}`;
 
   return {

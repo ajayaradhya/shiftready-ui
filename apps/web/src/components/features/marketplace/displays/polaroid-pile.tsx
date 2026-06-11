@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Package } from "lucide-react";
-import type { MarketplaceItem } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { MarketplaceItem } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import s from "./displays.module.css";
 
 function pseudoRandom(seed: string, salt = 0): number {

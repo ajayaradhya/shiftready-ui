@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   FlatList,
@@ -8,8 +8,8 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConversations } from "@/hooks/use-conversations";
-import type { ConversationSummary } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { ConversationSummary } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 function formatRelative(ts: string | null) {
   if (!ts) return "";

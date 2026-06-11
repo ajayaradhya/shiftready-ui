@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -6,8 +6,8 @@ import Image from "next/image";
 import { Heart, LogIn, ChevronRight, Package, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSaved, useInvalidateSaved } from "@/hooks/use-saved";
-import { unsaveSale, unsaveItem } from "@shiftready/api";
-import type { SavedSale, SavedItem } from "@shiftready/types";
+import { unsaveSale, unsaveItem } from "@myrio/api";
+import type { SavedSale, SavedItem } from "@myrio/types";
 
 function fmt(n: number) {
   return n.toLocaleString("en-AU", {
@@ -319,7 +319,7 @@ export default function SavedPage() {
   const { data, isLoading, refetch } = useSaved();
   const invalidateSaved = useInvalidateSaved();
   const [removing, setRemoving] = useState<Set<string>>(new Set());
-  useEffect(() => { document.title = "Saved - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Saved - Myrio"; }, []);
 
   const handleRemoveSale = async (eventId: string) => {
     setRemoving((s) => new Set(s).add(eventId));
@@ -361,7 +361,7 @@ export default function SavedPage() {
         }}
       >
         <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
-          Loadingâ€¦
+          Loading…
         </span>
       </div>
     );
@@ -523,7 +523,7 @@ export default function SavedPage() {
                 href="/market"
                 style={{ color: "var(--clay-600)", fontWeight: 600, textDecoration: "none" }}
               >
-                Browse sales â†’
+                Browse sales →
               </Link>
             </p>
           </div>

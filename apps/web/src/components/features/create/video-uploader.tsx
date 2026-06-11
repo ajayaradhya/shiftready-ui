@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileVideo } from "lucide-react";
 import { toast } from "sonner";
-import { initSale, startProcessing } from "@shiftready/api";
+import { initSale, startProcessing } from "@myrio/api";
 
 export function VideoUploader() {
   const router = useRouter();

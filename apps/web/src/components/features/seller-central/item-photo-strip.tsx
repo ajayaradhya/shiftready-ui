@@ -1,17 +1,17 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, Plus, X, Star } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { InventoryImage } from "@shiftready/types";
+import type { InventoryImage } from "@myrio/types";
 import {
   getItemImageUploadUrls,
   confirmItemImages,
   deleteItemImage,
   setItemImageCover,
   reorderItemImages,
-} from "@shiftready/api";
+} from "@myrio/api";
 import dynamic from "next/dynamic";
 const Lightbox = dynamic(() => import("./lightbox").then(m => ({ default: m.Lightbox })));
 
@@ -170,7 +170,7 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images, noBleed }: I
             whiteSpace: "nowrap",
           }}
         >
-          {uploading ? "Uploadingâ€¦" : "+ Add photos"}
+          {uploading ? "Uploading…" : "+ Add photos"}
         </button>
         <input
           ref={fileInputRef}

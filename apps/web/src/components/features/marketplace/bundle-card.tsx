@@ -1,7 +1,7 @@
 ﻿import Image from "next/image";
 import { Tag, Percent } from "lucide-react";
-import type { PublicBundle, PublicBundleItem } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { PublicBundle, PublicBundleItem } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 function BundleItemRow({ item }: { item: PublicBundleItem }) {
   const isSold = item.sale_status === "sold";

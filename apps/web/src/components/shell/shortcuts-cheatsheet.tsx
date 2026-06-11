@@ -51,7 +51,7 @@ export function ShortcutsCheatsheet({ open, onOpenChange }: ShortcutsCheatsheetP
             Keyboard shortcuts
           </DialogTitle>
           <DialogDescription className="sr-only">
-            All available keyboard shortcuts for ShiftReady.
+            All available keyboard shortcuts for Myrio.
           </DialogDescription>
         </DialogHeader>
 

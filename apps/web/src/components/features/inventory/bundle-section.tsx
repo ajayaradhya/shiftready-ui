@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { RoomBundle } from "@shiftready/types";
+import type { RoomBundle } from "@myrio/types";
 
 interface BundleSectionProps {
   bundle: RoomBundle;

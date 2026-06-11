@@ -1,11 +1,11 @@
-import "../global.css";
+﻿import "../global.css";
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Sentry from "@sentry/react-native";
-import { configure } from "@shiftready/api";
+import { configure } from "@myrio/api";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { queryClient } from "@/lib/query-client";
 import { configurePushHandler } from "@/lib/push";

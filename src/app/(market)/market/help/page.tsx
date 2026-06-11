@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, LifeBuoy, Mail } from "lucide-react";
 
-const SUPPORT_EMAIL = "support@shiftready.com.au";
+const SUPPORT_EMAIL = "support@myrio.com.au";
 
 const FAQS: { q: string; a: string }[] = [
   {
-    q: "How does ShiftReady work?",
+    q: "How does Myrio work?",
     a: "Sellers film a walkthrough of their home and our AI automatically identifies, describes, and prices every item. The sale is then published to the marketplace so buyers can browse, save, and message the seller directly.",
   },
   {
-    q: "Is it free to list on ShiftReady?",
-    a: "Yes — listing your sale is completely free. ShiftReady is in early access and we're focused on helping people move stress-free.",
+    q: "Is it free to list on Myrio?",
+    a: "Yes — listing your sale is completely free. Myrio is in early access and we're focused on helping people move stress-free.",
   },
   {
     q: "How do I buy something?",
@@ -39,8 +39,8 @@ const FAQS: { q: string; a: string }[] = [
     a: "Create a free account, go to Seller Central, and start a new sale. You can capture items live using your phone camera — each tap identifies the item automatically.",
   },
   {
-    q: "What areas does ShiftReady cover?",
-    a: "ShiftReady is available across Australia, with early sellers primarily in Sydney and surrounding suburbs. More areas are being added as the platform grows.",
+    q: "What areas does Myrio cover?",
+    a: "Myrio is available across Australia, with early sellers primarily in Sydney and surrounding suburbs. More areas are being added as the platform grows.",
   },
   {
     q: "How do I contact support?",
@@ -119,7 +119,7 @@ export default function HelpPage() {
         Help &amp; FAQ
       </h1>
       <p style={{ fontSize: 13, color: "var(--ink-400)", marginBottom: 40 }}>
-        Common questions about buying and selling on ShiftReady.
+        Common questions about buying and selling on Myrio.
       </p>
 
       {/* FAQ list */}

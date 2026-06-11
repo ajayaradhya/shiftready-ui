@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "FILL_IN_APPLE_TEAM_ID.au.com.shiftready.app",
+        "appID": "FILL_IN_APPLE_TEAM_ID.au.com.myrio.app",
         "paths": [
           "/sale/*",
           "/item/*"

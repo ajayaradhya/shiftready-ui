@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   SaleSummary,
   InventoryItem,
   SaleListing,
@@ -25,7 +25,7 @@ import type {
   MarkSoldPayload,
   MarkBundleSoldPayload,
   TransactionRecord,
-} from "@shiftready/types";
+} from "@myrio/types";
 
 let _apiBase =
   ((process.env.NEXT_PUBLIC_API_URL as string | undefined) ??

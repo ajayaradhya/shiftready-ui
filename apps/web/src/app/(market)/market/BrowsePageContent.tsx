@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
@@ -7,10 +7,10 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, Package } from "lucide-react";
 import { toast } from "sonner";
-import type { ActiveSaleSummary, LandingData } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { ActiveSaleSummary, LandingData } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import { useLanding } from "@/hooks/use-landing";
-import { searchMarketplace, getActiveSales } from "@shiftready/api";
+import { searchMarketplace, getActiveSales } from "@myrio/api";
 import { FilterChip } from "@/components/features/marketplace/FilterChip";
 import { SuburbChip } from "@/components/features/marketplace/SuburbChip";
 import { ConveyorBelt, ConveyorBeltSkeleton } from "@/components/features/marketplace/displays/conveyor-belt";
@@ -21,7 +21,7 @@ import {
   CONDITION_OPTIONS,
   PRICE_RANGE_OPTIONS,
   SORT_OPTIONS,
-} from "@shiftready/core";
+} from "@myrio/core";
 import s from "../../landing.module.css";
 
 type Variant = "default" | "tinted" | "moss" | "honey" | "ink";
@@ -125,15 +125,15 @@ function SaleCard({ sale, index }: { sale: ActiveSaleSummary; index: number }) {
           <div className={s.saleTitle}>{title}</div>
           <div className={s.saleMeta}>
             {sale.itemCount} items
-            {sale.minPrice != null ? ` Â· from ${fmt(sale.minPrice)}` : ""}
-            {sale.state ? ` Â· ${sale.state}` : ""}
+            {sale.minPrice != null ? ` · from ${fmt(sale.minPrice)}` : ""}
+            {sale.state ? ` · ${sale.state}` : ""}
           </div>
           <div className={s.saleFoot}>
             <div className={s.saleSeller}>
               <MiniAvatar text={sale.suburb ?? sale.eventId} variant={v} />
               {sale.suburb ?? "Moving sale"}
             </div>
-            <span className={s.saleCta}>Browse â†’</span>
+            <span className={s.saleCta}>Browse →</span>
           </div>
         </div>
       </article>
@@ -216,7 +216,7 @@ function useInViewOnce(rootMargin = "200px") {
 }
 
 function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: LandingData | null; fetchedAt: number }) {
-  useEffect(() => { document.title = "Browse - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Browse - Myrio"; }, []);
   const searchParams = useSearchParams();
   const [heroDismissed, setHeroDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -290,9 +290,9 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
     <div className={s.landing}>
       <main className={s.container}>
 
-        {/* â”€â”€ SELLER HERO â”€â”€ */}
+        {/* ── SELLER HERO ── */}
         {!heroDismissed && (
-          <section className={s.sellerHero} aria-label="Sell with ShiftReady">
+          <section className={s.sellerHero} aria-label="Sell with Myrio">
             <button className={s.sellerHeroClose} aria-label="Dismiss" onClick={() => { setHeroDismissed(true); localStorage.setItem("sr_seller_hero_dismissed", "1"); }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
                 <path d="m4 4 8 8M12 4l-8 8" />
@@ -300,7 +300,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
             </button>
             <div className={s.sellerHeroInner}>
               <div>
-                <div className={s.sellerHeroEyebrow}>For sellers Â· AI walkthrough</div>
+                <div className={s.sellerHeroEyebrow}>For sellers · AI walkthrough</div>
                 <h1 className={s.sellerHeroTitle}>Moving house? Turn your stuff into <em>cash</em>.</h1>
                 <p className={s.sellerHeroSub}>Film a walkthrough - AI extracts and prices everything in minutes. List a whole sale in the time it takes to make a coffee.</p>
               </div>
@@ -311,13 +311,13 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
                   </svg>
                   Start Live Capture
                 </Link>
-                <Link className={`${s.btn} ${s.btnLink}`} href="/seller-central">View My Sales â†’</Link>
+                <Link className={`${s.btn} ${s.btnLink}`} href="/seller-central">View My Sales →</Link>
               </div>
             </div>
           </section>
         )}
 
-        {/* â”€â”€ FILTER BAR â”€â”€ */}
+        {/* ── FILTER BAR ── */}
         <div className={s.filterBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <SuburbChip value={{ suburb, postcode }} onChange={handleLocationChange} />
@@ -352,7 +352,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
           </div>
         </div>
 
-        {/* â”€â”€ 01 Â· CONVEYOR BELT (primary browse, respects all filters) â”€â”€ */}
+        {/* ── 01 · CONVEYOR BELT (primary browse, respects all filters) ── */}
         <section>
           <div className={s.sectionHead}>
             <div>
@@ -361,7 +361,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
               </h2>
               <div className={s.sectionMeta}>
                 {itemsLoading
-                  ? "Loadingâ€¦"
+                  ? "Loading…"
                   : `${itemCount} item${itemCount !== 1 ? "s" : ""} rolling past${locationLabel ? ` in ${locationLabel}` : ""}`}
               </div>
             </div>
@@ -381,7 +381,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
           )}
         </section>
 
-        {/* â”€â”€ 02 Â· POLAROID PILE (newest, suburb-aware) â”€â”€ */}
+        {/* ── 02 · POLAROID PILE (newest, suburb-aware) ── */}
         <section style={{ marginTop: 56 }} ref={setPolaroidRef as React.RefCallback<HTMLElement>}>
           {(newestLoading || newestItems.length > 0) && (
             <>
@@ -392,10 +392,10 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
                   </h2>
                   <div className={s.sectionMeta}>
                     {newestLoading
-                      ? "Loadingâ€¦"
+                      ? "Loading…"
                       : useItemsForNewest
                         ? `Just listed${locationLabel ? ` near ${locationLabel}` : ""}`
-                        : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} Â· ${newestItems.length} total`}
+                        : `Just listed${locationLabel ? ` near ${locationLabel}` : ""} · ${newestItems.length} total`}
                   </div>
                 </div>
                 <span className={s.sectionView} />
@@ -405,7 +405,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
           )}
         </section>
 
-        {/* â”€â”€ 03 Â· RECEIPT ROLL (cheapest, suburb-aware) â”€â”€ */}
+        {/* ── 03 · RECEIPT ROLL (cheapest, suburb-aware) ── */}
         <section style={{ marginTop: 56 }} ref={setReceiptRef as React.RefCallback<HTMLElement>}>
           {(cheapestQuery.isLoading || (cheapestQuery.data?.items?.length ?? 0) > 0) && (
             <>
@@ -415,7 +415,7 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
                     Today&apos;s <em>best prices</em>
                   </h2>
                   <div className={s.sectionMeta}>
-                    Cheapest 14 items{locationLabel ? ` in ${locationLabel}` : " right now"} Â· cash, transfer or pick-up
+                    Cheapest 14 items{locationLabel ? ` in ${locationLabel}` : " right now"} · cash, transfer or pick-up
                   </div>
                 </div>
                 <span className={s.sectionView} />
@@ -428,13 +428,13 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
           )}
         </section>
 
-        {/* â”€â”€ ACTIVE SALES NEARBY â”€â”€ */}
+        {/* ── ACTIVE SALES NEARBY ── */}
         <section className={s.salesScrollWrap} ref={setSalesRef as React.RefCallback<HTMLElement>}>
           <div className={s.sectionHead}>
             <div>
               <h2 className={s.sectionTitle}>Moving sales <em>live now</em></h2>
               <div className={s.sectionMeta}>
-                {salesQuery.isLoading ? "Loadingâ€¦" : `${(salesQuery.data ?? []).length} active sale${(salesQuery.data ?? []).length !== 1 ? "s" : ""}`}
+                {salesQuery.isLoading ? "Loading…" : `${(salesQuery.data ?? []).length} active sale${(salesQuery.data ?? []).length !== 1 ? "s" : ""}`}
               </div>
             </div>
             <span className={s.sectionView} />
@@ -458,19 +458,19 @@ function BrowsePageInner({ initialLanding, fetchedAt }: { initialLanding: Landin
 
       </main>
 
-      {/* â”€â”€ FOOTER â”€â”€ */}
+      {/* ── FOOTER ── */}
       <div className={s.footerBand}>
         <footer className={s.footer}>
           <div className={s.footerBrand}>
-            <Image src="/logo-mark.svg" alt="ShiftReady" width={24} height={24} />
-            ShiftReady
+            <Image src="/logo-mark.svg" alt="Myrio" width={24} height={24} />
+            Myrio
           </div>
           <div className={s.footerLinks}>
             <Link href="#">About</Link>
             <Link href="#">How it works</Link>
             <Link href="#">Contact</Link>
           </div>
-          <div>Â© 2026 ShiftReady Â· Made in Australia</div>
+          <div>© 2026 Myrio · Made in Australia</div>
         </footer>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import {
+﻿import {
   createContext,
   useCallback,
   useContext,
@@ -20,7 +20,7 @@ import {
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { auth, isFirebaseConfigured } from "@/lib/firebase";
-import { _setIdToken, setTokenRefresher } from "@shiftready/api";
+import { _setIdToken, setTokenRefresher } from "@myrio/api";
 import { registerPushToken, unregisterPushToken } from "@/lib/push";
 
 WebBrowser.maybeCompleteAuthSession();

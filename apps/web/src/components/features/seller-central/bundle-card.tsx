@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Sofa, UtensilsCrossed, Bed, Package, Pencil, Percent, Trash2, Plus, ShoppingBag } from "lucide-react";
-import type { RoomBundle } from "@shiftready/types";
+import type { RoomBundle } from "@myrio/types";
 import { MarkBundleSoldDialog } from "./MarkBundleSoldDialog";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter,

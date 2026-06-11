@@ -20,7 +20,7 @@ import {
   type User as FirebaseUser,
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "@/lib/firebase";
-import { _setIdToken, setTokenRefresher } from "@shiftready/api";
+import { _setIdToken, setTokenRefresher } from "@myrio/api";
 
 // Register firebase token refresh so apiRequest can retry 401s without
 // importing firebase directly in the platform-agnostic api package.

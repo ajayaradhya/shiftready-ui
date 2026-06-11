@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { X, Star } from "lucide-react";
-import type { InventoryImage } from "@shiftready/types";
+import type { InventoryImage } from "@myrio/types";
 import { FocusTrap } from "@/components/ui/focus-trap";
 
 interface LightboxProps {
@@ -110,7 +110,7 @@ export function Lightbox({
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
               {coveringId === current.id ? <Spinner /> : <Star size={11} strokeWidth={1.5} />}
-              {coveringId === current.id ? "Settingâ€¦" : "Set as cover"}
+              {coveringId === current.id ? "Setting…" : "Set as cover"}
             </button>
           )}
           <button
@@ -132,7 +132,7 @@ export function Lightbox({
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             {deletingId === current.id ? <Spinner color="rgba(220,120,100,1)" /> : null}
-            {deletingId === current.id ? "Removingâ€¦" : "Remove"}
+            {deletingId === current.id ? "Removing…" : "Remove"}
           </button>
           <button
             onClick={onClose}
@@ -165,7 +165,7 @@ export function Lightbox({
             style={{ ...arrowBtnStyle, left: 8 }}
             aria-label="Previous image"
           >
-            â€¹
+            ‹
           </button>
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -185,7 +185,7 @@ export function Lightbox({
             style={{ ...arrowBtnStyle, right: 8 }}
             aria-label="Next image"
           >
-            â€º
+            ›
           </button>
         )}
       </div>

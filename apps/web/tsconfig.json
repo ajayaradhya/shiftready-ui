@@ -3,9 +3,9 @@
     "target": "ES2017",
     "paths": {
       "@/*": ["./src/*"],
-      "@shiftready/types": ["../../packages/types/src/index.ts"],
-      "@shiftready/core": ["../../packages/core/src/index.ts"],
-      "@shiftready/api": ["../../packages/api/src/index.ts"]
+      "@myrio/types": ["../../packages/types/src/index.ts"],
+      "@myrio/core": ["../../packages/core/src/index.ts"],
+      "@myrio/api": ["../../packages/api/src/index.ts"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,

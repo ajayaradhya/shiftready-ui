@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import SaleDetailClient from "./sale-detail-client";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shiftready.com.au";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myrio.com.au";
 
 interface SaleData {
   title?: string | null;
@@ -38,7 +38,7 @@ export async function generateMetadata({
   const itemCount =
     sale.bundles?.reduce((s, b) => s + b.items.length, 0) ?? 0;
   const location = [sale.suburb, sale.state].filter(Boolean).join(", ");
-  const description = `${itemCount} items for sale${location ? ` in ${location}` : ""}. AI-priced moving sale on ShiftReady.`;
+  const description = `${itemCount} items for sale${location ? ` in ${location}` : ""}. AI-priced moving sale on Myrio.`;
   const url = `${SITE_URL}/market/sale/${eventId}`;
 
   return {

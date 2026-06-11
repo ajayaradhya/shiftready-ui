@@ -1,4 +1,4 @@
-import {
+﻿import {
   View,
   Text,
   TouchableOpacity,
@@ -18,7 +18,7 @@ import * as Haptics from "expo-haptics";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { initCaptureSale, captureFrameNative } from "@shiftready/api";
+import { initCaptureSale, captureFrameNative } from "@myrio/api";
 import { captureStore, type CapturedItem } from "@/lib/capture-store";
 
 function formatAUD(v: number) {
@@ -133,7 +133,7 @@ export default function CaptureScreen() {
           Camera access needed
         </Text>
         <Text className="text-sm text-on-surface-variant text-center mb-8">
-          ShiftReady uses your camera to capture items for your sale listing.
+          Myrio uses your camera to capture items for your sale listing.
         </Text>
         <TouchableOpacity
           className="bg-primary rounded-xl px-6 py-3 mb-3 w-full items-center"

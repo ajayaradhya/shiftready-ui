@@ -31,7 +31,7 @@ export default function GlobalError({
         <div style={{ fontSize: 48, color: "#d4cfc9" }}>⚠</div>
         <div>
           <p style={{ fontSize: 18, fontWeight: 600, color: "#1c1917", margin: "0 0 8px" }}>
-            ShiftReady ran into a problem
+            Myrio ran into a problem
           </p>
           <p style={{ fontSize: 14, color: "#78716c", margin: 0 }}>
             Refresh the page or try again.

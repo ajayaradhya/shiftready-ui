@@ -117,7 +117,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
               className="text-[16px] font-semibold leading-none"
               style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}
             >
-              ShiftReady
+              Myrio
             </span>
           </Link>
         )}
@@ -134,7 +134,7 @@ export function ShellHeader({ hasSidebar = false }: ShellHeaderProps) {
               className="hidden sm:inline text-[16px] font-semibold leading-none"
               style={{ fontFamily: "var(--sr-font-serif)", letterSpacing: "-0.015em" }}
             >
-              ShiftReady
+              Myrio
             </span>
           </Link>
         )}

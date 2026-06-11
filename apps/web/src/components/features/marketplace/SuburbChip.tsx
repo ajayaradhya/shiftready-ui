@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useEffect, useState } from "react";
 import { MapPin, LocateFixed, Loader2 } from "lucide-react";
@@ -9,7 +9,7 @@ import {
   isValidPostcode,
   nearestSuburb,
   type Suburb,
-} from "@shiftready/core";
+} from "@myrio/core";
 import s from "./FilterChip.module.css";
 import ls from "./SuburbChip.module.css";
 
@@ -150,7 +150,7 @@ export function SuburbChip({ value, onChange }: Props) {
             <input
               ref={inputRef}
               className={ls.searchInput}
-              placeholder="Suburb or postcodeâ€¦"
+              placeholder="Suburb or postcode…"
               value={search}
               onChange={e => setSearch(e.target.value)}
               inputMode="text"
@@ -166,7 +166,7 @@ export function SuburbChip({ value, onChange }: Props) {
             {locating
               ? <Loader2 size={14} className={ls.spin} />
               : <LocateFixed size={14} />}
-            {locating ? "Locatingâ€¦" : "Use my location"}
+            {locating ? "Locating…" : "Use my location"}
           </button>
 
           {geoErr && <div className={ls.gpsErr}>{geoErr}</div>}

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Message } from "@shiftready/types";
+import type { Message } from "@myrio/types";
 
 const WS_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080")
   .replace(/^http/, "ws");
@@ -107,7 +107,7 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
         if (pingInterval) clearInterval(pingInterval);
         wsRef.current = null;
         if (!mountedRef.current) return;
-        // Exponential backoff â€” doubles on each failure, capped at MAX_RECONNECT_MS
+        // Exponential backoff — doubles on each failure, capped at MAX_RECONNECT_MS
         retryRef.current = setTimeout(() => {
           delayRef.current = Math.min(delayRef.current * 2, MAX_RECONNECT_MS);
           connectRef.current();

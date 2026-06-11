@@ -1,13 +1,13 @@
-import {
+﻿import {
   View, Text, ScrollView, FlatList,
   TouchableOpacity, Image, ActivityIndicator,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { getLandingData } from "@shiftready/api";
-import { formatAUD } from "@shiftready/core";
+import { getLandingData } from "@myrio/api";
+import { formatAUD } from "@myrio/core";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { ActiveSaleSummary, MarketplaceItem } from "@shiftready/types";
+import type { ActiveSaleSummary, MarketplaceItem } from "@myrio/types";
 
 function titleCase(s: string) {
   return s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());

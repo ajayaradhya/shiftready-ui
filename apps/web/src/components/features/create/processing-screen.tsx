@@ -1,13 +1,13 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { HowTo } from "./how-to";
 import { StepHeader } from "./step-header";
-import { getStatus } from "@shiftready/api";
+import { getStatus } from "@myrio/api";
 import type { UploadedFile } from "@/hooks/use-upload";
 import type { CapturedItem } from "@/lib/capture/capture-types";
-import { formatAUD } from "@shiftready/core";
+import { formatAUD } from "@myrio/core";
 
 const DEMO_ITEMS = [
   "Linen sofa", "Oak dining table", "Bosch washer", "Fiddle leaf fig",
@@ -16,10 +16,10 @@ const DEMO_ITEMS = [
 ];
 
 const SUB_LINES = [
-  "Identifying furnitureâ€¦",
-  "Detecting appliancesâ€¦",
-  "Reading dimensionsâ€¦",
-  "Pricing against marketplace dataâ€¦",
+  "Identifying furniture…",
+  "Detecting appliances…",
+  "Reading dimensions…",
+  "Pricing against marketplace data…",
 ];
 
 function formatBytes(bytes: number): string {
@@ -146,14 +146,14 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
                       background: "var(--clay-500)", display: "inline-block",
                       animation: "badge-pulse 1.6s infinite",
                     }} />
-                    Pricingâ€¦
+                    Pricing…
                   </div>
                 )}
               </div>
             </div>
           ))}
 
-          {/* Items without names â€” preserved but need review */}
+          {/* Items without names — preserved but need review */}
           {capturedItems.filter((i) => !i.name).map((item) => (
             <div
               key={item.id}
@@ -189,7 +189,7 @@ function LiveProcessingScreen({ eventId, capturedItems, onInventory, onDashboard
       </div>
       {/* /scroll body */}
 
-      {/* Sticky footer â€” primary CTA always visible */}
+      {/* Sticky footer — primary CTA always visible */}
       <div
         style={{
           flexShrink: 0,
@@ -336,7 +336,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
             </div>
             <div style={{ fontSize: 12.5, color: "var(--ink-500)" }}>
               {uploadedFile?.name ?? "video.mp4"}
-              {uploadedFile?.size ? ` Â· ${formatBytes(uploadedFile.size)}` : ""}
+              {uploadedFile?.size ? ` · ${formatBytes(uploadedFile.size)}` : ""}
             </div>
           </div>
           <div style={{ flex: 1 }} />
@@ -388,7 +388,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
                 fontFamily: "var(--sr-font-serif)", fontSize: 22, fontWeight: 500,
                 letterSpacing: "-0.015em", color: "var(--ink-800)",
               }}>
-                AI is scanning your videoâ€¦
+                AI is scanning your video…
               </div>
               <div style={{ color: "var(--sr-text-secondary)", fontSize: 14, height: 20, transition: "opacity 200ms" }}>
                 {SUB_LINES[subIdx]}
@@ -414,7 +414,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
               color: "var(--sr-text-muted)", letterSpacing: "0.10em",
               textTransform: "uppercase", marginTop: 6,
             }}>
-              Usually takes 2â€“5 min Â· {minRemaining} min remaining
+              Usually takes 2–5 min · {minRemaining} min remaining
             </div>
           </div>
 
@@ -563,7 +563,7 @@ export function ProcessingScreen({ eventId, uploadedFile, mode = "batch", captur
               display: "inline-flex", alignItems: "center", gap: 7,
             }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--ink-200)", display: "inline-block" }} />
-              scanningâ€¦
+              scanning…
             </span>
           </div>
         </div>

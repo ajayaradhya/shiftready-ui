@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Calendar, Package, DollarSign, ArrowRight, ShoppingBag, MoreHorizontal, Archive, Pencil } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { SaleListing, SaleStatus } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { SaleListing, SaleStatus } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import { useIsMobile } from "@/hooks/use-media-query";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {

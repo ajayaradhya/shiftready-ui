@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Check, X, RotateCcw, Percent } from "lucide-react";
-import type { OfferPayload } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { OfferPayload } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 
 interface OfferCardProps {
   offer: OfferPayload;
@@ -140,7 +140,7 @@ export function OfferCard({ offer, isOwn, onAccept, onCounter, onWithdraw, disab
               display: "inline-block",
             }}
           />
-          Awaiting responseâ€¦
+          Awaiting response…
         </div>
       )}
 
@@ -152,7 +152,7 @@ export function OfferCard({ offer, isOwn, onAccept, onCounter, onWithdraw, disab
             color: "var(--sr-text-muted)",
           }}
         >
-          Counter offer sent â†“
+          Counter offer sent ↓
         </div>
       )}
 

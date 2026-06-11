@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Check, X, DollarSign } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatAUD } from "@shiftready/core";
-import { markBundleSold } from "@shiftready/api";
-import type { RoomBundle } from "@shiftready/types";
+import { formatAUD } from "@myrio/core";
+import { markBundleSold } from "@myrio/api";
+import type { RoomBundle } from "@myrio/types";
 import { toast } from "sonner";
 
 const PAYMENT_METHODS = [
@@ -79,7 +79,7 @@ export function MarkBundleSoldDialog({ eventId, bundle, onClose }: MarkBundleSol
               Mark bundle as sold
             </div>
             <div style={{ fontSize: 12, color: "var(--sr-text-muted)", marginTop: 2 }}>
-              {bundle.name} Â· {availableCount} item{availableCount !== 1 ? "s" : ""}
+              {bundle.name} · {availableCount} item{availableCount !== 1 ? "s" : ""}
             </div>
           </div>
           <button
@@ -208,7 +208,7 @@ export function MarkBundleSoldDialog({ eventId, bundle, onClose }: MarkBundleSol
             onMouseEnter={(e) => { if (!mutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--moss-700)"; }}
             onMouseLeave={(e) => { if (!mutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--moss-600)"; }}
           >
-            {mutation.isPending ? "Savingâ€¦" : <><Check size={13} /> Confirm sold</>}
+            {mutation.isPending ? "Saving…" : <><Check size={13} /> Confirm sold</>}
           </button>
         </div>
       </div>

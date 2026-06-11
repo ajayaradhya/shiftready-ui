@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteItem, patchItem, PatchItemPayload } from "@shiftready/api";
-import { InventoryItem } from "@shiftready/types";
+import { deleteItem, patchItem, PatchItemPayload } from "@myrio/api";
+import { InventoryItem } from "@myrio/types";
 
 // Sub-components
 import { CardHeader } from "./card-header";
@@ -15,7 +15,7 @@ import { CardDeleteOverlay } from "./card-delete-overlay";
 interface InventoryCardProps {
   item: InventoryItem;
   bundleId: string;
-  allBundles?: import("@shiftready/types").RoomBundle[];
+  allBundles?: import("@myrio/types").RoomBundle[];
   onSeek: (timestamp: number) => void;
 }
 

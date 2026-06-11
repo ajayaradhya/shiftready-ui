@@ -1,12 +1,12 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
 import { Plus, Camera } from "lucide-react";
 import { useSalesList } from "@/hooks/use-sales";
 import { SaleRow } from "@/components/features/seller-central/sale-row";
-import { formatAUD, formatAUDCompact } from "@shiftready/core";
-import type { SaleStatus } from "@shiftready/types";
+import { formatAUD, formatAUDCompact } from "@myrio/core";
+import type { SaleStatus } from "@myrio/types";
 
 const LIVE_STATUSES: SaleStatus[] = ["live", "partially_sold"];
 
@@ -14,7 +14,7 @@ export default function SellerCentralPage() {
   const { data: rawSales, isLoading, error } = useSalesList();
   const sales = rawSales?.filter((s) => s.status !== "pending_upload");
 
-  useEffect(() => { document.title = "My Sales - ShiftReady"; }, []);
+  useEffect(() => { document.title = "My Sales - Myrio"; }, []);
 
   const totalItems = sales?.reduce((s, a) => s + a.itemCount, 0) ?? 0;
   const totalValue = sales?.reduce((s, a) => s + a.totalValue, 0) ?? 0;
@@ -68,8 +68,8 @@ export default function SellerCentralPage() {
         >
           {[
             { label: "Total sales",  value: String(sales.length),          delta: "Across all time" },
-            { label: "Items listed", value: String(totalItems),            delta: liveItems > 0 ? `â†‘ ${liveItems} live now` : "No items live", up: liveItems > 0 },
-            { label: "Total value",  value: formatAUDCompact(totalValue),  delta: activeValue > 0 ? `â†‘ ${formatAUD(activeValue)} active` : "No active sales", up: activeValue > 0 },
+            { label: "Items listed", value: String(totalItems),            delta: liveItems > 0 ? `↑ ${liveItems} live now` : "No items live", up: liveItems > 0 },
+            { label: "Total value",  value: formatAUDCompact(totalValue),  delta: activeValue > 0 ? `↑ ${formatAUD(activeValue)} active` : "No active sales", up: activeValue > 0 },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -98,7 +98,7 @@ export default function SellerCentralPage() {
 
       {/* Loading skeletons */}
       {isLoading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }} aria-busy="true" aria-label="Loading salesâ€¦">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }} aria-busy="true" aria-label="Loading sales…">
           {[0, 1, 2].map((i) => (
             <div key={i} style={{ height: 80, borderRadius: "var(--sr-radius-lg)", background: "var(--cream-100)", animation: "pulse 1.5s ease-in-out infinite" }} />
           ))}

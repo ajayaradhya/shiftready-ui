@@ -54,7 +54,7 @@ export function pickRecordingMimeType(): string {
 export function blobToFile(blob: Blob, mimeType: string): File {
   const baseType = mimeType.split(";")[0];
   const ext = baseType === "video/mp4" ? "mp4" : "webm";
-  return new File([blob], `shiftready-capture.${ext}`, { type: baseType });
+  return new File([blob], `myrio-capture.${ext}`, { type: baseType });
 }
 
 export async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {

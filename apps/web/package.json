@@ -1,5 +1,5 @@
 {
-  "name": "@shiftready/web",
+  "name": "@myrio/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,9 +14,9 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@shiftready/api": "workspace:*",
-    "@shiftready/core": "workspace:*",
-    "@shiftready/types": "workspace:*",
+    "@myrio/api": "workspace:*",
+    "@myrio/core": "workspace:*",
+    "@myrio/types": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

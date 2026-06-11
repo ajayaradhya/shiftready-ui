@@ -5,11 +5,12 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
 # Copy workspace manifests for dependency resolution
-COPY pnpm-workspace.yaml package.json .npmrc ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY packages/types/package.json ./packages/types/package.json
 COPY packages/core/package.json ./packages/core/package.json
 COPY packages/api/package.json ./packages/api/package.json
 COPY apps/web/package.json ./apps/web/package.json
+COPY apps/mobile/package.json ./apps/mobile/package.json
 
 RUN pnpm install --frozen-lockfile
 
@@ -49,7 +50,7 @@ ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 
-RUN pnpm --filter @shiftready/web build
+RUN pnpm --filter @myrio/web build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
@@ -58,9 +59,9 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV PORT 3000
 
-COPY --from=builder /app/apps/web/public ./public
 COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]

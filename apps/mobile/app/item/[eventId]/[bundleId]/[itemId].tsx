@@ -7,10 +7,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getPublicItem, saveItem, unsaveItem, startConversation } from "@shiftready/api";
-import { formatAUD, formatDateAU } from "@shiftready/core";
+import { getPublicItem, saveItem, unsaveItem, startConversation } from "@myrio/api";
+import { formatAUD, formatDateAU } from "@myrio/core";
 import { useAuth } from "@/contexts/auth-context";
-import type { PublicItemImage } from "@shiftready/types";
+import type { PublicItemImage } from "@myrio/types";
 
 const { width: SW } = Dimensions.get("window");
 

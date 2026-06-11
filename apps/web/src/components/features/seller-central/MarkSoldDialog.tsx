@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Check, X, DollarSign } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatAUD } from "@shiftready/core";
-import { markItemSold } from "@shiftready/api";
-import type { InventoryItem } from "@shiftready/types";
+import { formatAUD } from "@myrio/core";
+import { markItemSold } from "@myrio/api";
+import type { InventoryItem } from "@myrio/types";
 import { toast } from "sonner";
 
 const PAYMENT_METHODS = [
@@ -207,7 +207,7 @@ export function MarkSoldDialog({ eventId, bundleId, item, onClose }: MarkSoldDia
             onMouseEnter={(e) => { if (!mutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--moss-700)"; }}
             onMouseLeave={(e) => { if (!mutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--moss-600)"; }}
           >
-            {mutation.isPending ? "Savingâ€¦" : <><Check size={13} /> Confirm sold</>}
+            {mutation.isPending ? "Saving…" : <><Check size={13} /> Confirm sold</>}
           </button>
         </div>
       </div>

@@ -69,7 +69,7 @@ function CapturePageContent() {
   const appendTo = searchParams.get("appendTo");
   const isDev = searchParams.get("dev") === "1";
   const { setSale } = useSaleContext();
-  useEffect(() => { document.title = "Live Capture - ShiftReady"; }, []);
+  useEffect(() => { document.title = "Live Capture - Myrio"; }, []);
 
   const [pageState, setPageState] = useState<CapturePageState>("gate");
   const [stream, setStream] = useState<MediaStream | null>(null);

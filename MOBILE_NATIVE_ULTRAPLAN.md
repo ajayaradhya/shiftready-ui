@@ -1,4 +1,4 @@
-# ShiftReady Native Mobile (iOS + Android) UltraPlan
+﻿# Myrio Native Mobile (iOS + Android) UltraPlan
 
 Drafted 2026-06-03. Supersedes the Appendix stub in the Web Production-Hardening plan.
 
@@ -98,12 +98,12 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - `apps/mobile/app/_layout.tsx` — root layout: QueryClient + AuthProvider + `configure()`
   - `packages/api/src/index.ts` — added `configure({ apiBaseUrl })` export; `_apiBase` is now mutable
 - **Google SSO env vars** (add to `.env.local` and Firebase Console):
-  - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` — Google Cloud Console → Credentials → iOS OAuth client (bundle: `au.com.shiftready.app`)
-  - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` — Google Cloud Console → Credentials → Android OAuth client (package: `au.com.shiftready.app`)
+  - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` — Google Cloud Console → Credentials → iOS OAuth client (bundle: `au.com.myrio.app`)
+  - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` — Google Cloud Console → Credentials → Android OAuth client (package: `au.com.myrio.app`)
   - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` — Firebase Console → Auth → Google → Web SDK configuration → Web client ID
 - **Google SSO setup steps:**
   1. Firebase Console → Authentication → Sign-in method → enable Google.
-  2. Google Cloud Console → Credentials → create iOS client (bundle `au.com.shiftready.app`) + Android client (package + SHA-1 fingerprint from EAS / keytool).
+  2. Google Cloud Console → Credentials → create iOS client (bundle `au.com.myrio.app`) + Android client (package + SHA-1 fingerprint from EAS / keytool).
   3. Add all three client IDs to `.env.local`. For development with Expo Go, only `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` is required (native clients are used in EAS builds).
 
 ### Phase 2 — Buyer read-only ✅ DONE (2026-06-04)
@@ -175,7 +175,7 @@ Everything else (auth, signed GCS URLs, capture pipeline, marketplace masking) a
   - Fill `apple-app-site-association`: replace `FILL_IN_APPLE_TEAM_ID`.
   - Fill `assetlinks.json`: replace SHA256 fingerprint (from `eas credentials` after first Android build).
   - Add `EXPO_PUBLIC_SENTRY_DSN` to `.env.local` (from Sentry project settings).
-  - Run `pnpm --filter @shiftready/mobile install` to pull `expo-notifications`, `expo-updates`, `@sentry/react-native`.
+  - Run `pnpm --filter @myrio/mobile install` to pull `expo-notifications`, `expo-updates`, `@sentry/react-native`.
 - [ ] App Store + Play Console: create app listings, store screenshots, privacy nutrition labels (camera, push, auth).
 - [ ] Beta: EAS Build `preview` profile → TestFlight + Play internal testing; collect feedback; submit for review.
 - **Exit:** approved on both stores.

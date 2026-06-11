@@ -1,5 +1,5 @@
 ﻿import { useQuery } from "@tanstack/react-query";
-import { listSales } from "@shiftready/api";
+import { listSales } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useSalesList() {

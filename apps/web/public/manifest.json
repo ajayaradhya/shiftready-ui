@@ -1,6 +1,6 @@
 {
-  "name": "ShiftReady",
-  "short_name": "ShiftReady",
+  "name": "Myrio",
+  "short_name": "Myrio",
   "description": "AI-powered moving sale marketplace. Sell your stuff before you move.",
   "start_url": "/market",
   "display": "standalone",

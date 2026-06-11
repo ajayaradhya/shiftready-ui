@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ShiftReady Design Tokens - SINGLE SOURCE OF TRUTH
+   Myrio Design Tokens - SINGLE SOURCE OF TRUTH
    • Raw palette  →  :root  (primitive values only)
    • Tailwind utilities  →  @theme  (semantic tokens, dark app shell)
    • To change a color: edit the hex in @theme, it propagates everywhere.

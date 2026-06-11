@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import type { LandingData } from "@shiftready/types";
+import type { LandingData } from "@myrio/types";
 import { BrowsePageContent } from "./BrowsePageContent";
 
 export const metadata: Metadata = { title: "The Marketplace" };

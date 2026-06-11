@@ -16,9 +16,9 @@ import {
   ChevronUp,
   Heart,
 } from "lucide-react";
-import { getPublicSale, startConversation, saveSale, unsaveSale, setPin } from "@shiftready/api";
+import { getPublicSale, startConversation, saveSale, unsaveSale, setPin } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
-import type { PublicBundle } from "@shiftready/types";
+import type { PublicBundle } from "@myrio/types";
 
 function fmt(n: number) {
   return n.toLocaleString("en-AU", {

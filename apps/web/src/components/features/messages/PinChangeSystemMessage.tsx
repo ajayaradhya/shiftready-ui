@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import { Pin, PinOff } from "lucide-react";
-import type { PinSnapshot, PinKind } from "@shiftready/types";
+import type { PinSnapshot, PinKind } from "@myrio/types";
 
 interface PinChangeSystemMessageProps {
   text: string;

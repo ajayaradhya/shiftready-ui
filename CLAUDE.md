@@ -4,11 +4,11 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## Project Overview
 
-**ShiftReady UI** — Turborepo monorepo containing the web app and native mobile app for the ShiftReady relocation platform.
+**Myrio UI** — Turborepo monorepo containing the web app and native mobile app for the Myrio relocation platform.
 
 - **Web** (`apps/web/`): Next.js 16 / React 19 seller dashboard + buyer marketplace.
 - **Mobile** (`apps/mobile/`): Expo 53 / React Native 0.79.6 native app.
-- **Shared packages**: `@shiftready/api` · `@shiftready/core` · `@shiftready/types`.
+- **Shared packages**: `@myrio/api` · `@myrio/core` · `@myrio/types`.
 - **Backend** (`../shiftready-backend/`): FastAPI on Cloud Run. Sibling directory.
 
 Package manager: **pnpm 10** with Turborepo. Run `pnpm install` at root.
@@ -35,16 +35,16 @@ make install          # install all workspace deps (pnpm install)
 make clean            # nuke node_modules + reinstall
 
 # Web via pnpm directly
-pnpm --filter @shiftready/web dev
-pnpm --filter @shiftready/web build
+pnpm --filter @myrio/web dev
+pnpm --filter @myrio/web build
 pnpm lint
 pnpm type-check       # tsc --noEmit
 
 # Mobile via pnpm directly
-pnpm --filter @shiftready/mobile start
-pnpm --filter @shiftready/mobile android
-pnpm --filter @shiftready/mobile ios
-pnpm --filter @shiftready/mobile prebuild   # expo prebuild --clean
+pnpm --filter @myrio/mobile start
+pnpm --filter @myrio/mobile android
+pnpm --filter @myrio/mobile ios
+pnpm --filter @myrio/mobile prebuild   # expo prebuild --clean
 ```
 
 Backend must be running on port 8080 for API calls to work locally.
@@ -56,7 +56,7 @@ Backend must be running on port 8080 for API calls to work locally.
 ```
 shiftready-ui/
 ├── apps/
-│   ├── web/                       # Next.js 16 App Router (@shiftready/web)
+│   ├── web/                       # Next.js 16 App Router (@myrio/web)
 │   │   └── src/app/
 │   │       ├── layout.tsx         # Providers + Shell
 │   │       ├── page.tsx           # Landing
@@ -68,7 +68,7 @@ shiftready-ui/
 │   │       │   └── settings/      # Profile · Account · Contact · Notifs · Prefs · Privacy
 │   │       ├── (market)/          # Buyer marketplace
 │   │       └── (public)/          # Anonymous sale view
-│   └── mobile/                    # Expo / React Native (@shiftready/mobile)
+│   └── mobile/                    # Expo / React Native (@myrio/mobile)
 │       └── app/
 │           ├── (auth)/            # login · register
 │           ├── (tabs)/            # Market · Saved · Messages · Sell · Profile
@@ -80,9 +80,9 @@ shiftready-ui/
 │           ├── notifications/
 │           └── purchases/
 └── packages/                      # Shared workspace packages
-    ├── @shiftready/api             # Shared API client (configure({ apiBaseUrl }))
-    ├── @shiftready/core            # Shared utilities (SYDNEY_SUBURBS, suburbsForPostcode, etc.)
-    └── @shiftready/types           # Shared TypeScript types (NotifPrefs, SellerPrefs, PrivacyPrefs, …)
+    ├── @myrio/api             # Shared API client (configure({ apiBaseUrl }))
+    ├── @myrio/core            # Shared utilities (SYDNEY_SUBURBS, suburbsForPostcode, etc.)
+    └── @myrio/types           # Shared TypeScript types (NotifPrefs, SellerPrefs, PrivacyPrefs, …)
 ```
 
 ### Web Component Structure (`apps/web/src/`)
@@ -157,9 +157,9 @@ components/
 
 ### Shared Packages (`packages/`)
 
-- `@shiftready/api` — shared API client. Call `configure({ apiBaseUrl })` once at app startup. Used by both web and mobile.
-- `@shiftready/core` — shared utilities: `SYDNEY_SUBURBS`, `suburbsForPostcode(postcode)`, `isValidPostcode(str)`, suburb type definitions.
-- `@shiftready/types` — shared TypeScript interfaces: `NotifPrefs`, `SellerPrefs`, `PrivacyPrefs`, and other cross-platform domain types.
+- `@myrio/api` — shared API client. Call `configure({ apiBaseUrl })` once at app startup. Used by both web and mobile.
+- `@myrio/core` — shared utilities: `SYDNEY_SUBURBS`, `suburbsForPostcode(postcode)`, `isValidPostcode(str)`, suburb type definitions.
+- `@myrio/types` — shared TypeScript interfaces: `NotifPrefs`, `SellerPrefs`, `PrivacyPrefs`, and other cross-platform domain types.
 
 ### Mobile Lib (`apps/mobile/lib/`)
 
@@ -214,7 +214,7 @@ Six-section settings page at `apps/web/src/app/(sellers)/settings/page.tsx`. Lef
 |---|---|
 | **Profile** | Avatar (upload/remove), display name, seller bio, username (availability check, 7-day cooldown) |
 | **Account** | Email + password change, Google SSO status (connected badge) |
-| **Contact & Pickup** | Australian mobile number (E.164), auto-share toggle, suburb/state combobox (`@shiftready/core` suburb data) |
+| **Contact & Pickup** | Australian mobile number (E.164), auto-share toggle, suburb/state combobox (`@myrio/core` suburb data) |
 | **Notifications** | Per-event toggles for selling (msg, offer, counter, deal, ready, viewed) and buying (buy_msg, buy_offer, price_drop) — auto-saves on toggle |
 | **Preferences** | Payment methods (cash/bank/PayID/Afterpay), pickup days + times (pills), min offer threshold (slider 40–95%) |
 | **Privacy** | Messaging filter (anyone/verified/active buyers), profile visibility toggle, blocked users list |
@@ -326,7 +326,7 @@ Cloud Build on push to `master`:
 2. Push to Artifact Registry
 3. Deploy to Cloud Run (`australia-southeast1`) with automatic traffic migration
 
-**Current production API:** https://shiftready-api-12644234558.australia-southeast1.run.app
+**Current production API:** https://myrio-api-p6osvytooa-ts.a.run.app (web: https://myrio-web-p6osvytooa-ts.a.run.app; custom domain myrio.com.au pending DNS)
 
 ## Additional Docs
 

@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { setPin, clearPin } from "@shiftready/api";
-import type { PinKind } from "@shiftready/types";
+import { setPin, clearPin } from "@myrio/api";
+import type { PinKind } from "@myrio/types";
 import { toast } from "sonner";
 
 interface SetPinVars {

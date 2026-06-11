@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import type { MarketplaceItem } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { MarketplaceItem } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import s from "./displays.module.css";
 
 function pseudoRandom(seed: string, salt = 0): number {
@@ -36,9 +36,9 @@ export function ReceiptRoll({
         <div className={s.receiptTop} aria-hidden />
 
         <div className={s.receiptHead}>
-          <div className={s.receiptLogo}>ShiftReady Â· Marketplace</div>
+          <div className={s.receiptLogo}>Myrio · Marketplace</div>
           <div className={s.receiptMeta}>
-            {dateStr} Â· #{txnId} Â· {locationTag}
+            {dateStr} · #{txnId} · {locationTag}
           </div>
         </div>
 
@@ -58,7 +58,7 @@ export function ReceiptRoll({
             <div className={s.receiptBody}>
               <div className={s.receiptName}>{it.name}</div>
               <div className={s.receiptSub}>
-                {it.brand && it.brand !== "Generic" ? `${it.brand} Â· ` : ""}
+                {it.brand && it.brand !== "Generic" ? `${it.brand} · ` : ""}
                 {it.condition}
               </div>
             </div>

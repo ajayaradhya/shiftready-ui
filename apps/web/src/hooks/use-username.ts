@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { checkUsernameAvailable, getMe, updateUsername } from "@shiftready/api";
+import { checkUsernameAvailable, getMe, updateUsername } from "@myrio/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useUsername() {

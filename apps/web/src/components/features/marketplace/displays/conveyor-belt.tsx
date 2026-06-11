@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { MarketplaceItem } from "@shiftready/types";
-import { formatAUD } from "@shiftready/core";
+import type { MarketplaceItem } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
 import s from "./displays.module.css";
 
 function BeltItem({ item }: { item: MarketplaceItem }) {
@@ -19,7 +19,7 @@ function BeltItem({ item }: { item: MarketplaceItem }) {
       </div>
       <div className={s.beltName}>{item.name}</div>
       <div className={s.beltMeta}>
-        {item.brand && item.brand !== "Generic" ? `${item.brand} Â· ` : ""}
+        {item.brand && item.brand !== "Generic" ? `${item.brand} · ` : ""}
         {item.condition}
       </div>
     </Link>
@@ -67,9 +67,9 @@ export function ConveyorBelt({ items }: { items: MarketplaceItem[] }) {
   }, [items]);
 
   const lanes = [
-    { items: cheap, label: "Under $50 Â· grab-and-go", variant: undefined },
-    { items: mid, label: "$50 to $200 Â· everyday picks", variant: "reverse" as const },
-    { items: premium, label: "$200+ Â· statement pieces", variant: "slow" as const },
+    { items: cheap, label: "Under $50 · grab-and-go", variant: undefined },
+    { items: mid, label: "$50 to $200 · everyday picks", variant: "reverse" as const },
+    { items: premium, label: "$200+ · statement pieces", variant: "slow" as const },
   ].filter(l => l.items.length > 0);
 
   if (lanes.length === 0) return null;

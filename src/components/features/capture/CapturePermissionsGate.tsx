@@ -125,7 +125,7 @@ export function CapturePermissionsGate({ onGranted }: Props) {
           Allow camera access
         </h1>
         <p style={{ fontSize: 15, color: "var(--sr-text-secondary)", lineHeight: 1.55, margin: 0 }}>
-          ShiftReady uses your camera to detect and log household items in real time.
+          Myrio uses your camera to detect and log household items in real time.
         </p>
       </div>
 
