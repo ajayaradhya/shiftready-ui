@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -101,11 +101,11 @@ function EnquiryRow({ conv }: { conv: ConversationSummary }) {
             {itemName}
             {conv.dealStatus === "agreed" && conv.agreedPrice != null ? (
               <span style={{ color: "var(--moss-600)", marginLeft: 6, fontWeight: 600 }}>
-                â€” ${conv.agreedPrice.toLocaleString("en-AU")} agreed
+                — ${conv.agreedPrice.toLocaleString("en-AU")} agreed
               </span>
             ) : itemPrice != null ? (
               <span style={{ color: "var(--ink-400)", marginLeft: 6 }}>
-                â€” ${itemPrice.toLocaleString("en-AU")}
+                — ${itemPrice.toLocaleString("en-AU")}
               </span>
             ) : null}
           </p>

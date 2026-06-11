@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -42,20 +42,20 @@ function EmailVerificationRequired({ onResend }: { onResend: () => Promise<void>
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "2rem", textAlign: "center", gap: "1rem" }}>
-      <span style={{ fontSize: 48 }}>âœ‰ï¸</span>
+      <span style={{ fontSize: 48 }}>✉️</span>
       <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--clay-700)" }}>Verify your email first</h2>
       <p style={{ color: "var(--sr-text-muted)", maxWidth: 320, fontSize: 14, lineHeight: 1.6 }}>
         You need to verify your email address before you can start a capture session or create listings.
       </p>
       {sent ? (
-        <p style={{ fontWeight: 600, color: "var(--moss-700)", fontSize: 14 }}>Verification email sent â€” check your inbox.</p>
+        <p style={{ fontWeight: 600, color: "var(--moss-700)", fontSize: 14 }}>Verification email sent — check your inbox.</p>
       ) : (
         <button
           onClick={handleResend}
           disabled={sending}
           style={{ padding: "0.5rem 1.5rem", borderRadius: 8, background: "var(--clay-600)", color: "#fff", fontWeight: 700, fontSize: 14, border: "none", cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.6 : 1 }}
         >
-          {sending ? "Sendingâ€¦" : "Resend verification email"}
+          {sending ? "Sending…" : "Resend verification email"}
         </button>
       )}
     </div>
@@ -125,14 +125,14 @@ function CapturePageContent() {
     setStream(s);
     setPageState("capturing");
     captureStartTimeRef.current = Date.now();
-    // Camera revoke detection â€” if track ends mid-session, return to gate; items preserved
+    // Camera revoke detection — if track ends mid-session, return to gate; items preserved
     s.getVideoTracks().forEach((track) => {
       track.addEventListener("ended", () => {
         setStream(null);
         setPageState("gate");
       });
     });
-    // Sale created on first tap, not here â€” avoids orphan sales if user bails
+    // Sale created on first tap, not here — avoids orphan sales if user bails
   }, []);
 
   const addToast = useCallback((label: string, displayLabel?: string) => {
@@ -143,7 +143,7 @@ function CapturePageContent() {
 
   // Kick off per-frame Gemini call, update item on completion
   const runCaptureFrame = useCallback(async (itemId: string, frameSrc: string) => {
-    // Wait for sale init if first tap â€” eventIdRef may not be set yet
+    // Wait for sale init if first tap — eventIdRef may not be set yet
     if (!eventIdRef.current) {
       await initSaleOnce();
     }
@@ -225,7 +225,7 @@ function CapturePageContent() {
     return () => clearInterval(id);
   }, [isDev]);
 
-  // Tap â†’ immediately add item to bucket, Gemini runs in background
+  // Tap → immediately add item to bucket, Gemini runs in background
   const handleUserTap = useCallback((frameSrc: string) => {
     // Init sale on first tap (not at permission grant) to avoid orphan sales
     initSaleOnce();
@@ -300,7 +300,7 @@ function CapturePageContent() {
       const preparedItems = await Promise.all(
         confirmedItems.map(async (item) => {
           if (item.gcs_uri) return item;
-          // Upload frameSrc as fallback â€” best effort
+          // Upload frameSrc as fallback — best effort
           try {
             const file = await dataUrlToFile(item.frameSrc, `frame_${item.id}.jpg`);
             const result = await captureFrame(eid!, file);
@@ -397,7 +397,7 @@ function CapturePageContent() {
             onUserTap={handleUserTap}
           />
 
-          {/* Exit capture â€” replaces the global nav that's hidden in immersive mode */}
+          {/* Exit capture — replaces the global nav that's hidden in immersive mode */}
           <button
             onClick={() => router.push("/seller-central")}
             aria-label="Exit capture"
@@ -444,7 +444,7 @@ function CapturePageContent() {
                 pointerEvents: "none",
               }}
             >
-              Some items waiting for network â€” reconnect to retry
+              Some items waiting for network — reconnect to retry
             </div>
           )}
 
@@ -488,7 +488,7 @@ function CapturePageContent() {
             </div>
           )}
 
-          {/* Dev analytics panel â€” visible at ?dev=1 */}
+          {/* Dev analytics panel — visible at ?dev=1 */}
           {isDev && (
             <div
               style={{
@@ -524,7 +524,7 @@ function CapturePageContent() {
               <div>net-err total: <b>{networkErrorTotal}</b></div>
               <div>
                 elapsed:{" "}
-                <b>{debugElapsed != null ? `${debugElapsed}s` : "â€”"}</b>
+                <b>{debugElapsed != null ? `${debugElapsed}s` : "—"}</b>
               </div>
             </div>
           )}
@@ -561,7 +561,7 @@ function CapturePageContent() {
 
 export default function CapturePage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem" }}>Loading captureâ€¦</div>}>
+    <Suspense fallback={<div style={{ padding: "2rem" }}>Loading capture…</div>}>
       <CapturePageContent />
     </Suspense>
   );

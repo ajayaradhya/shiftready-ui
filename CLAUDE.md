@@ -1,4 +1,4 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
@@ -326,7 +326,7 @@ Cloud Build on push to `master`:
 2. Push to Artifact Registry
 3. Deploy to Cloud Run (`australia-southeast1`) with automatic traffic migration
 
-**Current production API:** https://myrio.com.au (back-filled after P4 deploy)
+**Current production API:** https://myrio-api-p6osvytooa-ts.a.run.app (web: https://myrio-web-p6osvytooa-ts.a.run.app; custom domain myrio.com.au pending DNS)
 
 ## Additional Docs
 

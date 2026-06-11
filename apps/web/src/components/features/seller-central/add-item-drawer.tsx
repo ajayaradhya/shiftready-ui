@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
@@ -227,7 +227,7 @@ export function AddItemDrawer({ eventId, bundles, defaultBundleId, open, onClose
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="Add a description buyers will seeâ€¦"
+              placeholder="Add a description buyers will see…"
               style={{ ...inputStyle, resize: "vertical" }}
             />
             <div style={{ fontSize: 10, color: "var(--sr-text-muted)", textAlign: "right", marginTop: 2 }}>{description.length}/500</div>

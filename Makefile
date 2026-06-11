@@ -20,7 +20,7 @@ web-build:        ## Production build of web app
 	pnpm build
 
 web-start:        ## Serve the production build
-	pnpm --filter @shiftready/web start
+	pnpm --filter @myrio/web start
 
 web-lint:         ## Lint web workspace
 	pnpm lint
@@ -29,13 +29,13 @@ web-lint:         ## Lint web workspace
 mobile: mobile-start   ## Alias: start Expo dev server
 
 mobile-start:     ## Start Expo dev server (Metro / Expo Go)
-	pnpm --filter @shiftready/mobile start
+	pnpm --filter @myrio/mobile start
 
 mobile-android:   ## Build + run native Android
-	pnpm --filter @shiftready/mobile android
+	pnpm --filter @myrio/mobile android
 
 mobile-ios:       ## Build + run native iOS (macOS only)
-	pnpm --filter @shiftready/mobile ios
+	pnpm --filter @myrio/mobile ios
 
 mobile-prebuild:  ## Regenerate native projects (expo prebuild --clean)
-	pnpm --filter @shiftready/mobile prebuild
+	pnpm --filter @myrio/mobile prebuild

@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # Myrio UI
 
@@ -15,7 +15,7 @@
 
 Tap-to-capture inventory · AI extraction + pricing · buyer marketplace · offers + messaging.
 
-[Companion Backend](../shiftready-backend) · [Live Production](https://shiftready-api-12644234558.australia-southeast1.run.app) · [Report Issue](https://github.com/ajayaradhya/shiftready-ui/issues)
+[Companion Backend](../shiftready-backend) · [Live Production](https://myrio-api-p6osvytooa-ts.a.run.app) · [Report Issue](https://github.com/ajayaradhya/shiftready-ui/issues)
 
 </div>
 
@@ -499,7 +499,7 @@ flowchart LR
 - `NEXT_PUBLIC_*` vars are **baked at build time** via Docker `--build-arg`. Changing the backend URL requires a new build — update the `_NEXT_PUBLIC_API_URL` substitution in the Cloud Build trigger.
 - Traffic auto-migrates on deploy.
 
-**Current production API:** https://shiftready-api-12644234558.australia-southeast1.run.app
+**Current production API:** https://myrio-api-p6osvytooa-ts.a.run.app
 
 ### Manual deploy
 

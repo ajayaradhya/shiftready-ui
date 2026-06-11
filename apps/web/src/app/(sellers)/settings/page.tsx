@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -16,7 +16,7 @@ import {
 } from "@/hooks/use-settings";
 import type { NotifPrefs, SellerPrefs, PrivacyPrefs } from "@myrio/types";
 
-// â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Icons ──────────────────────────────────────────────────────────────────
 const IcUser = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="8" cy="5.5" r="2.5"/><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/>
@@ -101,7 +101,7 @@ const IcGoogle = () => (
   </svg>
 );
 
-// â”€â”€ Shared primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Shared primitives ───────────────────────────────────────────────────────
 type Toast = { type: "ok" | "err"; msg: string } | null;
 
 function useSave(delay = 1600) {
@@ -174,7 +174,7 @@ function SaveFooter({ toast, onSave, saving, label = "Save changes" }: {
         disabled={saving}
         className="s-btn-primary"
       >
-        {saving ? "Savingâ€¦" : label}
+        {saving ? "Saving…" : label}
       </button>
     </div>
   );
@@ -334,7 +334,7 @@ function SSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   );
 }
 
-// â”€â”€ Section: Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Profile ────────────────────────────────────────────────────────
 function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; photoURL?: string | null }) {
   const { data: settings } = useMySettings();
   const { profile, isLoading, update, isUpdating } = useUsername();
@@ -388,7 +388,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
   const initials = (profile?.username ?? userEmail ?? "?").slice(0, 2).toUpperCase();
   const [avatarError, setAvatarError] = useState(false);
 
-  if (isLoading) return <div style={{ padding: 24, color: "var(--sr-text-muted)", fontSize: 13 }}>Loadingâ€¦</div>;
+  if (isLoading) return <div style={{ padding: 24, color: "var(--sr-text-muted)", fontSize: 13 }}>Loading…</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -452,10 +452,10 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
       <SCard>
         <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--sr-text-primary)", margin: "0 0 3px" }}>@Username</p>
         <p style={{ fontSize: 12, color: "var(--sr-text-muted)", margin: "0 0 18px", lineHeight: 1.55 }}>
-          Your unique handle on Myrio. 4â€“20 characters, letters and numbers only, must start with a letter.
+          Your unique handle on Myrio. 4–20 characters, letters and numbers only, must start with a letter.
         </p>
 
-        <SField label="Handle" hint="Last changed 3 days ago Â· next change available in 4 days" hintType="warn">
+        <SField label="Handle" hint="Last changed 3 days ago · next change available in 4 days" hintType="warn">
           <div style={{
             display: "flex", alignItems: "center",
             background: "var(--cream-50)", border: "1px solid var(--sr-border-default)",
@@ -475,7 +475,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
                 padding: "0 12px", fontSize: 11, fontWeight: 600, flexShrink: 0, fontFamily: "var(--sr-font-mono)",
                 color: unStatus === "available" ? "var(--moss-600)" : unStatus === "taken" ? "var(--rust-500)" : "var(--sr-text-muted)",
               }}>
-                {unStatus === "checking" ? "Checkingâ€¦" : unStatus === "available" ? "Available" : "Taken"}
+                {unStatus === "checking" ? "Checking…" : unStatus === "available" ? "Available" : "Taken"}
               </span>
             )}
           </div>
@@ -507,12 +507,12 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
               style={{ cursor: "not-allowed" }}
             >
               <button onClick={handleSaveUsername} disabled className="s-btn-primary" style={{ pointerEvents: "none" }}>
-                {isUpdating ? "Savingâ€¦" : "Save username"}
+                {isUpdating ? "Saving…" : "Save username"}
               </button>
             </span>
           ) : (
             <button onClick={handleSaveUsername} className="s-btn-primary">
-              {isUpdating ? "Savingâ€¦" : "Save username"}
+              {isUpdating ? "Saving…" : "Save username"}
             </button>
           )}
         </div>
@@ -527,7 +527,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
         <SField label="Bio">
           <STextarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={240} placeholder="E.g. Moving from Newtown - quality furniture, appliances, books. Available for pickup from June 5."/>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            <span style={{ fontSize: 11.5, color: "var(--sr-text-muted)" }}>Optional Â· shown publicly on your sale page.</span>
+            <span style={{ fontSize: 11.5, color: "var(--sr-text-muted)" }}>Optional · shown publicly on your sale page.</span>
             <span style={{ fontSize: 11.5, color: "var(--sr-text-muted)", flexShrink: 0 }}>{bio.length}/240</span>
           </div>
         </SField>
@@ -541,7 +541,7 @@ function ProfileSection({ userEmail, photoURL }: { userEmail?: string | null; ph
   );
 }
 
-// â”€â”€ Section: Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Account ────────────────────────────────────────────────────────
 function AccountSection({ userEmail }: { userEmail?: string | null }) {
   const [emailEdit, setEmailEdit] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -572,7 +572,7 @@ function AccountSection({ userEmail }: { userEmail?: string | null }) {
             <SInput placeholder="Confirm password" type="password"/>
             <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
               <button className="s-btn-primary s-btn-sm" onClick={() => save()} disabled={!newEmail}>
-                {saving ? "Sendingâ€¦" : "Send confirmation"}
+                {saving ? "Sending…" : "Send confirmation"}
               </button>
               {toast && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: "var(--sr-radius-md)", fontSize: 12, fontWeight: 500, background: "var(--moss-50)", color: "var(--moss-700)", border: "1px solid var(--moss-100)" }}>
@@ -634,14 +634,14 @@ function AccountSection({ userEmail }: { userEmail?: string | null }) {
           border: "1px solid var(--rust-100)", fontSize: 12, fontWeight: 500,
           cursor: "pointer",
         }}>
-          <IcTrash/> Delete accountâ€¦
+          <IcTrash/> Delete account…
         </button>
       </div>
     </div>
   );
 }
 
-// â”€â”€ SuburbCombobox â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SuburbCombobox ──────────────────────────────────────────────────────────
 function SuburbCombobox({ value, onChange, onStateChange }: {
   value: string;
   onChange: (suburb: string) => void;
@@ -724,7 +724,7 @@ function SuburbCombobox({ value, onChange, onStateChange }: {
   );
 }
 
-// â”€â”€ Section: Contact & Pickup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Contact & Pickup ───────────────────────────────────────────────
 function formatAULocal(e164: string): string {
   if (e164.startsWith("+61") && e164.length === 12) return "0" + e164.slice(3);
   return e164.replace(/^\+/, "");
@@ -795,7 +795,7 @@ function ContactSection() {
             display: "flex", alignItems: "center", background: "var(--cream-50)",
             border: "1px solid var(--sr-border-default)", borderRadius: "var(--sr-radius-md)", overflow: "hidden",
           }}>
-            <span style={{ padding: "0 10px 0 13px", fontSize: 15, flexShrink: 0, borderRight: "1px solid var(--sr-border-subtle)", height: 40, display: "flex", alignItems: "center" }}>ðŸ‡¦ðŸ‡º</span>
+            <span style={{ padding: "0 10px 0 13px", fontSize: 15, flexShrink: 0, borderRight: "1px solid var(--sr-border-subtle)", height: 40, display: "flex", alignItems: "center" }}>🇦🇺</span>
             <input
               value={phoneInput}
               onChange={e => { setPhoneInput(e.target.value); setPhoneSaved(false); setPhoneError(null); }}
@@ -825,7 +825,7 @@ function ContactSection() {
             )}
           </div>
           <button onClick={handleSavePhone} disabled={!canSavePhone} className="s-btn-primary">
-            {phoneMutation.isPending ? "Savingâ€¦" : "Save phone"}
+            {phoneMutation.isPending ? "Saving…" : "Save phone"}
           </button>
         </div>
       </SCard>
@@ -857,7 +857,7 @@ function ContactSection() {
   );
 }
 
-// â”€â”€ Section: Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Notifications ──────────────────────────────────────────────────
 const SELLING_NOTIFS = [
   { id: "msg",     label: "New message",          desc: "A buyer sends you a message in any conversation." },
   { id: "offer",   label: "Offer received",        desc: "A buyer makes an offer on one of your items or bundles." },
@@ -922,7 +922,7 @@ function NotificationsSection() {
   );
 }
 
-// â”€â”€ Section: Preferences â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Preferences ────────────────────────────────────────────────────
 const PAYMENT_OPTS = [
   { id: "cash",     label: "Cash" },
   { id: "bank",     label: "Bank transfer" },
@@ -930,14 +930,14 @@ const PAYMENT_OPTS = [
   { id: "afterpay", label: "Afterpay" },
 ];
 const PICKUP_DAYS  = ["Weekdays", "Weekends", "By appointment"];
-const PICKUP_TIMES = ["Morning (8â€“12)", "Afternoon (12â€“5)", "Evening (5â€“8)"];
+const PICKUP_TIMES = ["Morning (8–12)", "Afternoon (12–5)", "Evening (5–8)"];
 
 function PreferencesSection() {
   const { data: settings } = useMySettings();
   const prefsMutation = useUpdatePreferences();
   const [payments,    setPayments]    = useState(new Set(["cash", "bank", "payid"]));
   const [pickupDays,  setPickupDays]  = useState(new Set(["Weekdays", "Weekends"]));
-  const [pickupTimes, setPickupTimes] = useState(new Set(["Afternoon (12â€“5)"]));
+  const [pickupTimes, setPickupTimes] = useState(new Set(["Afternoon (12–5)"]));
   const [minOffer,    setMinOffer]    = useState(70);
   const { saving, toast, save } = useSave();
 
@@ -1061,7 +1061,7 @@ function PreferencesSection() {
   );
 }
 
-// â”€â”€ Section: Privacy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Section: Privacy ────────────────────────────────────────────────────────
 const BLOCKED_USERS = [
   { initials: "JK", username: "jake_k",      since: "3 weeks ago" },
   { initials: "MR", username: "marketrunner", since: "2 months ago" },
@@ -1185,7 +1185,7 @@ function PrivacySection() {
   );
 }
 
-// â”€â”€ Nav config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Nav config ──────────────────────────────────────────────────────────────
 const NAV_SECTIONS = [
   { id: "profile",       label: "Profile",           Icon: IcUser,    dividerBefore: false },
   { id: "account",       label: "Account",           Icon: IcLock,    dividerBefore: false },
@@ -1197,7 +1197,7 @@ const NAV_SECTIONS = [
 
 type SectionId = typeof NAV_SECTIONS[number]["id"];
 
-// â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Root ────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeId, setActiveId] = useState<SectionId>("profile");

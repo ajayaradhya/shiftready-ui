@@ -16,15 +16,10 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/FILL_IN_EAS_PROJECT_ID"
+      "url": "https://u.expo.dev/b57aaeec-9fd8-44ef-aab7-74af7454480e"
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "FILL_IN_EAS_PROJECT_ID"
-      }
     },
     "ios": {
       "supportsTablet": false,
@@ -38,12 +33,15 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "FILL_IN_REVERSED_OAUTH_CLIENT_ID"
+              "com.googleusercontent.apps.451061011617-0ip8hlr9mgqsf8conrndoa0l8e4riv2m"
             ]
           }
         ],
         "NSUserNotificationUsageDescription": "Myrio sends you alerts for new messages, offers, and deal updates.",
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -56,7 +54,8 @@
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "android.permission.CAMERA"
       ],
       "intentFilters": [
         {
@@ -74,7 +73,10 @@
               "pathPrefix": "/sale"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -100,6 +102,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b57aaeec-9fd8-44ef-aab7-74af7454480e"
+      }
+    },
+    "owner": "ajayaradhya"
   }
 }

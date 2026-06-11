@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import Image from "next/image";
@@ -170,7 +170,7 @@ export function ItemPhotoStrip({ eventId, bundleId, itemId, images, noBleed }: I
             whiteSpace: "nowrap",
           }}
         >
-          {uploading ? "Uploadingâ€¦" : "+ Add photos"}
+          {uploading ? "Uploading…" : "+ Add photos"}
         </button>
         <input
           ref={fileInputRef}

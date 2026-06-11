@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSummary, getStatus } from "@myrio/api";
@@ -51,7 +51,7 @@ export function useInventory(eventId: string) {
   const currentStatus = statusData?.status;
 
   // 3. SUMMARY DATA
-  // Fetches the full hierarchical inventory (Bundles â†’ Items).
+  // Fetches the full hierarchical inventory (Bundles → Items).
   const isPipelineActive =
     currentStatus === "processing" || currentStatus === "pricing_in_progress";
 

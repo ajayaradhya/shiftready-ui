@@ -73,5 +73,12 @@ substitutions:
   _LOCATION: australia-southeast1
   _REPO_NAME: myrio-repo
   _SERVICE_NAME: myrio-web
-  _NEXT_PUBLIC_API_URL: 'https://myrio.com.au'
+  _NEXT_PUBLIC_API_URL: 'https://myrio-api-p6osvytooa-ts.a.run.app'
+  _FIREBASE_API_KEY: 'AIzaSyCuMv-Wzc0dx0FCyHm_sKD8bx2w3lSS9yU'
+  _FIREBASE_AUTH_DOMAIN: 'myrio-platform.firebaseapp.com'
+  _FIREBASE_PROJECT_ID: 'myrio-platform'
+  _FIREBASE_STORAGE_BUCKET: 'myrio-platform.firebasestorage.app'
+  _FIREBASE_MESSAGING_SENDER_ID: '451061011617'
+  _FIREBASE_APP_ID: '1:451061011617:web:781b7c3b2e14f68926cce0'
+  _FIREBASE_MEASUREMENT_ID: 'G-19RZFL28M8'
   _NEXT_PUBLIC_SENTRY_DSN: ''  # Override in trigger once Sentry project is created

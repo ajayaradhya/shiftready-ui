@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -304,7 +304,7 @@ export function ConversationList({
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder="Search conversationsâ€¦"
+            placeholder="Search conversations…"
             style={{
               width: "100%",
               height: 32,
@@ -334,7 +334,7 @@ export function ConversationList({
               fontFamily: "var(--sr-font-sans)",
             }}
           >
-            Loadingâ€¦
+            Loading…
           </div>
         )}
 

@@ -1,4 +1,4 @@
-﻿// Greater Sydney suburb dataset (name Â· postcode Â· centroid).
+// Greater Sydney suburb dataset (name · postcode · centroid).
 // Source: matthewproctor/australianpostcodes (MIT), filtered to Greater Sydney
 // SA4 regions. Regenerate via the script in scripts/ if the source updates.
 
@@ -40,7 +40,7 @@ export function isValidPostcode(postcode: string): boolean {
   return /^\d{4}$/.test(postcode.trim());
 }
 
-// Equirectangular approximation â€” fine at city scale, far cheaper than haversine.
+// Equirectangular approximation — fine at city scale, far cheaper than haversine.
 function distanceSq(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const meanLat = ((lat1 + lat2) / 2) * (Math.PI / 180);
   const x = (lng2 - lng1) * Math.cos(meanLat);

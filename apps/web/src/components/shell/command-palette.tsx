@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { searchMarketplace } from "@myrio/api";
 import type { MarketplaceItem } from "@myrio/types";
 
-// â”€â”€ Recent ring buffer (localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Recent ring buffer (localStorage) ────────────────────────────────────────
 
 const RECENT_KEY = "sr-cmd-recent";
 const RECENT_MAX = 5;
@@ -40,13 +40,13 @@ function pushRecent(entry: RecentEntry) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
 
-// â”€â”€ Icon map (serialised name â†’ component) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Icon map (serialised name → component) ────────────────────────────────────
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; strokeWidth: number }>> = {
   LayoutDashboard, Store, MessageSquare, Settings, Camera, Package, ArrowRight, Tag,
 };
 
-// â”€â”€ Static command definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Static command definitions ────────────────────────────────────────────────
 
 interface CommandDef {
   id: string;
@@ -67,7 +67,7 @@ const STATIC_COMMANDS: CommandDef[] = [
   { id: "act-create",   label: "New Sale",         iconName: "Package",         href: "/seller-central/create",   group: "actions",  keywords: "upload video batch sale", requiresAuth: true },
 ];
 
-// â”€â”€ Palette UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Palette UI ────────────────────────────────────────────────────────────────
 
 interface CommandPaletteProps {
   open: boolean;
@@ -179,7 +179,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               ref={inputRef}
               value={query}
               onValueChange={setQuery}
-              placeholder="Search pages, sales, actionsâ€¦"
+              placeholder="Search pages, sales, actions…"
               className="flex-1 bg-transparent border-none outline-none text-[14px] placeholder:text-[var(--sr-text-muted)]"
               style={{
                 color: "var(--sr-text-primary)",
@@ -213,7 +213,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {/* Results */}
           <Command.List className="max-h-[380px] overflow-y-auto py-2">
             <Command.Empty className="py-10 text-center text-[13px]" style={{ color: "var(--sr-text-muted)" }}>
-              {searchPending ? "Searchingâ€¦" : `No results for "${query}"`}
+              {searchPending ? "Searching…" : `No results for "${query}"`}
             </Command.Empty>
 
             {/* Recent (shown only when no query) */}
@@ -319,8 +319,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               fontFamily: "var(--sr-font-mono)",
             }}
           >
-            <span><kbd style={kbdStyle}>â†‘â†“</kbd> navigate</span>
-            <span><kbd style={kbdStyle}>â†µ</kbd> open</span>
+            <span><kbd style={kbdStyle}>↑↓</kbd> navigate</span>
+            <span><kbd style={kbdStyle}>↵</kbd> open</span>
             <span><kbd style={kbdStyle}>esc</kbd> close</span>
           </div>
         </Command>
@@ -330,7 +330,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   );
 }
 
-// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function PaletteItem({
   id,

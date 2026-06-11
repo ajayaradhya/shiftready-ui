@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import { MoreHorizontal, Sparkles, Pencil, Trash2, ArrowRightLeft, Copy, ChevronDown, X, Check, ShoppingBag, EyeOff, RotateCcw, Unlock, Bookmark, ChevronRight } from "lucide-react";
@@ -250,7 +250,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   const dimmed = deleteMutation.isPending || moveMutation.isPending;
   const greyed = isSold || isWithdrawn;
 
-  // â”€â”€ Shared card body (used in desktop card + mobile sheet) â”€â”€â”€
+  // ── Shared card body (used in desktop card + mobile sheet) ───
   const cardBody = (
     <>
       {/* Capture bar */}
@@ -281,7 +281,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         )}
         {itemSaleStatus !== "available" && (
           <span
-            title={isSold ? "Item has been sold and payment recorded" : isReserved ? "Item is being held for a buyer â€” use 'Mark as sold' once pickup is complete" : "Item is hidden from the marketplace and not available for purchase"}
+            title={isSold ? "Item has been sold and payment recorded" : isReserved ? "Item is being held for a buyer — use 'Mark as sold' once pickup is complete" : "Item is hidden from the marketplace and not available for purchase"}
             style={{
               padding: "2px 8px", borderRadius: "var(--sr-radius-sm)",
               fontFamily: "var(--sr-font-mono)", fontSize: 9.5, fontWeight: 600,
@@ -386,11 +386,11 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
         >
           {item.description
             ? <span style={{ fontSize: 12, color: "var(--sr-text-secondary)", lineHeight: 1.5 }}>{item.description}</span>
-            : <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic" }}>Add a description buyers will seeâ€¦</span>
+            : <span style={{ fontSize: 12, color: "var(--sr-text-muted)", fontStyle: "italic" }}>Add a description buyers will see…</span>
           }
         </button>
 
-        {/* 2Ã—2 attrs grid */}
+        {/* 2×2 attrs grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, marginBottom: 14, background: "var(--sr-border-subtle)", border: "1px solid var(--sr-border-subtle)", borderRadius: "var(--sr-radius-md)", overflow: "hidden" }}>
           <AttrCell label="Brand">
             <input value={brand} onChange={(e) => setBrand(e.target.value)} onBlur={() => saveField("brand", brand, item.brand ?? "")} placeholder="Unknown" style={attrInputStyle} />
@@ -430,7 +430,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               onMouseLeave={(e) => { if (!repriceMutation.isPending) (e.currentTarget as HTMLElement).style.background = "var(--honey-500)"; }}
             >
               <Sparkles size={10} />
-              {repriceMutation.isPending ? "Pricingâ€¦" : "Re-price"}
+              {repriceMutation.isPending ? "Pricing…" : "Re-price"}
             </button>
           </div>
         )}
@@ -455,7 +455,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setRetailFocused(true); } }}
                 style={{ ...attrInputStyle, fontSize: 17, fontWeight: 600, color: "var(--sr-text-primary)", display: "block", padding: "2px 4px", cursor: "text", minHeight: 24 }}
               >
-                {retail != null ? formatAUD(retail) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>â€”</span>}
+                {retail != null ? formatAUD(retail) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>—</span>}
               </span>
             )}
           </div>
@@ -488,7 +488,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setListingFocused(true); } }}
                 style={{ ...attrInputStyle, fontSize: 22, fontWeight: 700, color: "var(--clay-600)", letterSpacing: "-0.02em", fontFeatureSettings: '"tnum"', display: "block", padding: "2px 4px", cursor: "text", minHeight: 28 }}
               >
-                {listing != null ? formatAUD(listing) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>â€”</span>}
+                {listing != null ? formatAUD(listing) : <span style={{ color: "var(--sr-text-muted)", fontStyle: "italic" }}>—</span>}
               </span>
             )}
           </div>
@@ -507,7 +507,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", marginBottom: 10, background: "var(--moss-50)", border: "1px solid var(--moss-100)", borderRadius: "var(--sr-radius-sm)" }}>
             <Check size={11} style={{ color: "var(--moss-600)", flexShrink: 0 }} />
             <span style={{ fontSize: 11.5, color: "var(--moss-700)" }}>
-              Sold{item.final_price != null && ` Â· ${formatAUD(item.final_price)}`}{item.buyer_label && ` to ${item.buyer_label}`}{item.sold_payment_method && ` Â· ${item.sold_payment_method}`}
+              Sold{item.final_price != null && ` · ${formatAUD(item.final_price)}`}{item.buyer_label && ` to ${item.buyer_label}`}{item.sold_payment_method && ` · ${item.sold_payment_method}`}
             </span>
           </div>
         )}
@@ -561,7 +561,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     </>
   );
 
-  // â”€â”€ Mobile: compact row + bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Mobile: compact row + bottom sheet ──────────────────────
   if (isMobile) {
     const statusLabel = isSold ? "Sold" : isReserved ? "Reserved" : isWithdrawn ? "Withdrawn" : null;
     const statusColor = isSold
@@ -610,7 +610,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
               {item.name}
             </div>
             <div style={{ fontSize: 11, color: "var(--sr-text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {[item.brand, item.category ? CATEGORY_LABELS[item.category] : null].filter(Boolean).join(" Â· ") || "Tap to add details"}
+              {[item.brand, item.category ? CATEGORY_LABELS[item.category] : null].filter(Boolean).join(" · ") || "Tap to add details"}
             </div>
           </div>
 
@@ -706,7 +706,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
     );
   }
 
-  // â”€â”€ Desktop: full inline card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Desktop: full inline card ────────────────────────────────
   return (
     <>
       <div
@@ -777,7 +777,7 @@ export function ItemCardV3({ eventId, bundleId, item, allBundles = [], bundleInd
   );
 }
 
-// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Sub-components ────────────────────────────────────────────
 
 function AttrCell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -954,7 +954,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="Add a description buyers will seeâ€¦"
+              placeholder="Add a description buyers will see…"
               style={modalInputStyle}
             />
             <div style={{ fontSize: 10, color: "var(--sr-text-muted)", textAlign: "right", marginTop: 2 }}>{description.length}/500</div>
@@ -976,7 +976,7 @@ function ItemEditModal({ item, onClose, onSave }: { item: InventoryItem; onClose
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <ModalField label="Dimensions">
-              <input value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="e.g. 180Ã—90Ã—75cm" style={modalInputStyle} />
+              <input value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="e.g. 180×90×75cm" style={modalInputStyle} />
             </ModalField>
             <ModalField label="Material">
               <input value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="e.g. Solid oak" style={modalInputStyle} />
@@ -1153,7 +1153,7 @@ function RepriceSuggestDialog({
             onMouseEnter={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "var(--clay-700)"; }}
             onMouseLeave={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "var(--clay-600)"; }}
           >
-            {saving ? "Savingâ€¦" : <><Check size={13} /> Accept price</>}
+            {saving ? "Saving…" : <><Check size={13} /> Accept price</>}
           </button>
         </div>
         </div>

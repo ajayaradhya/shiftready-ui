@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Package, X, Trash2, RotateCcw, Loader2, WifiOff, ChevronLeft, Pencil } from "lucide-react";
@@ -60,7 +60,7 @@ function ItemEditSheet({
     onClose();
   }, [onRemove, onClose]);
 
-  const displayName = item.isLoading ? "Identifyingâ€¦" : (item.name ?? item.label);
+  const displayName = item.isLoading ? "Identifying…" : (item.name ?? item.label);
   const price = formatPrice(item.predicted_original_price);
 
   return (
@@ -271,7 +271,7 @@ function ItemEditSheet({
               value={item.isLoading ? "" : name}
               onChange={(e) => setName(e.target.value)}
               disabled={item.isLoading}
-              placeholder={item.isLoading ? "Identifyingâ€¦" : "Name this item"}
+              placeholder={item.isLoading ? "Identifying…" : "Name this item"}
               onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
               style={{
                 width: "100%",
@@ -310,7 +310,7 @@ function ItemEditSheet({
               value={item.isLoading ? "" : brand}
               onChange={(e) => setBrand(e.target.value)}
               disabled={item.isLoading}
-              placeholder={item.isLoading ? "â€¦" : "e.g. IKEA, Sony, Unknown"}
+              placeholder={item.isLoading ? "…" : "e.g. IKEA, Sony, Unknown"}
               onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
               style={{
                 width: "100%",
@@ -364,7 +364,7 @@ function GridCell({
   const displayName = item.name
     ? item.name
     : item.isLoading
-    ? "Identifyingâ€¦"
+    ? "Identifying…"
     : item.label;
 
   return (
@@ -662,7 +662,7 @@ export function CaptureBucket({ items, onRemove, onRetry, onUpdateItem }: Props)
               >
                 {items.length === 0
                   ? "Tap items to add them"
-                  : `${items.length} item${items.length !== 1 ? "s" : ""}${loadingCount > 0 ? ` Â· ${loadingCount} identifyingâ€¦` : ""}${networkErrorCount > 0 ? ` Â· ${networkErrorCount} need retry` : ""}`}
+                  : `${items.length} item${items.length !== 1 ? "s" : ""}${loadingCount > 0 ? ` · ${loadingCount} identifying…` : ""}${networkErrorCount > 0 ? ` · ${networkErrorCount} need retry` : ""}`}
               </div>
             </div>
           </div>

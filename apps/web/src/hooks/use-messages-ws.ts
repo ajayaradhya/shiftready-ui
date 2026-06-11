@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -107,7 +107,7 @@ export function useMessagesWs(token: string | null, activeConvId?: string) {
         if (pingInterval) clearInterval(pingInterval);
         wsRef.current = null;
         if (!mountedRef.current) return;
-        // Exponential backoff â€” doubles on each failure, capped at MAX_RECONNECT_MS
+        // Exponential backoff — doubles on each failure, capped at MAX_RECONNECT_MS
         retryRef.current = setTimeout(() => {
           delayRef.current = Math.min(delayRef.current * 2, MAX_RECONNECT_MS);
           connectRef.current();

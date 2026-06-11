@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -126,7 +126,7 @@ export function NotificationsPanel({ open, onOpenChange }: NotificationsPanelPro
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <span className="text-[13px]" style={{ color: "var(--sr-text-muted)" }}>
-                Loadingâ€¦
+                Loading…
               </span>
             </div>
           ) : filtered.length === 0 ? (

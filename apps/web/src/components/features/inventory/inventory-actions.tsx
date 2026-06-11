@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Globe, ShieldCheck, Send, Power, Loader2, Archive } from "lucide-react";
@@ -279,7 +279,7 @@ export function InventoryActions({
               !emailVerified
                 ? "Verify your email to publish"
                 : uncategorisedCount > 0
-                  ? `${uncategorisedCount} item${uncategorisedCount > 1 ? "s" : ""} missing a category â€” set in inventory before publishing`
+                  ? `${uncategorisedCount} item${uncategorisedCount > 1 ? "s" : ""} missing a category — set in inventory before publishing`
                   : undefined
             }
           >

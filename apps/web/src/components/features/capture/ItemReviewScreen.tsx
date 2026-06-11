@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Trash2, Plus, PackageCheck, Loader2, AlertCircle, WifiOff, Copy, Wand2 } from "lucide-react";
@@ -141,7 +141,7 @@ export function ItemReviewScreen({
               {items.length === 0
                 ? "No items captured"
                 : loadingCount > 0
-                ? `${identifiedCount} identified Â· ${loadingCount} still identifyingâ€¦`
+                ? `${identifiedCount} identified · ${loadingCount} still identifying…`
                 : `${items.length} item${items.length !== 1 ? "s" : ""} captured`}
             </div>
           </div>
@@ -536,7 +536,7 @@ export function ItemReviewScreen({
             }}
           >
             <Loader2 size={14} strokeWidth={2} className="animate-spin" style={{ flexShrink: 0 }} />
-            {loadingCount} item{loadingCount !== 1 ? "s" : ""} still being identifiedâ€¦
+            {loadingCount} item{loadingCount !== 1 ? "s" : ""} still being identified…
           </div>
         )}
 
@@ -556,7 +556,7 @@ export function ItemReviewScreen({
             }}
           >
             <WifiOff size={14} strokeWidth={2} style={{ flexShrink: 0 }} />
-            {networkErrorCount} item{networkErrorCount !== 1 ? "s" : ""} had network errors â€” they&apos;ll upload on create.
+            {networkErrorCount} item{networkErrorCount !== 1 ? "s" : ""} had network errors — they&apos;ll upload on create.
           </div>
         )}
 
@@ -643,12 +643,12 @@ export function ItemReviewScreen({
           {isUploading ? (
             <>
               <Loader2 size={18} strokeWidth={2} className="animate-spin" />
-              Creating saleâ€¦
+              Creating sale…
             </>
           ) : (
             <>
               <PackageCheck size={18} strokeWidth={2} />
-              Create Sale{items.length > 0 ? ` â€” ${items.length} item${items.length !== 1 ? "s" : ""}` : ""}
+              Create Sale{items.length > 0 ? ` — ${items.length} item${items.length !== 1 ? "s" : ""}` : ""}
             </>
           )}
         </button>

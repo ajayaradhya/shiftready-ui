@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -135,7 +135,7 @@ export function FocusPicker({ saleEventId, onSelect, onClose }: FocusPickerProps
             <Search size={13} strokeWidth={1.5} color="var(--sr-text-muted)" />
             <input
               type="text"
-              placeholder="Search itemsâ€¦"
+              placeholder="Search items…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
@@ -156,7 +156,7 @@ export function FocusPicker({ saleEventId, onSelect, onClose }: FocusPickerProps
         <div style={{ flex: 1, overflowY: "auto" }}>
           {isLoading && (
             <div style={{ padding: "32px", textAlign: "center", color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)", fontSize: 13 }}>
-              Loadingâ€¦
+              Loading…
             </div>
           )}
 
@@ -244,7 +244,7 @@ export function FocusPicker({ saleEventId, onSelect, onClose }: FocusPickerProps
                             {bundle.name ?? "Bundle"}
                           </div>
                           <div style={{ fontFamily: "var(--sr-font-mono)", fontSize: 9, color: "var(--sr-text-muted)", marginTop: 2 }}>
-                            {bundle.items.length} items Â· {bundle.itemTotal > 0 ? fmt(bundle.itemTotal) : "POA"}
+                            {bundle.items.length} items · {bundle.itemTotal > 0 ? fmt(bundle.itemTotal) : "POA"}
                           </div>
                         </div>
                       </button>

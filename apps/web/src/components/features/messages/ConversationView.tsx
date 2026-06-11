@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Phone, MoreVertical, Shield, ShieldOff, ShieldCheck } from "lucide-react";
@@ -545,7 +545,7 @@ export function ConversationView({
               fontFamily: "var(--sr-font-sans)",
             }}
           >
-            Loadingâ€¦
+            Loading…
           </div>
         )}
 
@@ -564,8 +564,8 @@ export function ConversationView({
               padding: "40px 0",
             }}
           >
-            <span style={{ fontSize: 28 }}>ðŸ’¬</span>
-            <span>No messages yet â€” say hello!</span>
+            <span style={{ fontSize: 28 }}>💬</span>
+            <span>No messages yet — say hello!</span>
           </div>
         )}
 
@@ -596,7 +596,7 @@ export function ConversationView({
           if (msg.type === "system" && msg.subtype === "deal_agreed") {
             // Search ALL messages for the most recent offer_accepted.
             // Both offer_accepted and deal_agreed share the same createdAt timestamp,
-            // so Firestore sort order is non-deterministic â€” slice(0, i+1) can miss it.
+            // so Firestore sort order is non-deterministic — slice(0, i+1) can miss it.
             const dealAmt = [...allMessages]
               .reverse()
               .find((m) => m.type === "offer_accepted")

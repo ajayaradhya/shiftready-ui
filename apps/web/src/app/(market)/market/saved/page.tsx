@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -361,7 +361,7 @@ export default function SavedPage() {
         }}
       >
         <span style={{ fontSize: 13, color: "var(--sr-text-muted)", fontFamily: "var(--sr-font-sans)" }}>
-          Loadingâ€¦
+          Loading…
         </span>
       </div>
     );
@@ -523,7 +523,7 @@ export default function SavedPage() {
                 href="/market"
                 style={{ color: "var(--clay-600)", fontWeight: 600, textDecoration: "none" }}
               >
-                Browse sales â†’
+                Browse sales →
               </Link>
             </p>
           </div>

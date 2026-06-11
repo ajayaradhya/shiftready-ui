@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { FolderOpen, Shield, Video } from "lucide-react";
@@ -100,7 +100,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
                 fontSize: 14, fontWeight: 600,
               }}>
                 <Video size={15} strokeWidth={1.7} />
-                Start capturing â†’
+                Start capturing →
               </div>
             </div>
           </Link>
@@ -130,7 +130,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "var(--sr-font-serif)", fontSize: 22, fontWeight: 500, color: "var(--ink-800)", marginBottom: 6 }}>
-                Uploadingâ€¦
+                Uploading…
               </div>
               <div style={{ fontFamily: "var(--sr-font-mono)", fontSize: 28, fontWeight: 500, color: "var(--clay-600)", letterSpacing: "-0.02em" }}>
                 {uploadProgress}%
@@ -198,7 +198,7 @@ export function UploadScreen({ status, uploadProgress, fileError, uploadFile }: 
                 </div>
               </label>
               <div style={{ fontSize: 12, color: "var(--sr-text-muted)" }}>
-                MP4 Â· MOV Â· AVI Â· Max 2 GB Â· Min 30 sec
+                MP4 · MOV · AVI · Max 2 GB · Min 30 sec
               </div>
             </div>
           </div>

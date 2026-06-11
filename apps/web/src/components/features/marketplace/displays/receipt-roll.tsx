@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -38,7 +38,7 @@ export function ReceiptRoll({
         <div className={s.receiptHead}>
           <div className={s.receiptLogo}>Myrio · Marketplace</div>
           <div className={s.receiptMeta}>
-            {dateStr} Â· #{txnId} Â· {locationTag}
+            {dateStr} · #{txnId} · {locationTag}
           </div>
         </div>
 
@@ -58,7 +58,7 @@ export function ReceiptRoll({
             <div className={s.receiptBody}>
               <div className={s.receiptName}>{it.name}</div>
               <div className={s.receiptSub}>
-                {it.brand && it.brand !== "Generic" ? `${it.brand} Â· ` : ""}
+                {it.brand && it.brand !== "Generic" ? `${it.brand} · ` : ""}
                 {it.condition}
               </div>
             </div>
