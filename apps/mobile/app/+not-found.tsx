@@ -1,20 +1,19 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
+import { colors } from "@/lib/theme";
+import { EmptyState } from "@/components/ui";
 
 export default function NotFound() {
   const router = useRouter();
   return (
-    <View className="flex-1 items-center justify-center bg-surface px-6">
-      <Text className="text-lg font-semibold text-on-surface mb-2">Page not found</Text>
-      <Text className="text-sm text-on-surface-variant mb-6 text-center">
-        This screen doesn&apos;t exist.
-      </Text>
-      <TouchableOpacity
-        className="rounded-xl bg-primary px-6 py-3"
-        onPress={() => router.replace("/(tabs)")}
-      >
-        <Text className="text-on-primary font-medium">Go home</Text>
-      </TouchableOpacity>
+    <View style={{ flex: 1, justifyContent: "center", backgroundColor: colors.surface }}>
+      <EmptyState
+        icon="compass-outline"
+        title="Page not found"
+        body="This screen doesn't exist — let's get you back to the market."
+        ctaLabel="Back to market"
+        onCtaPress={() => router.replace("/(tabs)")}
+      />
     </View>
   );
 }

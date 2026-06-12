@@ -1,12 +1,14 @@
 ﻿import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
-import { apiRequest } from "@myrio/api";
+import { postPushToken, deletePushToken } from "@myrio/api";
 
 export function configurePushHandler(): void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
     }),
@@ -35,10 +37,7 @@ export async function registerPushToken(): Promise<void> {
   }
 
   try {
-    await apiRequest("/users/me/push-token", {
-      method: "POST",
-      body: JSON.stringify({ token }),
-    });
+    await postPushToken(token);
   } catch (err) {
     console.warn("Push token registration failed:", err);
   }
@@ -62,10 +61,7 @@ export async function unregisterPushToken(): Promise<void> {
         ?.eas?.projectId;
 
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    await apiRequest("/users/me/push-token", {
-      method: "DELETE",
-      body: JSON.stringify({ token }),
-    });
+    await deletePushToken(token);
   } catch {
     // non-fatal on sign-out
   }

@@ -1,16 +1,21 @@
-﻿import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useConversations } from "@/hooks/use-conversations";
 import { useMessagesWs } from "@/hooks/use-messages-ws";
 import type { ConversationSummary } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
+import { colors } from "@/lib/theme";
+import {
+  AppText,
+  Avatar,
+  Chip,
+  EmptyState,
+  ItemImage,
+  ScalePressable,
+  Skeleton,
+  TabHeader,
+} from "@/components/ui";
 
 function formatRelative(ts: string | null) {
   if (!ts) return "";
@@ -26,152 +31,183 @@ function formatRelative(ts: string | null) {
   return d.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 }
 
-function DealChip({ status, agreedPrice }: { status?: string; agreedPrice?: number | null }) {
-  if (status === "agreed") {
-    return (
-      <View style={{ backgroundColor: "#D1FAE5", borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-        <Text style={{ fontSize: 10, fontWeight: "600", color: "#065F46" }}>
-          {agreedPrice ? `Deal $${agreedPrice}` : "Deal agreed"}
-        </Text>
-      </View>
-    );
-  }
-  return null;
-}
-
 function ConvRow({ conv }: { conv: ConversationSummary }) {
   const router = useRouter();
-  const initial = (conv.otherUsername ?? "?")[0].toUpperCase();
+  const hasUnread = conv.unreadCount > 0;
+  const pinThumb = conv.pinSnapshot?.imageUrl ?? null;
+  const previewText = conv.lastMessage ?? "";
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
+    <ScalePressable
       onPress={() =>
         router.push({ pathname: "/conversation/[convId]", params: { convId: conv.id } })
       }
+      haptic="selection"
+      pressScale={0.99}
+      accessibilityRole="button"
+      accessibilityLabel={`Conversation with ${conv.otherUsername ?? "unknown"}${hasUnread ? `, ${conv.unreadCount} unread` : ""}`}
       style={{
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
         paddingHorizontal: 16,
-        paddingVertical: 14,
-        backgroundColor: conv.unreadCount > 0 ? "#FAF6EF" : "#FAFAF7",
+        paddingVertical: 13,
         borderBottomWidth: 1,
-        borderBottomColor: "#E0D5C0",
+        borderBottomColor: colors.outlineVariant,
       }}
     >
-      {/* Avatar */}
-      <View
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          backgroundColor: "#B5604A",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>{initial}</Text>
+      {/* Avatar + unread dot */}
+      <View>
+        <Avatar name={conv.otherUsername} size={48} />
+        {hasUnread ? (
+          <View
+            style={{
+              position: "absolute",
+              top: -1,
+              right: -1,
+              width: 13,
+              height: 13,
+              borderRadius: 7,
+              backgroundColor: colors.clay600,
+              borderWidth: 2,
+              borderColor: colors.surface,
+            }}
+          />
+        ) : null}
       </View>
 
-      {/* Content */}
-      <View style={{ flex: 1, gap: 3 }}>
+      {/* Text content */}
+      <View style={{ flex: 1, gap: 2 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: conv.unreadCount > 0 ? "700" : "600",
-                color: "#2C2416",
-              }}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+            <AppText
+              weight={hasUnread ? "bold" : "semibold"}
+              numberOfLines={1}
+              style={{ fontSize: 14.5 }}
             >
               @{conv.otherUsername ?? "Unknown"}
-            </Text>
-            <DealChip status={conv.dealStatus} agreedPrice={conv.agreedPrice} />
+            </AppText>
+            {conv.dealStatus === "agreed" ? (
+              <Chip
+                label={conv.agreedPrice ? `Deal ${formatAUD(conv.agreedPrice)}` : "Deal agreed"}
+                status="deal"
+                size="sm"
+              />
+            ) : null}
           </View>
-          <Text style={{ fontSize: 11, color: "#A09683" }}>
+          <AppText variant="caption" tone="faint" style={{ fontSize: 11 }}>
             {formatRelative(conv.lastMessageAt)}
-          </Text>
+          </AppText>
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text
+          <AppText
             numberOfLines={1}
+            weight={hasUnread ? "medium" : "regular"}
             style={{
               flex: 1,
               fontSize: 13,
-              color: conv.unreadCount > 0 ? "#4A2519" : "#7A6A58",
-              fontWeight: conv.unreadCount > 0 ? "500" : "400",
+              color: hasUnread ? colors.onSurface : colors.ink400,
             }}
           >
-            {conv.pinSnapshot?.name ? `Re: ${conv.pinSnapshot.name}` : (conv.lastMessage ?? "")}
-          </Text>
-          {conv.unreadCount > 0 && (
+            {previewText}
+          </AppText>
+          {hasUnread ? (
             <View
               style={{
                 minWidth: 20,
                 height: 20,
                 borderRadius: 10,
-                backgroundColor: "#B5604A",
+                backgroundColor: colors.clay600,
                 alignItems: "center",
                 justifyContent: "center",
                 paddingHorizontal: 5,
                 marginLeft: 8,
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>
+              <AppText weight="bold" style={{ color: colors.onPrimary, fontSize: 11, lineHeight: 14 }}>
                 {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
-              </Text>
+              </AppText>
             </View>
-          )}
+          ) : null}
         </View>
       </View>
-    </TouchableOpacity>
+
+      {/* Pinned item thumbnail */}
+      {pinThumb ? (
+        <ItemImage
+          uri={pinThumb}
+          width={44}
+          height={44}
+          borderRadius={8}
+        />
+      ) : null}
+    </ScalePressable>
+  );
+}
+
+function ConvSkeleton() {
+  return (
+    <View style={{ paddingTop: 4 }}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 13,
+          }}
+        >
+          <Skeleton width={48} height={48} borderRadius={24} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <Skeleton width="45%" height={13} />
+            <Skeleton width="70%" height={11} />
+          </View>
+        </View>
+      ))}
+    </View>
   );
 }
 
 export default function MessagesScreen() {
-  const insets = useSafeAreaInsets();
   const { user, idToken } = useAuth();
-  const { data: convs, isLoading, refetch } = useConversations();
+  const { data: convs, isLoading, refetch, isRefetching } = useConversations();
 
   useMessagesWs(idToken);
 
-  if (!user) {
-    return (
-      <View className="flex-1 bg-surface items-center justify-center px-6" style={{ paddingTop: insets.top }}>
-        <Text className="text-2xl font-bold text-on-surface mb-2">Messages</Text>
-        <Text className="text-on-surface-variant text-sm text-center">Sign in to view your conversations.</Text>
-      </View>
-    );
-  }
-
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      <View className="px-4 pt-4 pb-3 border-b border-outline-variant bg-surface">
-        <Text className="text-2xl font-bold text-on-surface">Messages</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <TabHeader title="Messages" eyebrow="Inbox" />
 
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#B5604A" />
-        </View>
+      {!user ? (
+        <EmptyState
+          icon="chatbubble-outline"
+          title="Sign in to see messages"
+          body="Your conversations with sellers and buyers will appear here."
+        />
+      ) : isLoading ? (
+        <ConvSkeleton />
       ) : !convs?.length ? (
-        <View className="flex-1 items-center justify-center px-6 gap-2">
-          <Text className="text-4xl">💬</Text>
-          <Text className="text-on-surface font-semibold text-base mt-2">No conversations yet</Text>
-          <Text className="text-on-surface-variant text-sm text-center">
-            Message a seller from any item listing to get started.
-          </Text>
-        </View>
+        <EmptyState
+          icon="chatbubbles-outline"
+          title="No conversations yet"
+          body="Message a seller from any item listing to get started."
+        />
       ) : (
         <FlatList
           data={convs}
           keyExtractor={(c) => c.id}
           renderItem={({ item }) => <ConvRow conv={item} />}
-          onRefresh={refetch}
-          refreshing={isLoading}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.clay600}
+              colors={[colors.clay600]}
+            />
+          }
         />
       )}
     </View>

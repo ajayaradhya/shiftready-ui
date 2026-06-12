@@ -1,25 +1,28 @@
-﻿import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, FlatList, RefreshControl } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   useNotifications,
   useMarkNotifRead,
   useMarkAllNotifsRead,
 } from "@/hooks/use-notifications";
 import type { Notification } from "@myrio/types";
+import { colors } from "@/lib/theme";
+import {
+  AppText,
+  EmptyState,
+  ScalePressable,
+  Skeleton,
+  StackHeader,
+} from "@/components/ui";
 
-const NOTIF_ICONS: Record<string, string> = {
-  "message.new": "💬",
-  "offer.new": "💰",
-  "offer.accepted": "✅",
-  "offer.countered": "🔄",
-  "sale.ready": "📦",
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const NOTIF_ICONS: Record<string, IconName> = {
+  "message.new": "chatbubble-outline",
+  "offer.new": "pricetag-outline",
+  "offer.accepted": "checkmark-circle-outline",
+  "offer.countered": "swap-horizontal-outline",
+  "sale.ready": "sparkles-outline",
 };
 
 function formatRelative(ts: string) {
@@ -40,20 +43,22 @@ function NotifRow({ notif }: { notif: Notification }) {
   const isUnread = !notif.readAt;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
+    <ScalePressable
+      pressScale={0.99}
       onPress={() => {
         if (isUnread) markRead.mutate(notif.id);
       }}
+      accessibilityRole="button"
+      accessibilityLabel={`${notif.title}${isUnread ? ", unread" : ""}`}
       style={{
         flexDirection: "row",
         alignItems: "flex-start",
         gap: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
-        backgroundColor: isUnread ? "#FAF6EF" : "#FAFAF7",
+        backgroundColor: isUnread ? colors.surfaceLow : colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: "#E0D5C0",
+        borderBottomColor: colors.outlineVariant,
       }}
     >
       <View
@@ -61,108 +66,122 @@ function NotifRow({ notif }: { notif: Notification }) {
           width: 40,
           height: 40,
           borderRadius: 20,
-          backgroundColor: isUnread ? "#FEE2C0" : "#EDE5D6",
+          backgroundColor: isUnread ? colors.clay100 : colors.surfaceContainer,
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <Text style={{ fontSize: 18 }}>{NOTIF_ICONS[notif.type] ?? "🔔"}</Text>
+        <Ionicons
+          name={NOTIF_ICONS[notif.type] ?? "notifications-outline"}
+          size={18}
+          color={isUnread ? colors.clay700 : colors.onSurfaceVariant}
+        />
       </View>
-      <View style={{ flex: 1, gap: 3 }}>
+      <View style={{ flex: 1, gap: 2 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: isUnread ? "700" : "600",
-              color: "#2C2416",
-              flex: 1,
-              marginRight: 8,
-            }}
+          <AppText
+            weight={isUnread ? "bold" : "semibold"}
+            style={{ fontSize: 13.5, flex: 1, marginRight: 8 }}
           >
             {notif.title}
-          </Text>
-          <Text style={{ fontSize: 11, color: "#A09683", flexShrink: 0 }}>
+          </AppText>
+          <AppText variant="caption" tone="faint" style={{ fontSize: 11 }}>
             {formatRelative(notif.createdAt)}
-          </Text>
+          </AppText>
         </View>
-        <Text style={{ fontSize: 13, color: "#7A6A58", lineHeight: 18 }}>{notif.body}</Text>
+        <AppText variant="caption" tone="muted" style={{ lineHeight: 18 }}>
+          {notif.body}
+        </AppText>
       </View>
-      {isUnread && (
+      {isUnread ? (
         <View
           style={{
             width: 8,
             height: 8,
             borderRadius: 4,
-            backgroundColor: "#B5604A",
+            backgroundColor: colors.clay600,
             marginTop: 6,
             flexShrink: 0,
           }}
         />
-      )}
-    </TouchableOpacity>
+      ) : null}
+    </ScalePressable>
+  );
+}
+
+function NotifSkeleton() {
+  return (
+    <View style={{ paddingTop: 4 }}>
+      {[0, 1, 2, 3].map((i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: "row",
+            gap: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+          }}
+        >
+          <Skeleton width={40} height={40} borderRadius={20} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <Skeleton width="55%" height={12} />
+            <Skeleton width="85%" height={11} />
+          </View>
+        </View>
+      ))}
+    </View>
   );
 }
 
 export default function NotificationsScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { data: notifs, isLoading, refetch } = useNotifications();
+  const { data: notifs, isLoading, refetch, isRefetching } = useNotifications();
   const markAll = useMarkAllNotifsRead();
   const unreadCount = notifs?.filter((n) => !n.readAt).length ?? 0;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAFAF7", paddingTop: insets.top }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: "#E0D5C0",
-          backgroundColor: "#FAFAF7",
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={{ fontSize: 17, color: "#B5604A" }}>‹ Back</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: "700", color: "#2C2416" }}>Notifications</Text>
-        </View>
-        {unreadCount > 0 && (
-          <TouchableOpacity
-            onPress={() => markAll.mutate()}
-            disabled={markAll.isPending}
-          >
-            <Text style={{ fontSize: 13, color: "#B5604A", fontWeight: "600" }}>Mark all read</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <StackHeader
+        title="Notifications"
+        right={
+          unreadCount > 0 ? (
+            <ScalePressable
+              onPress={() => markAll.mutate()}
+              disabled={markAll.isPending}
+              haptic="selection"
+              accessibilityRole="button"
+              accessibilityLabel="Mark all notifications as read"
+              style={{ paddingHorizontal: 4, justifyContent: "center", height: 40 }}
+            >
+              <AppText variant="caption" weight="semibold" style={{ color: colors.clay600 }}>
+                Mark all read
+              </AppText>
+            </ScalePressable>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color="#B5604A" />
-        </View>
+        <NotifSkeleton />
       ) : !notifs?.length ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Text style={{ fontSize: 32 }}>🔔</Text>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#2C2416", marginTop: 8 }}>
-            No notifications
-          </Text>
-          <Text style={{ fontSize: 13, color: "#A09683", textAlign: "center", paddingHorizontal: 32 }}>
-            You&apos;re all caught up. Notifications for messages and offers will appear here.
-          </Text>
-        </View>
+        <EmptyState
+          icon="notifications-outline"
+          title="No notifications"
+          body="You're all caught up. Messages and offers will appear here."
+        />
       ) : (
         <FlatList
           data={notifs}
           keyExtractor={(n) => n.id}
           renderItem={({ item }) => <NotifRow notif={item} />}
-          onRefresh={refetch}
-          refreshing={isLoading}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.clay600}
+              colors={[colors.clay600]}
+            />
+          }
         />
       )}
     </View>

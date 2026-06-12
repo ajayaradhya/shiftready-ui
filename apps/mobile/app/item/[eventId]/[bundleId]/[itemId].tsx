@@ -1,18 +1,36 @@
 import { useState, useRef } from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity, Alert,
-  Image, ActivityIndicator, Modal, Dimensions, FlatList,
+  View,
+  ScrollView,
+  Alert,
+  Modal,
+  FlatList,
+  useWindowDimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getPublicItem, saveItem, unsaveItem, startConversation } from "@myrio/api";
+import { getPublicItem, getPublicSale, saveItem, unsaveItem, setPin, startConversation } from "@myrio/api";
 import { formatAUD, formatDateAU } from "@myrio/core";
 import { useAuth } from "@/contexts/auth-context";
-import type { PublicItemImage } from "@myrio/types";
-
-const { width: SW } = Dimensions.get("window");
+import type { PublicBundleItem, PublicItemImage } from "@myrio/types";
+import { MakeOfferSheet } from "@/components/market/MakeOfferSheet";
+import { colors, radius } from "@/lib/theme";
+import {
+  AppText,
+  Button,
+  Chip,
+  EmptyState,
+  IconButton,
+  ItemImage,
+  PriceText,
+  ScalePressable,
+  Skeleton,
+  StackHeader,
+  triggerHaptic,
+} from "@/components/ui";
 
 function ImageGallery({
   images,
@@ -22,6 +40,9 @@ function ImageGallery({
   imageUrl: string | null;
 }) {
   const insets = useSafeAreaInsets();
+  const { width: SW } = useWindowDimensions();
+  const galleryHeight = Math.round(SW * 0.85);
+  const [page, setPage] = useState(0);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const listRef = useRef<FlatList<{ url: string }> | null>(null);
 
@@ -33,21 +54,12 @@ function ImageGallery({
       : [];
 
   if (displayImages.length === 0) {
-    return (
-      <View
-        style={{
-          width: "100%", height: 300, backgroundColor: "#EDE5D6",
-          alignItems: "center", justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 52 }}>📦</Text>
-      </View>
-    );
+    return <ItemImage uri={null} height={galleryHeight} fallbackIconSize={48} />;
   }
 
   return (
     <>
-      <View style={{ backgroundColor: "#EDE5D6" }}>
+      <View style={{ backgroundColor: colors.surfaceHigh }}>
         <FlatList
           ref={listRef}
           data={displayImages}
@@ -55,40 +67,56 @@ function ImageGallery({
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) =>
+            setPage(Math.round(e.nativeEvent.contentOffset.x / SW))
+          }
           renderItem={({ item, index }) => (
-            <TouchableOpacity
-              activeOpacity={0.95}
+            <ScalePressable
+              pressScale={0.99}
               onPress={() => setLightboxIdx(index)}
+              accessibilityRole="imagebutton"
+              accessibilityLabel={`Photo ${index + 1} of ${displayImages.length}, tap to expand`}
             >
               <Image
                 source={{ uri: item.url }}
-                style={{ width: SW, height: 320 }}
-                resizeMode="cover"
+                style={{ width: SW, height: galleryHeight }}
+                contentFit="cover"
+                transition={150}
               />
-            </TouchableOpacity>
+            </ScalePressable>
           )}
         />
-        {displayImages.length > 1 && (
+        {displayImages.length > 1 ? (
           <View
             style={{
-              flexDirection: "row", justifyContent: "center",
-              paddingVertical: 8, gap: 5,
+              position: "absolute",
+              bottom: 12,
+              alignSelf: "center",
+              flexDirection: "row",
+              gap: 5,
+              backgroundColor: "rgba(20,17,13,0.4)",
+              borderRadius: radius.full,
+              paddingHorizontal: 8,
+              paddingVertical: 5,
             }}
           >
             {displayImages.map((_, i) => (
               <View
                 key={i}
                 style={{
-                  width: 6, height: 6, borderRadius: 3,
-                  backgroundColor: "#B5604A", opacity: 0.45,
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: "#fff",
+                  opacity: i === page ? 1 : 0.45,
                 }}
               />
             ))}
           </View>
-        )}
+        ) : null}
       </View>
 
-      {/* Lightbox modal */}
+      {/* Lightbox */}
       <Modal
         visible={lightboxIdx !== null}
         transparent
@@ -96,21 +124,26 @@ function ImageGallery({
         statusBarTranslucent
         onRequestClose={() => setLightboxIdx(null)}
       >
-        <View
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.96)" }}
-        >
-          <TouchableOpacity
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.96)" }}>
+          <ScalePressable
             onPress={() => setLightboxIdx(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Close photo viewer"
             style={{
               position: "absolute",
-              top: insets.top + 12, right: 16,
-              zIndex: 10, padding: 8,
-              backgroundColor: "rgba(255,255,255,0.12)",
+              top: insets.top + 12,
+              right: 16,
+              zIndex: 10,
+              width: 40,
+              height: 40,
               borderRadius: 20,
+              backgroundColor: "rgba(255,255,255,0.14)",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
+          </ScalePressable>
           <FlatList
             data={displayImages}
             keyExtractor={(_, i) => String(i)}
@@ -118,20 +151,13 @@ function ImageGallery({
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             initialScrollIndex={lightboxIdx ?? 0}
-            getItemLayout={(_, index) => ({
-              length: SW, offset: SW * index, index,
-            })}
+            getItemLayout={(_, index) => ({ length: SW, offset: SW * index, index })}
             renderItem={({ item }) => (
-              <View
-                style={{
-                  width: SW, flex: 1,
-                  alignItems: "center", justifyContent: "center",
-                }}
-              >
+              <View style={{ width: SW, flex: 1, alignItems: "center", justifyContent: "center" }}>
                 <Image
                   source={{ uri: item.url }}
                   style={{ width: SW, height: SW }}
-                  resizeMode="contain"
+                  contentFit="contain"
                 />
               </View>
             )}
@@ -142,20 +168,110 @@ function ImageGallery({
   );
 }
 
+function MoreFromSaleRail({
+  eventId,
+  currentItemId,
+}: {
+  eventId: string;
+  currentItemId: string;
+}) {
+  const router = useRouter();
+  const { data: sale } = useQuery({
+    queryKey: ["public-sale", eventId],
+    queryFn: () => getPublicSale(eventId),
+    staleTime: 60_000,
+  });
+
+  const others: (PublicBundleItem & { bundleId: string })[] =
+    sale?.bundles.flatMap((b) =>
+      b.items
+        .filter(
+          (i) =>
+            i.id !== currentItemId &&
+            i.sale_status !== "sold" &&
+            i.sale_status !== "withdrawn"
+        )
+        .map((i) => ({ ...i, bundleId: b.id }))
+    ) ?? [];
+
+  if (others.length === 0) return null;
+
+  return (
+    <View style={{ marginTop: 28 }}>
+      <AppText variant="micro" tone="faint" style={{ paddingHorizontal: 16 }}>
+        More from this sale
+      </AppText>
+      <FlatList
+        data={others.slice(0, 12)}
+        keyExtractor={(i) => i.id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}
+        renderItem={({ item }) => (
+          <ScalePressable
+            onPress={() =>
+              router.push({
+                pathname: "/item/[eventId]/[bundleId]/[itemId]",
+                params: { eventId, bundleId: item.bundleId, itemId: item.id },
+              })
+            }
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel={`${item.name ?? "Item"}, ${formatAUD(item.price)}`}
+            style={{
+              width: 130,
+              backgroundColor: colors.surfaceLow,
+              borderRadius: radius.lg,
+              borderWidth: 1,
+              borderColor: colors.outlineVariant,
+              overflow: "hidden",
+            }}
+          >
+            <ItemImage uri={item.image_url} height={100} recyclingKey={item.id} />
+            <View style={{ padding: 8 }}>
+              <AppText weight="medium" numberOfLines={1} style={{ fontSize: 12.5 }}>
+                {item.name}
+              </AppText>
+              <AppText weight="bold" style={{ fontSize: 13, color: colors.clay600, marginTop: 2 }}>
+                {formatAUD(item.price)}
+              </AppText>
+            </View>
+          </ScalePressable>
+        )}
+      />
+    </View>
+  );
+}
+
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View
       style={{
-        flexDirection: "row", justifyContent: "space-between",
-        paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: "#E0D5C0",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        paddingVertical: 8,
       }}
     >
-      <Text style={{ fontSize: 13, color: "#4F4838" }}>{label}</Text>
-      <Text
-        style={{ fontSize: 13, fontWeight: "500", color: "#1F1B17", maxWidth: "60%", textAlign: "right" }}
-      >
+      <AppText variant="caption" tone="muted">
+        {label}
+      </AppText>
+      <AppText weight="medium" style={{ fontSize: 14, maxWidth: "60%", textAlign: "right" }}>
         {value}
-      </Text>
+      </AppText>
+    </View>
+  );
+}
+
+function ItemSkeleton() {
+  return (
+    <View>
+      <Skeleton width="100%" height={320} borderRadius={0} />
+      <View style={{ padding: 16, gap: 12 }}>
+        <Skeleton width={120} height={28} />
+        <Skeleton width="70%" height={20} />
+        <Skeleton width="100%" height={140} borderRadius={16} />
+      </View>
     </View>
   );
 }
@@ -171,7 +287,7 @@ export default function ItemDetailScreen() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: item, isLoading, error } = useQuery({
+  const { data: item, isLoading, error, refetch } = useQuery({
     queryKey: ["public-item", eventId, bundleId, itemId],
     queryFn: () => getPublicItem(eventId, bundleId, itemId),
     staleTime: 60_000,
@@ -185,6 +301,7 @@ export default function ItemDetailScreen() {
     if (!user || !item) return;
     const next = !isSaved;
     setSavedOptimistic(next);
+    triggerHaptic("light");
     try {
       if (next) await saveItem(eventId, bundleId, itemId);
       else await unsaveItem(eventId, bundleId, itemId);
@@ -195,6 +312,25 @@ export default function ItemDetailScreen() {
   }
 
   const isSoldItem = item?.sale_status === "sold";
+  const isReserved = item?.sale_status === "reserved";
+  const canMessage = !!(user && item?.seller_id && item.seller_id !== user.uid && !isSoldItem);
+  const [offerSheet, setOfferSheet] = useState(false);
+
+  const itemImageUrl =
+    item?.images?.find((i) => i.is_cover)?.url ?? item?.images?.[0]?.url ?? item?.image_url ?? null;
+
+  function goToConversation(convId: string) {
+    router.push({
+      pathname: "/conversation/[convId]",
+      params: {
+        convId,
+        // Optimistic pin context so the thread renders instantly (B3).
+        pinName: item?.name ?? "",
+        pinImage: itemImageUrl ?? "",
+        pinPrice: item?.price != null ? String(item.price) : "",
+      },
+    });
+  }
 
   async function handleMessage() {
     if (!user || !item?.seller_id) return;
@@ -205,7 +341,13 @@ export default function ItemDetailScreen() {
         bundleId,
         itemId,
       });
-      router.push({ pathname: "/conversation/[convId]", params: { convId: res.conversationId } });
+      if (res.created) {
+        // Conversation create ignores context for pinning — set it explicitly.
+        setPin(res.conversationId, { kind: "item", saleEventId: eventId, bundleId, itemId }).catch(
+          () => {}
+        );
+      }
+      goToConversation(res.conversationId);
     } catch {
       Alert.alert("Error", "Could not start conversation.");
     } finally {
@@ -214,184 +356,231 @@ export default function ItemDetailScreen() {
   }
 
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row", alignItems: "center",
-          paddingHorizontal: 16, paddingVertical: 12,
-          borderBottomWidth: 1, borderBottomColor: "#E0D5C0",
-          backgroundColor: "#FAFAF7",
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 8, padding: 4 }}>
-          <Ionicons name="arrow-back" size={22} color="#1F1B17" />
-        </TouchableOpacity>
-        <Text
-          style={{ flex: 1, fontSize: 16, fontWeight: "600", color: "#1F1B17" }}
-          numberOfLines={1}
-        >
-          {item?.name ?? "Item"}
-        </Text>
-        {user && item && !isSoldItem && (
-          <TouchableOpacity onPress={toggleSave} style={{ padding: 4, marginLeft: 8 }}>
-            <Ionicons
-              name={isSaved ? "heart" : "heart-outline"}
-              size={22}
-              color={isSaved ? "#B5604A" : "#A09683"}
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <StackHeader
+        title={item?.name ?? ""}
+        right={
+          user && item && !isSoldItem ? (
+            <IconButton
+              icon={isSaved ? "heart" : "heart-outline"}
+              color={isSaved ? colors.clay600 : colors.onSurface}
+              accessibilityLabel={isSaved ? "Remove from saved" : "Save this item"}
+              onPress={toggleSave}
             />
-          </TouchableOpacity>
-        )}
-      </View>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#B5604A" />
-        </View>
+        <ItemSkeleton />
       ) : error || !item ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text style={{ fontSize: 14, color: "#4F4838", textAlign: "center" }}>
-            Could not load this item.
-          </Text>
-        </View>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Couldn't load this item"
+          body="It may have been removed, or your connection dropped."
+          ctaLabel="Retry"
+          onCtaPress={() => refetch()}
+        />
       ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 48 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <ImageGallery images={item.images} imageUrl={item.image_url} />
+        <>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: canMessage ? 110 : 48 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <ImageGallery images={item.images} imageUrl={item.image_url} />
 
-          {/* Price + name */}
-          <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-            {isSoldItem ? (
+            {/* Title + price */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+              {isSoldItem ? (
+                <Chip label="Sold" status="sold" style={{ marginBottom: 10 }} />
+              ) : isReserved ? (
+                <Chip label="Reserved" status="reserved" style={{ marginBottom: 10 }} />
+              ) : null}
+
+              <AppText variant="title">{item.name}</AppText>
+              {item.brand || item.condition ? (
+                <AppText variant="caption" tone="muted" style={{ marginTop: 3 }}>
+                  {[item.brand, item.condition].filter(Boolean).join(" · ")}
+                </AppText>
+              ) : null}
+
+              {!isSoldItem && item.price != null ? (
+                <View style={{ marginTop: 12 }}>
+                  <PriceText
+                    value={item.price}
+                    size={28}
+                    originalValue={item.original_price}
+                    showSavePct
+                  />
+                </View>
+              ) : null}
+            </View>
+
+            {/* Details */}
+            {(item.condition || item.year || item.original_price != null || item.dimensions || item.material || item.is_fragile || item.disassembly_required) ? (
               <View
                 style={{
-                  alignSelf: "flex-start",
-                  backgroundColor: "#E0D5C0", borderRadius: 6,
-                  paddingHorizontal: 10, paddingVertical: 4,
-                  marginBottom: 8,
+                  marginHorizontal: 16,
+                  marginTop: 20,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  backgroundColor: colors.surfaceLow,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.outlineVariant,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: "#4F4838" }}>SOLD</Text>
+                {item.condition ? <DetailRow label="Condition" value={item.condition} /> : null}
+                {item.year ? <DetailRow label="Year" value={String(item.year)} /> : null}
+                {item.dimensions ? <DetailRow label="Dimensions" value={item.dimensions} /> : null}
+                {item.material ? <DetailRow label="Material" value={item.material} /> : null}
+                {item.is_fragile ? <DetailRow label="Fragile" value="Yes — handle with care" /> : null}
+                {item.disassembly_required ? <DetailRow label="Disassembly" value="Required" /> : null}
               </View>
-            ) : item.sale_status === "reserved" ? (
-              <View
-                style={{
-                  alignSelf: "flex-start",
-                  backgroundColor: "#F5DDCF", borderRadius: 6,
-                  paddingHorizontal: 10, paddingVertical: 4,
-                  marginBottom: 8,
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: "#B5604A" }}>RESERVED</Text>
+            ) : null}
+
+            {/* From the sale — tappable card */}
+            {(item.suburb || item.bundle_name || item.sale_title) ? (
+              <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+                <AppText variant="micro" tone="faint" style={{ marginBottom: 8 }}>
+                  From the sale
+                </AppText>
+                <ScalePressable
+                  onPress={() => router.push({ pathname: "/sale/[eventId]", params: { eventId } })}
+                  haptic="selection"
+                  accessibilityRole="button"
+                  accessibilityLabel={`View full sale${item.sale_title ? `: ${item.sale_title}` : ""}`}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 12,
+                    backgroundColor: colors.surfaceLow,
+                    borderRadius: radius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.outlineVariant,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: radius.md,
+                      backgroundColor: colors.surfaceContainer,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="home-outline" size={20} color={colors.outline} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    {item.sale_title ? (
+                      <AppText weight="semibold" numberOfLines={1} style={{ fontSize: 14 }}>
+                        {item.sale_title}
+                      </AppText>
+                    ) : null}
+                    <AppText variant="caption" tone="muted" numberOfLines={1} style={{ marginTop: 1 }}>
+                      {[
+                        item.bundle_name ? `${item.bundle_name} bundle` : null,
+                        item.suburb ? `Pickup in ${item.suburb}` : null,
+                        item.move_out_date ? `until ${formatDateAU(item.move_out_date)}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </AppText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.ink300} />
+                </ScalePressable>
               </View>
-            ) : (
-              <Text
-                style={{ fontSize: 28, fontWeight: "800", color: "#B5604A", marginBottom: 4 }}
-              >
-                {formatAUD(item.price)}
-              </Text>
-            )}
+            ) : null}
 
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "#1F1B17" }}>
-              {item.name}
-            </Text>
-            {item.brand ? (
-              <Text style={{ fontSize: 13, color: "#4F4838", marginTop: 2 }}>
-                {item.brand}
-              </Text>
-            ) : null}
-          </View>
+            {/* More from this sale */}
+            <MoreFromSaleRail eventId={eventId} currentItemId={itemId} />
+          </ScrollView>
 
-          {/* Details table */}
-          <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-            {item.condition ? <DetailRow label="Condition" value={item.condition} /> : null}
-            {item.year ? <DetailRow label="Year" value={String(item.year)} /> : null}
-            {item.original_price != null ? (
-              <DetailRow label="Original price" value={formatAUD(item.original_price)} />
-            ) : null}
-            {item.dimensions ? <DetailRow label="Dimensions" value={item.dimensions} /> : null}
-            {item.material ? <DetailRow label="Material" value={item.material} /> : null}
-            {item.is_fragile ? (
-              <DetailRow label="Fragile" value="Yes — handle with care" />
-            ) : null}
-            {item.disassembly_required ? (
-              <DetailRow label="Disassembly" value="Required" />
-            ) : null}
-          </View>
-
-          {/* Context */}
-          {(item.suburb || item.bundle_name || item.sale_title) ? (
+          {/* Sticky CTA bar */}
+          {canMessage ? (
             <View
               style={{
-                paddingHorizontal: 16, marginTop: 20, paddingTop: 16,
-                borderTopWidth: 1, borderTopColor: "#E0D5C0",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                paddingHorizontal: 16,
+                paddingTop: 12,
+                paddingBottom: Math.max(insets.bottom, 12),
+                backgroundColor: colors.surface,
+                borderTopWidth: 1,
+                borderTopColor: colors.outlineVariant,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 11, fontWeight: "600", color: "#A09683",
-                  textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8,
-                }}
-              >
-                From the sale
-              </Text>
-              {item.bundle_name ? (
-                <Text style={{ fontSize: 13, color: "#4F4838" }}>
-                  Bundle: {item.bundle_name}
-                </Text>
+              <Button
+                label={messaging ? "Opening…" : "Message seller"}
+                icon="chatbubble-outline"
+                size="lg"
+                loading={messaging}
+                onPress={handleMessage}
+                style={{ flex: 1 }}
+              />
+              {!isReserved && item.price != null ? (
+                <Button
+                  label="Make offer"
+                  icon="pricetag-outline"
+                  size="lg"
+                  variant="secondary"
+                  onPress={() => setOfferSheet(true)}
+                />
               ) : null}
-              {item.sale_title ? (
-                <Text style={{ fontSize: 13, color: "#4F4838", marginTop: 2 }}>
-                  {item.sale_title}
-                </Text>
-              ) : null}
-              {item.suburb ? (
-                <Text style={{ fontSize: 13, color: "#4F4838", marginTop: 2 }}>
-                  Pickup in {item.suburb}
-                </Text>
-              ) : null}
-              {item.move_out_date ? (
-                <Text style={{ fontSize: 13, color: "#4F4838", marginTop: 2 }}>
-                  Move out {formatDateAU(item.move_out_date)}
-                </Text>
-              ) : null}
+            </View>
+          ) : (isSoldItem || isReserved) && user ? (
+            <View
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                paddingHorizontal: 16,
+                paddingTop: 12,
+                paddingBottom: Math.max(insets.bottom, 12),
+                backgroundColor: colors.surface,
+                borderTopWidth: 1,
+                borderTopColor: colors.outlineVariant,
+              }}
+            >
+              <Button
+                label="See more from this sale"
+                size="lg"
+                variant="secondary"
+                block
+                onPress={() => router.push({ pathname: "/sale/[eventId]", params: { eventId } })}
+              />
             </View>
           ) : null}
 
-          {/* CTAs */}
-          <View style={{ paddingHorizontal: 16, marginTop: 24, gap: 10 }}>
-            {user && item.seller_id && item.seller_id !== user.uid && !isSoldItem && (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={handleMessage}
-                disabled={messaging}
-                style={{
-                  backgroundColor: "#B5604A", borderRadius: 12,
-                  paddingVertical: 14, alignItems: "center",
-                  opacity: messaging ? 0.6 : 1,
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
-                  {messaging ? "Opening chat…" : "Message seller"}
-                </Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => router.push({ pathname: "/sale/[eventId]", params: { eventId } })}
-              style={{
-                borderWidth: 1, borderColor: "#C8B99A", borderRadius: 12,
-                paddingVertical: 14, alignItems: "center",
+          {user && item.seller_id ? (
+            <MakeOfferSheet
+              visible={offerSheet}
+              target={{
+                sellerId: item.seller_id,
+                eventId,
+                bundleId,
+                itemId,
+                itemName: item.name ?? "Item",
+                imageUrl: itemImageUrl,
+                listPrice: item.price,
               }}
-            >
-              <Text style={{ color: "#4F4838", fontWeight: "600", fontSize: 15 }}>
-                View full sale
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+              onClose={() => setOfferSheet(false)}
+              onSent={(convId) => {
+                setOfferSheet(false);
+                goToConversation(convId);
+              }}
+            />
+          ) : null}
+        </>
       )}
     </View>
   );

@@ -1,9 +1,7 @@
 import {
   View,
-  Text,
   FlatList,
   TextInput,
-  TouchableOpacity,
   ActivityIndicator,
   Modal,
   KeyboardAvoidingView,
@@ -12,21 +10,36 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { markConversationRead, revealPhone, listConversations } from "@myrio/api";
+import { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { markConversationRead, revealPhone } from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
+import { useConversations } from "@/hooks/use-conversations";
 import { useMessages } from "@/hooks/use-messages";
 import { useMessagesWs } from "@/hooks/use-messages-ws";
-import { useSendMessage } from "@/hooks/use-send-message";
+import { useSendMessage, useRemoveLocalMessage, type LocalMessage } from "@/hooks/use-send-message";
 import {
   useSendOffer,
   useAcceptOffer,
   useCounterOffer,
   useWithdrawOffer,
 } from "@/hooks/use-offers";
-import type { Message, ConversationSummary, OfferPayload } from "@myrio/types";
+import type { Message, OfferPayload, PinSnapshot } from "@myrio/types";
 import { formatAUD } from "@myrio/core";
+import { colors, fonts, radius } from "@/lib/theme";
+import {
+  AppText,
+  Avatar,
+  Button,
+  Chip,
+  EmptyState,
+  ItemImage,
+  ScalePressable,
+  Skeleton,
+  StackHeader,
+  triggerHaptic,
+  type StatusVariant,
+} from "@/components/ui";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -37,28 +50,38 @@ function formatTime(ts: string | null) {
   return new Date(ts).toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
 }
 
-function useConversationById(convId: string): ConversationSummary | undefined {
-  const qc = useQueryClient();
-  const convs = qc.getQueryData<ConversationSummary[]>(["conversations"]);
-  return convs?.find((c) => c.id === convId);
+function dayLabel(ts: string | null): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 }
 
 // ---------------------------------------------------------------------------
-// Offer card rendered inside the message list
+// Offer card
 // ---------------------------------------------------------------------------
+
+const OFFER_STATUS_CHIP: Record<string, { label: string; status: StatusVariant }> = {
+  pending: { label: "Pending", status: "processing" },
+  countered: { label: "Countered", status: "processing" },
+  accepted: { label: "Accepted", status: "deal" },
+  withdrawn: { label: "Withdrawn", status: "sold" },
+};
 
 function OfferCard({
   offer,
   isMine,
-  myUid,
   convId,
-  conv,
+  itemName,
 }: {
   offer: OfferPayload;
   isMine: boolean;
-  myUid: string;
   convId: string;
-  conv?: ConversationSummary;
+  itemName?: string | null;
 }) {
   const accept = useAcceptOffer(convId);
   const counter = useCounterOffer(convId);
@@ -68,20 +91,8 @@ function OfferCard({
 
   const canAct = !isMine && offer.status === "pending";
   const canWithdraw = isMine && offer.status === "pending";
-
-  const statusColor: Record<string, string> = {
-    pending: "#92400E",
-    countered: "#92400E",
-    accepted: "#065F46",
-    withdrawn: "#6B7280",
-  };
-
-  const statusLabel: Record<string, string> = {
-    pending: "Pending",
-    countered: "Countered",
-    accepted: "Accepted",
-    withdrawn: "Withdrawn",
-  };
+  const isAccepted = offer.status === "accepted";
+  const chip = OFFER_STATUS_CHIP[offer.status] ?? { label: offer.status, status: "neutral" as StatusVariant };
 
   function doCounter() {
     const amt = parseFloat(counterText.replace(/[^0-9.]/g, ""));
@@ -97,47 +108,39 @@ function OfferCard({
   return (
     <View
       style={{
-        borderRadius: 12,
+        borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: offer.status === "accepted" ? "#6EE7B7" : "#E0D5C0",
-        backgroundColor: offer.status === "accepted" ? "#ECFDF5" : "#FBF8F3",
+        borderColor: isAccepted ? colors.success : colors.outlineVariant,
+        backgroundColor: isAccepted ? colors.successContainer : colors.surfaceLow,
         padding: 14,
         gap: 8,
-        minWidth: 220,
+        minWidth: 230,
+        maxWidth: 290,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ fontSize: 11, fontWeight: "600", color: "#A09683", textTransform: "uppercase", letterSpacing: 0.5 }}>
-          Offer
-        </Text>
-        <View
-          style={{
-            backgroundColor: offer.status === "accepted" ? "#D1FAE5" : "#FEF3C7",
-            borderRadius: 4,
-            paddingHorizontal: 6,
-            paddingVertical: 2,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 10,
-              fontWeight: "700",
-              color: statusColor[offer.status] ?? "#374151",
-            }}
-          >
-            {statusLabel[offer.status] ?? offer.status}
-          </Text>
-        </View>
+        <AppText variant="micro" tone="faint" numberOfLines={1} style={{ flexShrink: 1, marginRight: 6 }}>
+          {(isMine ? "Your offer" : "Offer") + (itemName ? ` · ${itemName}` : "")}
+        </AppText>
+        <Chip label={chip.label} status={chip.status} size="sm" />
       </View>
 
-      <Text style={{ fontSize: 24, fontWeight: "700", color: "#2C2416" }}>
+      <AppText
+        style={{
+          fontFamily: fonts.bold,
+          fontSize: 26,
+          lineHeight: 32,
+          color: isAccepted ? colors.onSuccessContainer : colors.onSurface,
+          fontVariant: ["tabular-nums"],
+        }}
+      >
         {formatAUD(offer.amount)}
-      </Text>
-      {offer.listPrice && (
-        <Text style={{ fontSize: 12, color: "#A09683" }}>
+      </AppText>
+      {offer.listPrice ? (
+        <AppText variant="caption" tone="faint">
           Listed at {formatAUD(offer.listPrice)}
-        </Text>
-      )}
+        </AppText>
+      ) : null}
 
       {showCounter ? (
         <View style={{ gap: 8 }}>
@@ -145,66 +148,63 @@ function OfferCard({
             value={counterText}
             onChangeText={setCounterText}
             placeholder="Counter amount (AUD)"
+            placeholderTextColor={colors.ink300}
             keyboardType="decimal-pad"
+            autoFocus
+            accessibilityLabel="Counter offer amount"
             style={{
               borderWidth: 1,
-              borderColor: "#C8B99A",
-              borderRadius: 8,
+              borderColor: colors.outline,
+              borderRadius: radius.sm,
               paddingHorizontal: 12,
               paddingVertical: 8,
-              fontSize: 14,
-              color: "#2C2416",
-              backgroundColor: "#FFFFFF",
+              fontFamily: fonts.regular,
+              fontSize: 15,
+              color: colors.onSurface,
+              backgroundColor: colors.surfaceLowest,
             }}
-            autoFocus
           />
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity
-              onPress={() => { setShowCounter(false); setCounterText(""); }}
-              style={{
-                flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 8,
-                borderWidth: 1, borderColor: "#C8B99A",
+            <Button
+              label="Cancel"
+              variant="ghost"
+              size="sm"
+              style={{ flex: 1 }}
+              onPress={() => {
+                setShowCounter(false);
+                setCounterText("");
               }}
-            >
-              <Text style={{ fontSize: 13, color: "#7A6A58" }}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={doCounter}
-              style={{
-                flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 8,
-                backgroundColor: "#B5604A",
-              }}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "600", color: "#fff" }}>Send counter</Text>
-            </TouchableOpacity>
+            />
+            <Button label="Send counter" size="sm" style={{ flex: 1 }} onPress={doCounter} />
           </View>
         </View>
       ) : (
         <View style={{ flexDirection: "row", gap: 8 }}>
-          {canAct && (
+          {canAct ? (
             <>
-              <TouchableOpacity
+              <Button
+                label="Accept"
+                size="sm"
+                haptic="success"
+                style={{ flex: 1 }}
+                loading={accept.isPending}
                 onPress={() => accept.mutate({ offerId: offer.offerId })}
-                style={{
-                  flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 8,
-                  backgroundColor: "#B5604A",
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#fff" }}>Accept</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              />
+              <Button
+                label="Counter"
+                variant="secondary"
+                size="sm"
+                style={{ flex: 1 }}
                 onPress={() => setShowCounter(true)}
-                style={{
-                  flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 8,
-                  borderWidth: 1, borderColor: "#B5604A",
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#B5604A" }}>Counter</Text>
-              </TouchableOpacity>
+              />
             </>
-          )}
-          {canWithdraw && (
-            <TouchableOpacity
+          ) : null}
+          {canWithdraw ? (
+            <Button
+              label="Withdraw"
+              variant="ghost"
+              size="sm"
+              style={{ flex: 1 }}
               onPress={() =>
                 Alert.alert("Withdraw offer?", "This will cancel your offer.", [
                   { text: "Cancel", style: "cancel" },
@@ -215,14 +215,8 @@ function OfferCard({
                   },
                 ])
               }
-              style={{
-                flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 8,
-                borderWidth: 1, borderColor: "#EF4444",
-              }}
-            >
-              <Text style={{ fontSize: 13, color: "#EF4444" }}>Withdraw</Text>
-            </TouchableOpacity>
-          )}
+            />
+          ) : null}
         </View>
       )}
     </View>
@@ -230,27 +224,40 @@ function OfferCard({
 }
 
 // ---------------------------------------------------------------------------
-// Single message bubble
+// Message bubble
 // ---------------------------------------------------------------------------
 
 function MessageBubble({
   msg,
   isMine,
-  myUid,
   convId,
-  conv,
+  showTime,
+  onToggleTime,
+  pinName,
+  onRetry,
 }: {
-  msg: Message;
+  msg: LocalMessage;
   isMine: boolean;
-  myUid: string;
   convId: string;
-  conv?: ConversationSummary;
+  showTime: boolean;
+  onToggleTime: () => void;
+  pinName?: string | null;
+  onRetry?: (msg: LocalMessage) => void;
 }) {
   if (msg.type === "system") {
     return (
-      <View style={{ alignItems: "center", marginVertical: 6 }}>
-        <View style={{ backgroundColor: "#EDE5D6", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 5 }}>
-          <Text style={{ fontSize: 12, color: "#7A6A58", textAlign: "center" }}>{msg.text}</Text>
+      <View style={{ alignItems: "center", marginVertical: 6, paddingHorizontal: 16 }}>
+        <View
+          style={{
+            backgroundColor: colors.surfaceHigh,
+            borderRadius: radius.md,
+            paddingHorizontal: 12,
+            paddingVertical: 5,
+          }}
+        >
+          <AppText variant="caption" tone="muted" style={{ textAlign: "center" }}>
+            {msg.text}
+          </AppText>
         </View>
       </View>
     );
@@ -258,20 +265,23 @@ function MessageBubble({
 
   if ((msg.type === "offer" || msg.type === "offer_accepted") && msg.offerPayload) {
     return (
-      <View style={{ alignItems: isMine ? "flex-end" : "flex-start", marginVertical: 4, paddingHorizontal: 16 }}>
-        <OfferCard
-          offer={msg.offerPayload}
-          isMine={isMine}
-          myUid={myUid}
-          convId={convId}
-          conv={conv}
-        />
-        <Text style={{ fontSize: 10, color: "#A09683", marginTop: 3 }}>
+      <View
+        style={{
+          alignItems: isMine ? "flex-end" : "flex-start",
+          marginVertical: 4,
+          paddingHorizontal: 16,
+        }}
+      >
+        <OfferCard offer={msg.offerPayload} isMine={isMine} convId={convId} itemName={pinName} />
+        <AppText variant="caption" tone="faint" style={{ fontSize: 10, marginTop: 3 }}>
           {formatTime(msg.createdAt)}
-        </Text>
+        </AppText>
       </View>
     );
   }
+
+  const isFailed = msg._local === "failed";
+  const isSending = msg._local === "sending";
 
   return (
     <View
@@ -281,43 +291,81 @@ function MessageBubble({
         paddingHorizontal: 16,
       }}
     >
-      <View
-        style={{
-          maxWidth: "75%",
-          backgroundColor: isMine ? "#B5604A" : "#EDE5D6",
-          borderRadius: 16,
-          borderBottomRightRadius: isMine ? 4 : 16,
-          borderBottomLeftRadius: isMine ? 16 : 4,
-          paddingHorizontal: 14,
-          paddingVertical: 9,
-        }}
+      <ScalePressable
+        pressScale={0.99}
+        onPress={isFailed && onRetry ? () => onRetry(msg) : onToggleTime}
+        accessibilityRole={isFailed ? "button" : "text"}
+        accessibilityLabel={isFailed ? "Message failed to send, tap to retry" : undefined}
       >
-        <Text style={{ fontSize: 14, color: isMine ? "#fff" : "#2C2416", lineHeight: 20 }}>
-          {msg.text}
-        </Text>
-      </View>
-      <Text style={{ fontSize: 10, color: "#A09683", marginTop: 2, marginHorizontal: 4 }}>
-        {formatTime(msg.createdAt)}
-      </Text>
+        <View
+          style={{
+            maxWidth: 290,
+            backgroundColor: isMine ? colors.clay600 : colors.surfaceHigh,
+            borderRadius: 18,
+            borderBottomRightRadius: isMine ? 4 : 18,
+            borderBottomLeftRadius: isMine ? 18 : 4,
+            paddingHorizontal: 14,
+            paddingVertical: 9,
+            opacity: isSending ? 0.65 : 1,
+            borderWidth: isFailed ? 1 : 0,
+            borderColor: isFailed ? colors.error : undefined,
+          }}
+        >
+          <AppText
+            style={{
+              fontSize: 14.5,
+              lineHeight: 20,
+              color: isMine ? colors.onPrimary : colors.onSurface,
+            }}
+          >
+            {msg.text}
+          </AppText>
+        </View>
+      </ScalePressable>
+      {isFailed ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}>
+          <Ionicons name="alert-circle" size={12} color={colors.error} />
+          <AppText variant="caption" style={{ fontSize: 11, color: colors.error }}>
+            Failed — tap to retry
+          </AppText>
+        </View>
+      ) : isSending ? (
+        <AppText variant="caption" tone="faint" style={{ fontSize: 10, marginTop: 2, marginHorizontal: 4 }}>
+          Sending…
+        </AppText>
+      ) : showTime ? (
+        <AppText variant="caption" tone="faint" style={{ fontSize: 10, marginTop: 2, marginHorizontal: 4 }}>
+          {formatTime(msg.createdAt)}
+        </AppText>
+      ) : null}
     </View>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Offer send modal
+// Offer modal
 // ---------------------------------------------------------------------------
 
 function OfferModal({
   visible,
   onClose,
   convId,
+  pin,
 }: {
   visible: boolean;
   onClose: () => void;
   convId: string;
+  pin?: PinSnapshot | null;
 }) {
   const [amountText, setAmountText] = useState("");
   const sendOffer = useSendOffer(convId);
+  const listPrice = pin?.price;
+
+  function pickPercent(pct: number) {
+    if (!listPrice) return;
+    triggerHaptic("selection");
+    setAmountText(String(Math.max(1, Math.round(listPrice * (1 - pct / 100)))));
+  }
 
   function submit() {
     const amt = parseFloat(amountText.replace(/[^0-9.]/g, ""));
@@ -325,6 +373,7 @@ function OfferModal({
       Alert.alert("Invalid amount", "Enter a valid dollar amount.");
       return;
     }
+    triggerHaptic("light");
     sendOffer.mutate({ amount: amt });
     onClose();
     setAmountText("");
@@ -332,10 +381,11 @@ function OfferModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-        activeOpacity={1}
+      <ScalePressable
+        style={{ flex: 1, backgroundColor: "rgba(20,17,13,0.4)" }}
         onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close offer sheet"
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -344,52 +394,112 @@ function OfferModal({
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "#FAFAF7",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          backgroundColor: colors.surface,
+          borderTopLeftRadius: radius.xl,
+          borderTopRightRadius: radius.xl,
           padding: 20,
+          paddingBottom: 28,
           gap: 14,
         }}
       >
-        <Text style={{ fontSize: 17, fontWeight: "700", color: "#2C2416" }}>Make an offer</Text>
+        <View
+          style={{
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: colors.surfaceHighest,
+            alignSelf: "center",
+            marginTop: -8,
+          }}
+        />
+        <AppText variant="title" style={{ fontSize: 19 }}>
+          Make an offer
+        </AppText>
+
+        {/* Item context */}
+        {pin?.name ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              padding: 10,
+              backgroundColor: colors.surfaceLow,
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.outlineVariant,
+              marginTop: -4,
+            }}
+          >
+            <ItemImage uri={pin.imageUrl} width={40} height={40} borderRadius={radius.sm} />
+            <View style={{ flex: 1 }}>
+              <AppText weight="semibold" numberOfLines={1} style={{ fontSize: 13.5 }}>
+                {pin.name}
+              </AppText>
+              {listPrice != null ? (
+                <AppText variant="caption" tone="muted">
+                  Listed at {formatAUD(listPrice)}
+                </AppText>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Quick picks */}
+        {listPrice ? (
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {[10, 20].map((pct) => (
+              <ScalePressable
+                key={pct}
+                onPress={() => pickPercent(pct)}
+                accessibilityRole="button"
+                accessibilityLabel={`Offer ${pct} percent below listed price`}
+                style={{
+                  paddingHorizontal: 14,
+                  height: 36,
+                  borderRadius: radius.full,
+                  backgroundColor: colors.surfaceContainer,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <AppText weight="semibold" style={{ fontSize: 13 }}>
+                  −{pct}% · {formatAUD(Math.round(listPrice * (1 - pct / 100)))}
+                </AppText>
+              </ScalePressable>
+            ))}
+          </View>
+        ) : null}
+
         <TextInput
           value={amountText}
           onChangeText={setAmountText}
           placeholder="Amount (AUD)"
+          placeholderTextColor={colors.ink300}
           keyboardType="decimal-pad"
+          autoFocus
+          accessibilityLabel="Offer amount in Australian dollars"
           style={{
             borderWidth: 1,
-            borderColor: "#C8B99A",
-            borderRadius: 10,
+            borderColor: colors.outline,
+            borderRadius: radius.md,
             paddingHorizontal: 14,
             paddingVertical: 12,
-            fontSize: 18,
-            color: "#2C2416",
-            backgroundColor: "#FFFFFF",
+            fontFamily: fonts.semibold,
+            fontSize: 20,
+            color: colors.onSurface,
+            backgroundColor: colors.surfaceLowest,
           }}
-          autoFocus
         />
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={{
-              flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 10,
-              borderWidth: 1, borderColor: "#C8B99A",
-            }}
-          >
-            <Text style={{ fontSize: 15, color: "#7A6A58" }}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          <Button label="Cancel" variant="ghost" style={{ flex: 1 }} onPress={onClose} />
+          <Button
+            label="Send offer"
+            style={{ flex: 2 }}
+            loading={sendOffer.isPending}
+            haptic="light"
             onPress={submit}
-            disabled={sendOffer.isPending}
-            style={{
-              flex: 2, alignItems: "center", paddingVertical: 12, borderRadius: 10,
-              backgroundColor: "#B5604A",
-              opacity: sendOffer.isPending ? 0.6 : 1,
-            }}
-          >
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>Send offer</Text>
-          </TouchableOpacity>
+          />
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -401,130 +511,238 @@ function OfferModal({
 // ---------------------------------------------------------------------------
 
 export default function ConversationScreen() {
-  const { convId } = useLocalSearchParams<{ convId: string }>();
+  const {
+    convId,
+    name: nameParam,
+    pinName: pinNameParam,
+    pinImage: pinImageParam,
+    pinPrice: pinPriceParam,
+  } = useLocalSearchParams<{
+    convId: string;
+    name?: string;
+    pinName?: string;
+    pinImage?: string;
+    pinPrice?: string;
+  }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, idToken } = useAuth();
   const myUid = user?.uid ?? "";
 
-  const conv = useConversationById(convId);
+  const { data: convs } = useConversations();
+  const conv = convs?.find((c) => c.id === convId);
   const { data, isLoading, fetchNextPage, hasNextPage } = useMessages(convId);
   useMessagesWs(idToken, convId);
 
-  const sendMsg = useSendMessage(convId);
+  const sendMsg = useSendMessage(convId, myUid);
+  const removeLocal = useRemoveLocalMessage(convId);
   const [text, setText] = useState("");
   const [offerModal, setOfferModal] = useState(false);
   const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
+  const [timeShownFor, setTimeShownFor] = useState<string | null>(null);
 
-  // Mark read on enter
   useEffect(() => {
     if (convId && idToken) {
       markConversationRead(convId).catch(() => undefined);
     }
   }, [convId, idToken]);
 
-  const messages = data?.pages.flatMap((p) => p.messages) ?? [];
-  // Inverted FlatList needs newest first
+  const messages = (data?.pages.flatMap((p) => p.messages) ?? []) as LocalMessage[];
   const reversed = [...messages].reverse();
+
+  // Day separators for the inverted list: attach a label to the OLDEST message of each day.
+  const daySeparatorIds = new Set<string>();
+  {
+    let lastDay = "";
+    for (const m of messages) {
+      const label = dayLabel(m.createdAt);
+      if (label !== lastDay) {
+        daySeparatorIds.add(m.id);
+        lastDay = label;
+      }
+    }
+  }
 
   function send() {
     const t = text.trim();
     if (!t) return;
+    triggerHaptic("selection");
     sendMsg.mutate({ text: t });
     setText("");
+  }
+
+  function retryMessage(msg: LocalMessage) {
+    triggerHaptic("selection");
+    sendMsg.mutate({ text: msg.text, tempId: msg.id });
   }
 
   async function handleRevealPhone() {
     try {
       const res = await revealPhone(convId);
       setRevealedPhone(res.phoneE164);
+      triggerHaptic("success");
     } catch {
       Alert.alert("Error", "Could not reveal phone number.");
     }
   }
 
-  const otherName = conv?.otherUsername ?? "Conversation";
+  // B2: prefer route-passed name so a brand-new conversation renders instantly;
+  // fall back to a skeleton until the counterpart resolves.
+  const otherName = conv?.otherUsername ?? nameParam ?? null;
   const isDealAgreed = conv?.dealStatus === "agreed";
+  // B3: optimistic pinned card from route params until the server snapshot lands.
+  const pin: PinSnapshot | null =
+    conv?.pinSnapshot ??
+    (pinNameParam
+      ? {
+          name: pinNameParam,
+          imageUrl: pinImageParam ?? null,
+          price: pinPriceParam ? Number(pinPriceParam) : null,
+        }
+      : null);
+  const pinRef = conv?.pin;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAFAF7", paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       {/* Header */}
+      <StackHeader
+        title=""
+        right={
+          isDealAgreed ? (
+            <Chip
+              label={conv?.agreedPrice ? `Deal ${formatAUD(conv.agreedPrice)}` : "Deal agreed"}
+              status="deal"
+            />
+          ) : undefined
+        }
+        style={{ paddingBottom: 10 }}
+      />
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
+          gap: 10,
           paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: "#E0D5C0",
-          backgroundColor: "#FAFAF7",
-          gap: 12,
+          paddingBottom: 10,
+          marginTop: -44,
+          marginLeft: 44,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 17, color: "#B5604A" }}>‹ Back</Text>
-        </TouchableOpacity>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#2C2416" }}>
-            @{otherName}
-          </Text>
-          {conv?.pinSnapshot?.name && (
-            <Text style={{ fontSize: 12, color: "#7A6A58" }} numberOfLines={1}>
-              {conv.pinSnapshot.name}
-              {conv.pinSnapshot.price ? ` · ${formatAUD(conv.pinSnapshot.price)}` : ""}
-            </Text>
-          )}
-        </View>
-        {isDealAgreed && (
-          <View style={{ backgroundColor: "#D1FAE5", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 }}>
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#065F46" }}>
-              {conv?.agreedPrice ? `Deal ${formatAUD(conv.agreedPrice)}` : "Deal agreed"}
-            </Text>
-          </View>
+        {otherName ? (
+          <>
+            <Avatar name={otherName} size={34} />
+            <AppText variant="heading" numberOfLines={1} style={{ fontSize: 16 }}>
+              @{otherName}
+            </AppText>
+          </>
+        ) : (
+          <>
+            <Skeleton width={34} height={34} borderRadius={17} />
+            <Skeleton width={120} height={16} borderRadius={6} />
+          </>
         )}
       </View>
 
-      {/* Phone reveal banner */}
-      {isDealAgreed && conv?.phoneRevealAvailable && !revealedPhone && (
-        <TouchableOpacity
-          onPress={handleRevealPhone}
+      {/* Pinned item card */}
+      {pin?.name ? (
+        <ScalePressable
+          onPress={(() => {
+            if (!pinRef?.saleEventId) return undefined;
+            const { saleEventId, bundleId, itemId } = pinRef;
+            if (bundleId && itemId) {
+              return () =>
+                router.push({
+                  pathname: "/item/[eventId]/[bundleId]/[itemId]",
+                  params: { eventId: saleEventId, bundleId, itemId },
+                });
+            }
+            return () =>
+              router.push({ pathname: "/sale/[eventId]", params: { eventId: saleEventId } });
+          })()}
+          haptic="selection"
+          accessibilityRole="button"
+          accessibilityLabel={`About: ${pin.name}`}
           style={{
-            backgroundColor: "#FFFBEB",
-            borderBottomWidth: 1,
-            borderBottomColor: "#FDE68A",
-            paddingHorizontal: 16,
-            paddingVertical: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            marginHorizontal: 16,
+            marginBottom: 8,
+            padding: 10,
+            backgroundColor: colors.surfaceLow,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.outlineVariant,
+          }}
+        >
+          <ItemImage uri={pin.imageUrl} width={40} height={40} borderRadius={radius.sm} />
+          <View style={{ flex: 1 }}>
+            <AppText weight="semibold" numberOfLines={1} style={{ fontSize: 13.5 }}>
+              {pin.name}
+            </AppText>
+            {pin.price != null ? (
+              <AppText variant="caption" weight="semibold" style={{ color: colors.clay600 }}>
+                {formatAUD(pin.price)}
+              </AppText>
+            ) : null}
+          </View>
+          <Ionicons name="chevron-forward" size={15} color={colors.ink300} />
+        </ScalePressable>
+      ) : null}
+
+      {/* Phone reveal */}
+      {isDealAgreed && conv?.phoneRevealAvailable && !revealedPhone ? (
+        <ScalePressable
+          onPress={handleRevealPhone}
+          haptic="light"
+          accessibilityRole="button"
+          accessibilityLabel="Reveal seller phone number"
+          style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
+            marginHorizontal: 16,
+            marginBottom: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 11,
+            backgroundColor: colors.successContainer,
+            borderRadius: radius.lg,
           }}
         >
-          <Text style={{ fontSize: 13, color: "#92400E" }}>
-            Seller shared their phone — tap to reveal
-          </Text>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: "#B45309" }}>Reveal ›</Text>
-        </TouchableOpacity>
-      )}
-      {revealedPhone && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Ionicons name="call-outline" size={16} color={colors.onSuccessContainer} />
+            <AppText variant="caption" weight="medium" style={{ color: colors.onSuccessContainer }}>
+              Phone number unlocked — tap to reveal
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={15} color={colors.onSuccessContainer} />
+        </ScalePressable>
+      ) : null}
+      {revealedPhone ? (
         <View
           style={{
-            backgroundColor: "#ECFDF5",
-            borderBottomWidth: 1,
-            borderBottomColor: "#6EE7B7",
-            paddingHorizontal: 16,
-            paddingVertical: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            marginHorizontal: 16,
+            marginBottom: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 11,
+            backgroundColor: colors.successContainer,
+            borderRadius: radius.lg,
           }}
         >
-          <Text style={{ fontSize: 13, color: "#065F46" }}>
-            📞 {revealedPhone}
-          </Text>
+          <Ionicons name="call" size={16} color={colors.onSuccessContainer} />
+          <AppText weight="semibold" style={{ color: colors.onSuccessContainer, fontSize: 15 }}>
+            {revealedPhone}
+          </AppText>
         </View>
-      )}
+      ) : null}
 
       {/* Messages */}
       {isLoading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color="#B5604A" />
+          <ActivityIndicator color={colors.clay600} />
         </View>
       ) : (
         <FlatList
@@ -532,20 +750,44 @@ export default function ConversationScreen() {
           inverted
           keyExtractor={(m) => m.id}
           renderItem={({ item }) => (
-            <MessageBubble
-              msg={item}
-              isMine={item.senderId === myUid}
-              myUid={myUid}
-              convId={convId}
-              conv={conv}
-            />
+            <View>
+              {daySeparatorIds.has(item.id) ? (
+                <View style={{ alignItems: "center", marginVertical: 10 }}>
+                  <AppText variant="micro" tone="faint">
+                    {dayLabel(item.createdAt)}
+                  </AppText>
+                </View>
+              ) : null}
+              <MessageBubble
+                msg={item}
+                isMine={item.senderId === myUid}
+                convId={convId}
+                pinName={pin?.name}
+                showTime={timeShownFor === item.id}
+                onToggleTime={() => setTimeShownFor(timeShownFor === item.id ? null : item.id)}
+                onRetry={(m) => {
+                  Alert.alert("Message not sent", m.text, [
+                    { text: "Delete", style: "destructive", onPress: () => removeLocal(m.id) },
+                    { text: "Retry", onPress: () => retryMessage(m) },
+                    { text: "Cancel", style: "cancel" },
+                  ]);
+                }}
+              />
+            </View>
           )}
           contentContainerStyle={{ paddingVertical: 12 }}
-          onEndReached={() => { if (hasNextPage) fetchNextPage(); }}
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage();
+          }}
           onEndReachedThreshold={0.3}
           ListEmptyComponent={
-            <View style={{ alignItems: "center", justifyContent: "center", padding: 40 }}>
-              <Text style={{ fontSize: 13, color: "#A09683" }}>No messages yet. Say hello!</Text>
+            <View style={{ transform: [{ scaleY: -1 }] }}>
+              <EmptyState
+                icon="chatbubble-ellipses-outline"
+                title="No messages yet"
+                body="Say hello — or open with an offer."
+                compact
+              />
             </View>
           }
         />
@@ -561,60 +803,73 @@ export default function ConversationScreen() {
             flexDirection: "row",
             alignItems: "flex-end",
             paddingHorizontal: 12,
-            paddingVertical: 10,
-            paddingBottom: insets.bottom + 10,
+            paddingTop: 10,
+            paddingBottom: Math.max(insets.bottom, 10),
             borderTopWidth: 1,
-            borderTopColor: "#E0D5C0",
-            backgroundColor: "#FAFAF7",
+            borderTopColor: colors.outlineVariant,
+            backgroundColor: colors.surface,
             gap: 8,
           }}
         >
-          <TouchableOpacity
+          <ScalePressable
             onPress={() => setOfferModal(true)}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel="Make an offer"
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: "#EDE5D6",
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: colors.surfaceContainer,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 16 }}>$</Text>
-          </TouchableOpacity>
+            <Ionicons name="pricetag-outline" size={19} color={colors.clay600} />
+          </ScalePressable>
           <TextInput
             value={text}
             onChangeText={setText}
             placeholder="Message…"
+            placeholderTextColor={colors.ink300}
             multiline
+            accessibilityLabel="Message input"
             style={{
               flex: 1,
               borderWidth: 1,
-              borderColor: "#C8B99A",
-              borderRadius: 20,
+              borderColor: colors.outlineVariant,
+              borderRadius: 22,
               paddingHorizontal: 14,
-              paddingVertical: 9,
-              fontSize: 14,
-              color: "#2C2416",
-              backgroundColor: "#FFFFFF",
+              paddingVertical: 11,
+              fontFamily: fonts.regular,
+              fontSize: 14.5,
+              color: colors.onSurface,
+              backgroundColor: colors.surfaceLowest,
               maxHeight: 100,
             }}
-            placeholderTextColor="#A09683"
           />
-          <TouchableOpacity
+          <ScalePressable
             onPress={send}
-            disabled={!text.trim() || sendMsg.isPending}
+            disabled={!text.trim()}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            accessibilityState={{ disabled: !text.trim() }}
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: text.trim() ? "#B5604A" : "#E0D5C0",
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: text.trim() ? colors.clay600 : colors.surfaceHighest,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: text.trim() ? "#fff" : "#A09683", fontSize: 16 }}>↑</Text>
-          </TouchableOpacity>
+            <Ionicons
+              name="arrow-up"
+              size={19}
+              color={text.trim() ? colors.onPrimary : colors.outline}
+            />
+          </ScalePressable>
         </View>
       </KeyboardAvoidingView>
 
@@ -622,6 +877,7 @@ export default function ConversationScreen() {
         visible={offerModal}
         onClose={() => setOfferModal(false)}
         convId={convId}
+        pin={pin}
       />
     </View>
   );

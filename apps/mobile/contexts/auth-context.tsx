@@ -81,8 +81,10 @@ function parseFirebaseError(err: unknown): string {
   return "An unexpected error occurred.";
 }
 
+// Backend dev bypass uses the full token string as the uid, so the local
+// user object must match or all "is mine" checks break in dev.
 const DEV_USER: AuthUser = {
-  uid: DEV_USER_ID,
+  uid: `dev_${DEV_USER_ID}`,
   email: `${DEV_USER_ID}@dev.local`,
   displayName: "Dev User",
   photoURL: null,

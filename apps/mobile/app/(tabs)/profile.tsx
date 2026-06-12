@@ -1,13 +1,108 @@
-﻿import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { getMe } from "@myrio/api";
+import { Ionicons } from "@expo/vector-icons";
+import { getMe, getSaved, listSales } from "@myrio/api";
 import { useAuth } from "@/contexts/auth-context";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNotifUnreadCount } from "@/hooks/use-notifications";
+import { colors, radius } from "@/lib/theme";
+import {
+  AppText,
+  Avatar,
+  Button,
+  ScalePressable,
+  TabHeader,
+} from "@/components/ui";
+
+function MenuRow({
+  icon,
+  label,
+  onPress,
+  badge,
+  last,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  badge?: number;
+  last?: boolean;
+}) {
+  return (
+    <ScalePressable
+      onPress={onPress}
+      haptic="selection"
+      pressScale={0.99}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}${badge ? `, ${badge} unread` : ""}`}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        borderBottomWidth: last ? 0 : 1,
+        borderBottomColor: colors.outlineVariant,
+      }}
+    >
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: colors.surfaceContainer,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name={icon} size={17} color={colors.onSurfaceVariant} />
+      </View>
+      <AppText weight="medium" style={{ flex: 1, fontSize: 14.5 }}>
+        {label}
+      </AppText>
+      {badge ? (
+        <View
+          style={{
+            minWidth: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: colors.clay600,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 5,
+          }}
+        >
+          <AppText weight="bold" style={{ color: colors.onPrimary, fontSize: 11, lineHeight: 14 }}>
+            {badge}
+          </AppText>
+        </View>
+      ) : null}
+      <Ionicons name="chevron-forward" size={15} color={colors.ink300} />
+    </ScalePressable>
+  );
+}
+
+function MenuGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <View>
+      <AppText variant="micro" tone="faint" style={{ marginBottom: 8, marginLeft: 2 }}>
+        {title}
+      </AppText>
+      <View
+        style={{
+          backgroundColor: colors.surfaceLow,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: colors.outlineVariant,
+          overflow: "hidden",
+        }}
+      >
+        {children}
+      </View>
+    </View>
+  );
+}
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, signOut } = useAuth();
   const { data: notifUnread } = useNotifUnreadCount();
@@ -19,75 +114,111 @@ export default function ProfileScreen() {
     enabled: !!user,
   });
 
+  const { data: sales } = useQuery({
+    queryKey: ["sales"],
+    queryFn: listSales,
+    enabled: !!user,
+  });
+
+  const { data: saved } = useQuery({
+    queryKey: ["saved"],
+    queryFn: getSaved,
+    enabled: !!user,
+  });
+
+  const activeSales = sales?.filter((s) => s.status === "live" || s.status === "partially_sold").length ?? 0;
+  const itemsListed = sales?.reduce((n, s) => n + s.itemCount, 0) ?? 0;
+  const savedCount = (saved?.saved_items?.length ?? 0) + (saved?.saved_sales?.length ?? 0);
+
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      <View className="px-4 pt-4 pb-3 border-b border-outline-variant bg-surface">
-        <Text className="text-2xl font-bold text-on-surface">Profile</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <TabHeader title="Profile" eyebrow="Account" />
 
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 12 }}>
-        {/* User card */}
-        <View className="rounded-xl bg-surface-container-low p-4 border border-outline-variant">
-          <Text className="text-base font-semibold text-on-surface">
-            {user?.displayName ?? "User"}
-          </Text>
-          <Text className="text-sm text-on-surface-variant mt-0.5">
-            {user?.email}
-          </Text>
-          {profile?.username && (
-            <Text className="text-sm text-primary mt-0.5">@{profile.username}</Text>
-          )}
-        </View>
-
-        {/* Quick links */}
-        <View className="rounded-xl bg-surface-container-low border border-outline-variant overflow-hidden">
-          <TouchableOpacity
-            className="px-4 py-3.5 border-b border-outline-variant flex-row items-center justify-between"
-            onPress={() => router.push("/notifications")}
-          >
-            <Text className="text-sm font-medium text-on-surface">Notifications</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              {notifCount > 0 && (
-                <View style={{ backgroundColor: "#B5604A", borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}>
-                  <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>{notifCount}</Text>
-                </View>
-              )}
-              <Text className="text-on-surface-variant text-base">›</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="px-4 py-3.5 flex-row items-center justify-between"
-            onPress={() => router.push("/purchases")}
-          >
-            <Text className="text-sm font-medium text-on-surface">My Purchases</Text>
-            <Text className="text-on-surface-variant text-base">›</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Seller Central entry */}
-        <TouchableOpacity
-          className="rounded-xl bg-surface-container p-4 border border-outline-variant"
-          onPress={() => router.push("/(tabs)/sell")}
-          activeOpacity={0.7}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, gap: 18, paddingBottom: 90 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Identity card */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            padding: 16,
+            backgroundColor: colors.surfaceLow,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.outlineVariant,
+          }}
         >
-          <Text className="text-sm font-semibold text-on-surface mb-2">Selling</Text>
-          <Text className="text-sm text-on-surface-variant mb-3">
-            Manage your sales, inventory, and listings.
-          </Text>
-          <View className="rounded-lg bg-primary px-4 py-2.5 items-center">
-            <Text className="text-on-primary font-medium text-sm">
-              Go to My Sales →
-            </Text>
+          <Avatar name={profile?.username ?? user?.displayName} uri={user?.photoURL} size={56} />
+          <View style={{ flex: 1 }}>
+            <AppText variant="heading" numberOfLines={1}>
+              {user?.displayName ?? "User"}
+            </AppText>
+            {profile?.username ? (
+              <AppText variant="caption" weight="medium" style={{ color: colors.clay600, marginTop: 1 }}>
+                @{profile.username}
+              </AppText>
+            ) : null}
+            <AppText variant="caption" tone="faint" numberOfLines={1} style={{ marginTop: 1 }}>
+              {user?.email}
+            </AppText>
           </View>
-        </TouchableOpacity>
+        </View>
 
-        {/* Sign out */}
-        <TouchableOpacity
-          className="rounded-xl bg-surface-container-low border border-outline-variant px-4 py-3.5 items-center mt-2"
-          onPress={signOut}
-        >
-          <Text className="text-error font-medium text-sm">Sign out</Text>
-        </TouchableOpacity>
+        {/* Stats */}
+        {sales && sales.length > 0 ? (
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {[
+              { label: "Active sales", value: activeSales },
+              { label: "Items listed", value: itemsListed },
+              { label: "Saved", value: savedCount },
+            ].map((stat) => (
+              <View
+                key={stat.label}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  paddingVertical: 14,
+                  backgroundColor: colors.surfaceLow,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.outlineVariant,
+                }}
+              >
+                <AppText weight="bold" style={{ fontSize: 22, lineHeight: 28, color: colors.clay600 }}>
+                  {stat.value}
+                </AppText>
+                <AppText variant="caption" tone="muted">
+                  {stat.label}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <MenuGroup title="Buying">
+          <MenuRow
+            icon="notifications-outline"
+            label="Notifications"
+            badge={notifCount > 0 ? notifCount : undefined}
+            onPress={() => router.push("/notifications")}
+          />
+          <MenuRow icon="bag-check-outline" label="My Purchases" onPress={() => router.push("/purchases")} />
+          <MenuRow icon="heart-outline" label="Saved" last onPress={() => router.push("/(tabs)/saved")} />
+        </MenuGroup>
+
+        <MenuGroup title="Selling">
+          <MenuRow icon="storefront-outline" label="My Sales" last onPress={() => router.push("/(tabs)/sell")} />
+        </MenuGroup>
+
+        <MenuGroup title="Account">
+          <MenuRow icon="settings-outline" label="Settings" last onPress={() => router.push("/settings")} />
+        </MenuGroup>
+
+        <Button label="Sign out" variant="ghost" block onPress={signOut} />
       </ScrollView>
     </View>
   );

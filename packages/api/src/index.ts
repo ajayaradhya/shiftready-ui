@@ -135,6 +135,24 @@ export async function captureFrame(eventId: string, file: File): Promise<Capture
   );
 }
 
+/** React Native variant — uploads a frame from a local file URI. */
+export async function captureFrameNative(
+  eventId: string,
+  fileUri: string
+): Promise<CaptureFrameResult> {
+  const form = new FormData();
+  // RN FormData file part: { uri, name, type }
+  form.append("frame", {
+    uri: fileUri,
+    name: "frame.jpg",
+    type: "image/jpeg",
+  } as unknown as Blob);
+  return apiRequest<CaptureFrameResult>(
+    `${_apiBase}/sales/${eventId}/capture/frame`,
+    { method: "POST", body: form }
+  );
+}
+
 export interface CapturedItemForFinalize {
   temp_id: string;
   name: string;
@@ -587,6 +605,24 @@ export async function reorderItemImages(
       body: JSON.stringify({ image_ids: imageIds }),
     }
   );
+}
+
+// --- Push tokens (mobile) ---
+
+export async function postPushToken(token: string): Promise<void> {
+  await apiRequest<unknown>(`${_apiBase}/users/me/push-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+}
+
+export async function deletePushToken(token: string): Promise<void> {
+  await apiRequest<unknown>(`${_apiBase}/users/me/push-token`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
 }
 
 // --- User / Username ---

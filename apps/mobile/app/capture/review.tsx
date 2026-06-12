@@ -1,30 +1,35 @@
-﻿import {
+import {
   View,
-  Text,
   FlatList,
-  TouchableOpacity,
   TextInput,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { Image } from "expo-image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
+import { Swipeable } from "react-native-gesture-handler";
 import { finalizeCaptureV2 } from "@myrio/api";
+import { formatAUD } from "@myrio/core";
 import { captureStore, type CapturedItem } from "@/lib/capture-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import { colors, fonts, radius } from "@/lib/theme";
+import {
+  AppText,
+  Button,
+  EmptyState,
+  ScalePressable,
+  StackHeader,
+  triggerHaptic,
+} from "@/components/ui";
 
-const fmtAUD = (v: number | undefined) =>
-  v == null
-    ? ""
-    : new Intl.NumberFormat("en-AU", {
-        style: "currency",
-        currency: "AUD",
-        maximumFractionDigits: 0,
-      }).format(v);
+interface PendingRemoval {
+  item: CapturedItem;
+  index: number;
+}
 
 export default function CaptureReviewScreen() {
   const insets = useSafeAreaInsets();
@@ -33,10 +38,14 @@ export default function CaptureReviewScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [finalizing, setFinalizing] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<PendingRemoval | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setItems(captureStore.getItems());
   }, []);
+
+  const estValue = items.reduce((sum, it) => sum + (it.predictedOriginalPrice ?? 0), 0);
 
   const saveName = (tempId: string) => {
     captureStore.updateItem(tempId, { name: editName, nameSource: "user" });
@@ -44,14 +53,38 @@ export default function CaptureReviewScreen() {
     setEditingId(null);
   };
 
-  const removeItem = (tempId: string) => {
-    captureStore.removeItem(tempId);
-    setItems(captureStore.getItems());
-  };
+  const removeItem = useCallback((item: CapturedItem, index: number) => {
+    triggerHaptic("light");
+    setItems((prev) => prev.filter((it) => it.tempId !== item.tempId));
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    setPendingRemoval({ item, index });
+    undoTimer.current = setTimeout(() => {
+      captureStore.removeItem(item.tempId);
+      setPendingRemoval(null);
+    }, 3500);
+  }, []);
+
+  const undoRemoval = useCallback(() => {
+    if (!pendingRemoval) return;
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    triggerHaptic("selection");
+    setItems((prev) => {
+      const next = [...prev];
+      next.splice(pendingRemoval.index, 0, pendingRemoval.item);
+      return next;
+    });
+    setPendingRemoval(null);
+  }, [pendingRemoval]);
 
   const finalize = async () => {
     const eventId = captureStore.getEventId();
     if (!eventId || items.length === 0) return;
+    // Flush any pending removal
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    if (pendingRemoval) {
+      captureStore.removeItem(pendingRemoval.item.tempId);
+      setPendingRemoval(null);
+    }
 
     setFinalizing(true);
     try {
@@ -66,24 +99,27 @@ export default function CaptureReviewScreen() {
       }));
 
       await finalizeCaptureV2(eventId, payload);
+      triggerHaptic("success");
       captureStore.reset();
       router.replace(`/seller/inventory/${eventId}`);
     } catch (err) {
+      triggerHaptic("error");
       Alert.alert("Finalise failed", (err as Error).message);
       setFinalizing(false);
     }
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !pendingRemoval) {
     return (
-      <View
-        className="flex-1 bg-surface items-center justify-center p-8"
-        style={{ paddingTop: insets.top }}
-      >
-        <Text className="text-base text-on-surface-variant">No items captured.</Text>
-        <TouchableOpacity className="mt-4" onPress={() => router.back()}>
-          <Text className="text-primary font-medium">← Go back</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        <StackHeader title="Review items" />
+        <EmptyState
+          icon="camera-outline"
+          title="No items captured"
+          body="Go back to the camera and snap your first item."
+          ctaLabel="Back to camera"
+          onCtaPress={() => router.back()}
+        />
       </View>
     );
   }
@@ -93,136 +129,189 @@ export default function CaptureReviewScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-        {/* Header */}
-        <View className="px-4 pt-3 pb-3 border-b border-outline-variant flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#1c1917" />
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-on-surface flex-1">
-            Review items ({items.length})
-          </Text>
-        </View>
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        <StackHeader
+          title={`Review items (${items.length})`}
+          right={
+            estValue > 0 ? (
+              <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
+                <AppText variant="micro" tone="faint">
+                  Est. RRP
+                </AppText>
+                <AppText weight="bold" style={{ fontSize: 14, color: colors.clay600 }}>
+                  ~{formatAUD(estValue)}
+                </AppText>
+              </View>
+            ) : undefined
+          }
+        />
 
         <FlatList
           data={items}
           keyExtractor={(it) => it.tempId}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: "#F0E9DA",
-                backgroundColor: "#FAFAF7",
-                gap: 12,
-              }}
+          contentContainerStyle={{ padding: 16, gap: 10 }}
+          renderItem={({ item, index }) => (
+            <Swipeable
+              renderRightActions={() => (
+                <ScalePressable
+                  onPress={() => removeItem(item, index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${item.name}`}
+                  style={{
+                    width: 72,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: colors.error,
+                    borderRadius: radius.lg,
+                    marginLeft: 8,
+                  }}
+                >
+                  <Ionicons name="trash" size={20} color="#fff" />
+                </ScalePressable>
+              )}
+              overshootRight={false}
             >
-              <Image
-                source={{ uri: item.gcsUri }}
-                style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: "#EDE8DC" }}
-                contentFit="cover"
-              />
-              <View style={{ flex: 1 }}>
-                {editingId === item.tempId ? (
-                  <TextInput
-                    value={editName}
-                    onChangeText={setEditName}
-                    onBlur={() => saveName(item.tempId)}
-                    onSubmitEditing={() => saveName(item.tempId)}
-                    autoFocus
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#1c1917",
-                      borderBottomWidth: 1.5,
-                      borderBottomColor: "#B5604A",
-                      paddingBottom: 2,
-                    }}
-                  />
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setEditingId(item.tempId);
-                      setEditName(item.name);
-                    }}
-                    style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-                  >
-                    <Text
-                      style={{ fontSize: 14, fontWeight: "600", color: "#1c1917" }}
-                      numberOfLines={1}
-                    >
-                      {item.name}
-                    </Text>
-                    <Ionicons name="pencil-outline" size={13} color="#A09683" />
-                  </TouchableOpacity>
-                )}
-                {item.brand && (
-                  <Text style={{ fontSize: 12, color: "#78716c", marginTop: 2 }}>
-                    {item.brand}
-                  </Text>
-                )}
-                {item.predictedOriginalPrice != null && (
-                  <Text style={{ fontSize: 12, color: "#78716c" }}>
-                    ~{fmtAUD(item.predictedOriginalPrice)} orig.
-                  </Text>
-                )}
-              </View>
-              <TouchableOpacity
-                onPress={() =>
-                  Alert.alert("Remove item?", item.name, [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Remove", style: "destructive", onPress: () => removeItem(item.tempId) },
-                  ])
-                }
-                style={{ padding: 6 }}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  gap: 12,
+                  backgroundColor: colors.surfaceLow,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.outlineVariant,
+                }}
               >
-                <Ionicons name="trash-outline" size={18} color="#A09683" />
-              </TouchableOpacity>
-            </View>
+                <Image
+                  source={{ uri: item.localUri ?? undefined }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: radius.md,
+                    backgroundColor: colors.surfaceHigh,
+                  }}
+                  contentFit="cover"
+                />
+                <View style={{ flex: 1 }}>
+                  {editingId === item.tempId ? (
+                    <TextInput
+                      value={editName}
+                      onChangeText={setEditName}
+                      onBlur={() => saveName(item.tempId)}
+                      onSubmitEditing={() => saveName(item.tempId)}
+                      autoFocus
+                      accessibilityLabel="Edit item name"
+                      style={{
+                        fontFamily: fonts.semibold,
+                        fontSize: 14.5,
+                        color: colors.onSurface,
+                        borderBottomWidth: 1.5,
+                        borderBottomColor: colors.clay600,
+                        paddingBottom: 2,
+                      }}
+                    />
+                  ) : (
+                    <ScalePressable
+                      onPress={() => {
+                        setEditingId(item.tempId);
+                        setEditName(item.name);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit name: ${item.name}`}
+                      style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+                    >
+                      <AppText weight="semibold" numberOfLines={1} style={{ fontSize: 14.5, flexShrink: 1 }}>
+                        {item.name}
+                      </AppText>
+                      <Ionicons name="pencil-outline" size={13} color={colors.outline} />
+                    </ScalePressable>
+                  )}
+                  {item.brand || item.predictedOriginalPrice != null ? (
+                    <AppText variant="caption" tone="muted" numberOfLines={1} style={{ marginTop: 2 }}>
+                      {[
+                        item.brand,
+                        item.predictedOriginalPrice != null
+                          ? `~${formatAUD(item.predictedOriginalPrice)} RRP`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </AppText>
+                  ) : null}
+                </View>
+              </View>
+            </Swipeable>
           )}
-          ListFooterComponent={<View style={{ height: 120 }} />}
+          ListFooterComponent={<View style={{ height: 110 }} />}
         />
 
-        {/* Finalize CTA */}
+        {/* Undo snackbar */}
+        {pendingRemoval ? (
+          <Animated.View
+            entering={FadeInDown.duration(200)}
+            exiting={FadeOutDown.duration(150)}
+            style={{
+              position: "absolute",
+              bottom: Math.max(insets.bottom, 12) + 80,
+              left: 16,
+              right: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: colors.ink800,
+              borderRadius: radius.lg,
+              paddingHorizontal: 16,
+              paddingVertical: 13,
+            }}
+          >
+            <AppText style={{ color: colors.surface, fontSize: 14 }} numberOfLines={1}>
+              "{pendingRemoval.item.name}" removed
+            </AppText>
+            <ScalePressable
+              onPress={undoRemoval}
+              accessibilityRole="button"
+              accessibilityLabel="Undo remove"
+              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <AppText weight="bold" style={{ color: colors.clay200, fontSize: 14 }}>
+                Undo
+              </AppText>
+            </ScalePressable>
+          </Animated.View>
+        ) : null}
+
+        {/* Sticky finalize bar */}
         <View
           style={{
             position: "absolute",
-            bottom: insets.bottom + 12,
-            left: 16,
-            right: 16,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: Math.max(insets.bottom, 12),
+            backgroundColor: colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: colors.outlineVariant,
           }}
         >
-          <TouchableOpacity
+          <Button
+            label={
+              finalizing
+                ? "Processing…"
+                : `List ${items.length} item${items.length !== 1 ? "s" : ""} →`
+            }
+            icon={finalizing ? undefined : "sparkles"}
+            size="lg"
+            block
+            loading={finalizing}
+            haptic="light"
             onPress={finalize}
-            disabled={finalizing || items.length === 0}
-            style={{
-              backgroundColor: finalizing ? "#D6C9B0" : "#B5604A",
-              borderRadius: 14,
-              paddingVertical: 16,
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-          >
-            {finalizing ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
-                  Processing…
-                </Text>
-              </View>
-            ) : (
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
-                Finalise {items.length} item{items.length !== 1 ? "s" : ""} →
-              </Text>
-            )}
-          </TouchableOpacity>
+          />
+          <AppText variant="caption" tone="faint" style={{ textAlign: "center", marginTop: 8 }}>
+            AI groups them into room bundles and prices everything
+          </AppText>
         </View>
       </View>
     </KeyboardAvoidingView>

@@ -4,6 +4,8 @@ export interface CapturedItem {
   brand?: string;
   predictedOriginalPrice?: number;
   gcsUri: string;
+  /** Local file URI of the captured frame — used for thumbnails (gcsUri is gs:// and not renderable). */
+  localUri?: string;
   needsReview?: boolean;
   nameSource?: "ai" | "user";
 }

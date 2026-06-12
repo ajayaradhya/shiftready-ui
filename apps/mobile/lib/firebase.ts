@@ -36,7 +36,9 @@ if (isFirebaseConfigured) {
       const {
         getReactNativePersistence,
       } = require("firebase/auth") as typeof import("firebase/auth") & {
-        getReactNativePersistence: (storage: unknown) => unknown;
+        getReactNativePersistence: (
+          storage: unknown
+        ) => import("firebase/auth").Persistence;
       };
       const AsyncStorage =
         require("@react-native-async-storage/async-storage").default;

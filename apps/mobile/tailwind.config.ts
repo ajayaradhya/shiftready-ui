@@ -10,6 +10,14 @@ export default {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["Fraunces_600SemiBold"],
+        "display-bold": ["Fraunces_700Bold"],
+        sans: ["Inter_400Regular"],
+        medium: ["Inter_500Medium"],
+        semibold: ["Inter_600SemiBold"],
+        bold: ["Inter_700Bold"],
+      },
       colors: {
         primary: "#B5604A",
         tertiary: "#557239",

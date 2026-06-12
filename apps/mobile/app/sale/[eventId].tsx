@@ -1,16 +1,32 @@
-import { useState } from "react";
-import {
-  View, Text, ScrollView, TouchableOpacity,
-  Image, ActivityIndicator,
-} from "react-native";
+import { useMemo, useState } from "react";
+import { View, ScrollView, LayoutAnimation, Platform, UIManager } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getPublicSale, saveSale, unsaveSale } from "@myrio/api";
+import { getPublicSale, saveSale, unsaveSale, startConversation, setPin } from "@myrio/api";
 import { formatAUD, formatDateAU } from "@myrio/core";
 import { useAuth } from "@/contexts/auth-context";
 import type { PublicBundle, PublicBundleItem } from "@myrio/types";
+import { colors, radius } from "@/lib/theme";
+import {
+  AppText,
+  Avatar,
+  Button,
+  Chip,
+  EmptyState,
+  IconButton,
+  ItemImage,
+  PriceText,
+  ScalePressable,
+  Skeleton,
+  StackHeader,
+  triggerHaptic,
+} from "@/components/ui";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 function titleCase(s: string) {
   return s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
@@ -21,156 +37,151 @@ function daysUntil(dateStr: string | null): number | null {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
 }
 
-function ItemRow({
-  item,
-  onPress,
-}: {
-  item: PublicBundleItem;
-  onPress: () => void;
-}) {
+function ItemRow({ item, onPress }: { item: PublicBundleItem; onPress: () => void }) {
   const isSold = item.sale_status === "sold" || item.sale_status === "withdrawn";
   const isReserved = item.sale_status === "reserved";
 
   return (
-    <TouchableOpacity
-      activeOpacity={isSold ? 1 : 0.85}
+    <ScalePressable
       onPress={isSold ? undefined : onPress}
+      haptic="selection"
+      disabled={isSold}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name ?? "Item"}${isSold ? ", sold" : isReserved ? ", reserved" : `, ${formatAUD(item.price)}`}`}
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#E0D5C0",
+        paddingVertical: 10,
+        gap: 12,
       }}
     >
-      <View
-        style={{
-          width: 52, height: 52, borderRadius: 8, overflow: "hidden",
-          backgroundColor: "#EDE5D6", marginRight: 12,
-        }}
-      >
-        {item.image_url ? (
-          <Image
-            source={{ uri: item.image_url }}
-            style={{ width: 52, height: 52 }}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ fontSize: 18 }}>📦</Text>
-          </View>
-        )}
-      </View>
+      <ItemImage
+        uri={item.image_url}
+        width={64}
+        height={64}
+        borderRadius={radius.md}
+        recyclingKey={item.id}
+        style={isSold ? { opacity: 0.45 } : undefined}
+      />
       <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: 13, fontWeight: "500",
-            color: isSold ? "#A09683" : "#1F1B17",
-          }}
+        <AppText
+          weight="medium"
           numberOfLines={1}
+          style={{ fontSize: 14, color: isSold ? colors.ink300 : colors.onSurface }}
         >
           {item.name}
-        </Text>
+        </AppText>
         {item.brand ? (
-          <Text style={{ fontSize: 11, color: "#4F4838", marginTop: 1 }} numberOfLines={1}>
+          <AppText variant="caption" tone="faint" numberOfLines={1} style={{ marginTop: 1 }}>
             {item.brand}
-          </Text>
+          </AppText>
         ) : null}
       </View>
-      <View style={{ alignItems: "flex-end", marginLeft: 8 }}>
+      <View style={{ alignItems: "flex-end" }}>
         {isSold ? (
-          <View
-            style={{
-              backgroundColor: "#E0D5C0", borderRadius: 4,
-              paddingHorizontal: 7, paddingVertical: 2,
-            }}
-          >
-            <Text style={{ fontSize: 10, color: "#4F4838", fontWeight: "600" }}>SOLD</Text>
-          </View>
+          <Chip label="Sold" status="sold" size="sm" />
         ) : isReserved ? (
-          <View
-            style={{
-              backgroundColor: "#F5DDCF", borderRadius: 4,
-              paddingHorizontal: 7, paddingVertical: 2,
-            }}
-          >
-            <Text style={{ fontSize: 10, color: "#B5604A", fontWeight: "600" }}>RESERVED</Text>
-          </View>
+          <Chip label="Reserved" status="reserved" size="sm" />
         ) : (
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#B5604A" }}>
-            {formatAUD(item.price)}
-          </Text>
+          <PriceText value={item.price} size={14} />
         )}
       </View>
-    </TouchableOpacity>
+      {!isSold ? <Ionicons name="chevron-forward" size={15} color={colors.ink300} /> : null}
+    </ScalePressable>
   );
 }
 
-function BundleSection({
-  bundle,
-  eventId,
-}: {
-  bundle: PublicBundle;
-  eventId: string;
-}) {
+function BundleSection({ bundle, eventId }: { bundle: PublicBundle; eventId: string }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(true);
+  const savings = bundle.itemTotal - bundle.bundlePrice;
 
   return (
-    <View style={{ marginBottom: 12 }}>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => setExpanded(!expanded)}
+    <View
+      style={{
+        marginBottom: 12,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.outlineVariant,
+        backgroundColor: colors.surfaceLow,
+        overflow: "hidden",
+      }}
+    >
+      <ScalePressable
+        onPress={() => {
+          triggerHaptic("selection");
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setExpanded(!expanded);
+        }}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={`${bundle.name ?? "Items"} bundle, ${bundle.items.length} items`}
         style={{
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-          paddingVertical: 12, paddingHorizontal: 14,
-          backgroundColor: "#F5F0E8",
-          borderRadius: expanded ? 12 : 12,
-          borderBottomLeftRadius: expanded ? 0 : 12,
-          borderBottomRightRadius: expanded ? 0 : 12,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingVertical: 14,
+          paddingHorizontal: 14,
+          backgroundColor: colors.surfaceContainer,
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#1F1B17" }}>
+          <AppText variant="heading" style={{ fontSize: 15 }}>
             {bundle.name ?? "Items"}
-          </Text>
-          <Text style={{ fontSize: 11, color: "#4F4838", marginTop: 1 }}>
-            {bundle.items.length} item{bundle.items.length !== 1 ? "s" : ""}
-            {" · "}
-            {formatAUD(bundle.bundlePrice)}
-          </Text>
+          </AppText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+            <AppText variant="caption" tone="muted">
+              {bundle.items.length} item{bundle.items.length !== 1 ? "s" : ""} · {formatAUD(bundle.bundlePrice)}
+            </AppText>
+            {savings > 0 ? (
+              <AppText variant="caption" weight="semibold" tone="success">
+                Save {formatAUD(savings)} bundling
+              </AppText>
+            ) : null}
+          </View>
         </View>
-        <Ionicons
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size={16}
-          color="#A09683"
-        />
-      </TouchableOpacity>
+        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color={colors.outline} />
+      </ScalePressable>
 
-      {expanded && (
-        <View
-          style={{
-            paddingHorizontal: 14, paddingBottom: 4,
-            backgroundColor: "#FBF8F3",
-            borderWidth: 1, borderTopWidth: 0, borderColor: "#E0D5C0",
-            borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
-          }}
-        >
+      {expanded ? (
+        <View style={{ paddingHorizontal: 14, paddingVertical: 4 }}>
           {bundle.items.length === 0 ? (
-            <Text style={{ fontSize: 13, color: "#A09683", paddingVertical: 12 }}>
+            <AppText variant="caption" tone="faint" style={{ paddingVertical: 12 }}>
               No items in this bundle.
-            </Text>
+            </AppText>
           ) : (
             bundle.items.map((item) => (
               <ItemRow
                 key={item.id}
                 item={item}
-                onPress={() => router.push({ pathname: "/item/[eventId]/[bundleId]/[itemId]", params: { eventId, bundleId: bundle.id, itemId: item.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/item/[eventId]/[bundleId]/[itemId]",
+                    params: { eventId, bundleId: bundle.id, itemId: item.id },
+                  })
+                }
               />
             ))
           )}
         </View>
-      )}
+      ) : null}
+    </View>
+  );
+}
+
+function SaleSkeleton() {
+  return (
+    <View>
+      <Skeleton width="100%" height={280} borderRadius={0} />
+      <View style={{ padding: 16, gap: 12 }}>
+        <Skeleton width="75%" height={24} />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Skeleton width={110} height={30} borderRadius={999} />
+          <Skeleton width={140} height={30} borderRadius={999} />
+        </View>
+        <Skeleton width="100%" height={60} borderRadius={16} />
+        <Skeleton width="100%" height={180} borderRadius={16} />
+      </View>
     </View>
   );
 }
@@ -182,7 +193,7 @@ export default function SaleDetailScreen() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: sale, isLoading, error } = useQuery({
+  const { data: sale, isLoading, error, refetch } = useQuery({
     queryKey: ["public-sale", eventId],
     queryFn: () => getPublicSale(eventId),
     staleTime: 60_000,
@@ -190,11 +201,38 @@ export default function SaleDetailScreen() {
 
   const [savedOptimistic, setSavedOptimistic] = useState<boolean | null>(null);
   const isSaved = savedOptimistic !== null ? savedOptimistic : (sale?.is_saved ?? false);
+  const [messaging, setMessaging] = useState(false);
+
+  async function handleMessageSeller() {
+    if (!user || !sale?.sellerId) return;
+    setMessaging(true);
+    try {
+      const res = await startConversation(sale.sellerId, undefined, { saleEventId: eventId });
+      if (res.created) {
+        // New conversations have no pin; attach the sale so the thread has context.
+        setPin(res.conversationId, { kind: "sale", saleEventId: eventId }).catch(() => {});
+      }
+      router.push({
+        pathname: "/conversation/[convId]",
+        params: {
+          convId: res.conversationId,
+          name: sale.sellerUsername ?? "",
+          pinName: title,
+          pinImage: sale.cover_image_url ?? "",
+        },
+      });
+    } catch {
+      // Non-fatal; user can retry.
+    } finally {
+      setMessaging(false);
+    }
+  }
 
   async function toggleSave() {
     if (!user || !sale) return;
     const next = !isSaved;
     setSavedOptimistic(next);
+    triggerHaptic("light");
     try {
       if (next) await saveSale(eventId);
       else await unsaveSale(eventId);
@@ -206,161 +244,204 @@ export default function SaleDetailScreen() {
 
   const days = daysUntil(sale?.moveOutDate ?? null);
   const urgencyLabel =
-    days == null ? null
-    : days <= 0 ? "Sale ended"
-    : days === 1 ? "Last day!"
-    : `${days} days left`;
+    days == null ? null : days <= 0 ? "Sale ended" : days === 1 ? "Last day!" : `${days} days left`;
+
+  const priceRange = useMemo(() => {
+    const prices =
+      sale?.bundles.flatMap((b) =>
+        b.items.filter((i) => i.sale_status !== "sold" && i.sale_status !== "withdrawn").map((i) => i.price)
+      ) ?? [];
+    if (prices.length === 0) return null;
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max ? formatAUD(min) : `${formatAUD(min)} – ${formatAUD(max)}`;
+  }, [sale?.bundles]);
+
+  const hasCover = !!sale?.cover_image_url;
+  const title = sale?.title || (sale?.suburb ? `${titleCase(sale.suburb)} Moving Sale` : "Moving Sale");
 
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row", alignItems: "center",
-          paddingHorizontal: 16, paddingVertical: 12,
-          borderBottomWidth: 1, borderBottomColor: "#E0D5C0",
-          backgroundColor: "#FAFAF7",
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 8, padding: 4 }}>
-          <Ionicons name="arrow-back" size={22} color="#1F1B17" />
-        </TouchableOpacity>
-        <Text
-          style={{ flex: 1, fontSize: 16, fontWeight: "600", color: "#1F1B17" }}
-          numberOfLines={1}
-        >
-          {sale?.title || "Moving Sale"}
-        </Text>
-        {user && (
-          <TouchableOpacity onPress={toggleSave} style={{ padding: 4, marginLeft: 8 }}>
-            <Ionicons
-              name={isSaved ? "heart" : "heart-outline"}
-              size={22}
-              color={isSaved ? "#B5604A" : "#A09683"}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#B5604A" />
-        </View>
+        <>
+          <StackHeader title="" />
+          <SaleSkeleton />
+        </>
       ) : error || !sale ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text style={{ fontSize: 14, color: "#4F4838", textAlign: "center" }}>
-            Could not load this sale.
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 48 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Cover image */}
-          {sale.cover_image_url ? (
-            <View style={{ width: "100%", height: 220, backgroundColor: "#EDE5D6" }}>
-              <Image
-                source={{ uri: sale.cover_image_url }}
-                style={{ width: "100%", height: 220 }}
-                resizeMode="cover"
-              />
-            </View>
-          ) : null}
-
-          {/* Sale info */}
-          <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "#1F1B17" }}>
-              {sale.title ||
-                (sale.suburb ? `${titleCase(sale.suburb)} Moving Sale` : "Moving Sale")}
-            </Text>
-
-            {/* Meta chips */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12, gap: 8 }}>
-              {sale.suburb ? (
-                <View
-                  style={{
-                    flexDirection: "row", alignItems: "center",
-                    backgroundColor: "#F5F0E8", borderRadius: 8,
-                    paddingHorizontal: 10, paddingVertical: 6,
-                  }}
-                >
-                  <Ionicons name="location-outline" size={12} color="#A09683" />
-                  <Text style={{ fontSize: 12, color: "#4F4838", marginLeft: 4 }}>
-                    {titleCase(sale.suburb)}{sale.state ? `, ${sale.state}` : ""}
-                  </Text>
-                </View>
-              ) : null}
-              {sale.moveOutDate ? (
-                <View
-                  style={{
-                    flexDirection: "row", alignItems: "center",
-                    backgroundColor: "#F5F0E8", borderRadius: 8,
-                    paddingHorizontal: 10, paddingVertical: 6,
-                  }}
-                >
-                  <Ionicons name="calendar-outline" size={12} color="#A09683" />
-                  <Text style={{ fontSize: 12, color: "#4F4838", marginLeft: 4 }}>
-                    Move out {formatDateAU(sale.moveOutDate)}
-                  </Text>
-                </View>
-              ) : null}
-              {urgencyLabel ? (
-                <View
-                  style={{
-                    backgroundColor: days != null && days <= 3 ? "#F5DDCF" : "#F5F0E8",
-                    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12, fontWeight: "600",
-                      color: days != null && days <= 3 ? "#B5604A" : "#4F4838",
-                    }}
-                  >
-                    {urgencyLabel}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-
-            {sale.sellerUsername ? (
-              <Text style={{ fontSize: 12, color: "#A09683", marginTop: 8 }}>
-                Sold by @{sale.sellerUsername}
-              </Text>
-            ) : null}
-
-            {sale.description ? (
-              <Text
-                style={{
-                  fontSize: 14, color: "#4F4838", marginTop: 12, lineHeight: 20,
-                }}
-              >
-                {sale.description}
-              </Text>
-            ) : null}
-          </View>
-
-          {/* Divider */}
-          <View
-            style={{ height: 1, backgroundColor: "#E0D5C0", marginHorizontal: 16, marginVertical: 16 }}
+        <>
+          <StackHeader title="Moving sale" />
+          <EmptyState
+            icon="cloud-offline-outline"
+            title="Couldn't load this sale"
+            body="It may have ended, or your connection dropped."
+            ctaLabel="Retry"
+            onCtaPress={() => refetch()}
           />
-
-          {/* Bundles */}
-          <View style={{ paddingHorizontal: 16 }}>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: "#1F1B17", marginBottom: 12 }}>
-              {sale.bundles.length} bundle{sale.bundles.length !== 1 ? "s" : ""}
-            </Text>
-            {sale.bundles.length === 0 ? (
-              <Text style={{ fontSize: 14, color: "#A09683" }}>No items listed yet.</Text>
+        </>
+      ) : (
+        <>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 110 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Cover with floating controls */}
+            {hasCover ? (
+              <View>
+                <ItemImage uri={sale.cover_image_url} height={280} fallbackIcon="home-outline" />
+                <View
+                  style={{
+                    position: "absolute",
+                    top: insets.top + 8,
+                    left: 16,
+                    right: 16,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <IconButton icon="arrow-back" floating accessibilityLabel="Go back" onPress={() => router.back()} />
+                  {user ? (
+                    <IconButton
+                      icon={isSaved ? "heart" : "heart-outline"}
+                      color={isSaved ? colors.clay600 : colors.onSurface}
+                      floating
+                      accessibilityLabel={isSaved ? "Remove from saved" : "Save this sale"}
+                      onPress={toggleSave}
+                    />
+                  ) : null}
+                </View>
+              </View>
             ) : (
-              sale.bundles.map((bundle) => (
-                <BundleSection key={bundle.id} bundle={bundle} eventId={eventId} />
-              ))
+              <StackHeader
+                title=""
+                right={
+                  user ? (
+                    <IconButton
+                      icon={isSaved ? "heart" : "heart-outline"}
+                      color={isSaved ? colors.clay600 : colors.onSurface}
+                      accessibilityLabel={isSaved ? "Remove from saved" : "Save this sale"}
+                      onPress={toggleSave}
+                    />
+                  ) : undefined
+                }
+              />
             )}
+
+            {/* Sale info */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 18 }}>
+              <AppText variant="title">{title}</AppText>
+
+              <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12, gap: 8 }}>
+                {sale.suburb ? (
+                  <Chip
+                    icon="location-outline"
+                    label={`${titleCase(sale.suburb)}${sale.state ? `, ${sale.state}` : ""}`}
+                  />
+                ) : null}
+                {sale.moveOutDate ? (
+                  <Chip icon="calendar-outline" label={`Move out ${formatDateAU(sale.moveOutDate)}`} />
+                ) : null}
+                {urgencyLabel ? (
+                  <Chip
+                    label={urgencyLabel}
+                    status={days != null && days <= 3 ? "urgent" : "neutral"}
+                  />
+                ) : null}
+              </View>
+
+              {sale.sellerUsername ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    marginTop: 16,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    backgroundColor: colors.surfaceLow,
+                    borderRadius: radius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.outlineVariant,
+                  }}
+                >
+                  <Avatar name={sale.sellerUsername} size={36} />
+                  <View style={{ flex: 1 }}>
+                    <AppText weight="semibold" style={{ fontSize: 14 }}>
+                      @{sale.sellerUsername}
+                    </AppText>
+                    <AppText variant="caption" tone="faint">
+                      Seller
+                    </AppText>
+                  </View>
+                </View>
+              ) : null}
+
+              {sale.description ? (
+                <AppText tone="muted" style={{ marginTop: 14 }}>
+                  {sale.description}
+                </AppText>
+              ) : null}
+            </View>
+
+            {/* Bundles */}
+            <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+              <AppText variant="micro" tone="faint">
+                What's for sale
+              </AppText>
+              <AppText variant="heading" style={{ marginTop: 2, marginBottom: 12 }}>
+                {sale.bundles.length} room bundle{sale.bundles.length !== 1 ? "s" : ""}
+              </AppText>
+              {sale.bundles.length === 0 ? (
+                <EmptyState icon="cube-outline" title="No items listed yet" compact />
+              ) : (
+                sale.bundles.map((bundle) => (
+                  <BundleSection key={bundle.id} bundle={bundle} eventId={eventId} />
+                ))
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Sticky bottom bar */}
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom: Math.max(insets.bottom, 12),
+              backgroundColor: colors.surface,
+              borderTopWidth: 1,
+              borderTopColor: colors.outlineVariant,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              {priceRange ? (
+                <>
+                  <AppText variant="micro" tone="faint">
+                    Items from
+                  </AppText>
+                  <AppText weight="bold" style={{ fontSize: 16, color: colors.clay600 }}>
+                    {priceRange}
+                  </AppText>
+                </>
+              ) : null}
+            </View>
+            {user && sale.sellerId && sale.sellerId !== user.uid ? (
+              <Button
+                label="Message seller"
+                icon="chatbubble-outline"
+                size="lg"
+                loading={messaging}
+                onPress={handleMessageSeller}
+              />
+            ) : null}
           </View>
-        </ScrollView>
+        </>
       )}
     </View>
   );

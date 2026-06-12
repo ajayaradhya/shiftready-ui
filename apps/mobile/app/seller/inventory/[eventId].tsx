@@ -1,727 +1,145 @@
+import { useState } from "react";
 import {
   View,
-  Text,
   SectionList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  TextInput,
   Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   RefreshControl,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
-import { useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import {
   getSummary,
-  patchItem,
-  repriceItem,
-  publishSale,
   unpublishSale,
   archiveSale,
-  markItemSold,
-  markBundleSold,
-  deleteItem,
-  getItemImageUploadUrls,
-  confirmItemImages,
-  type PublishPayload,
+  repriceItem,
 } from "@myrio/api";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import type { SaleSummary, InventoryItem, RoomBundle, SaleStatus } from "@myrio/types";
+import { formatAUD } from "@myrio/core";
+import type { SaleSummary, InventoryItem, RoomBundle } from "@myrio/types";
+import { colors, radius } from "@/lib/theme";
+import {
+  AppText,
+  Button,
+  Chip,
+  EmptyState,
+  ItemImage,
+  ScalePressable,
+  Skeleton,
+  StackHeader,
+  triggerHaptic,
+  type StatusVariant,
+} from "@/components/ui";
+import { StatusHero } from "@/components/seller/StatusHero";
+import { ItemEditSheet } from "@/components/seller/ItemEditSheet";
+import { BundleSoldSheet, RenameBundleSheet } from "@/components/seller/BundleSheets";
+import { PublishSheet } from "@/components/seller/PublishSheet";
 
-const STATUS_LABEL: Partial<Record<SaleStatus, string>> = {
-  pending_upload: "Pending",
-  processing: "Processing…",
-  ready_for_review: "Ready to publish",
-  pricing_in_progress: "Pricing…",
-  live: "Live",
-  partially_sold: "Partially sold",
-  sold: "Sold",
-  failed: "Failed",
-  archived: "Archived",
-  expired: "Expired",
-};
-
-const STATUS_BG: Partial<Record<SaleStatus, string>> = {
-  processing: "#fef3c7",
-  pricing_in_progress: "#fef3c7",
-  ready_for_review: "#fef3c7",
-  live: "#dcfce7",
-  partially_sold: "#dbeafe",
-  sold: "#f3e8ff",
-  failed: "#fee2e2",
-  archived: "#f5f5f4",
-};
-
-const STATUS_FG: Partial<Record<SaleStatus, string>> = {
-  processing: "#92400e",
-  pricing_in_progress: "#92400e",
-  ready_for_review: "#b45309",
-  live: "#166534",
-  partially_sold: "#1e40af",
-  sold: "#6b21a8",
-  failed: "#991b1b",
-  archived: "#57534e",
-};
-
-const ITEM_STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
-  available: { bg: "#dcfce7", fg: "#166534" },
-  reserved:  { bg: "#fef3c7", fg: "#92400e" },
-  sold:      { bg: "#f3e8ff", fg: "#6b21a8" },
-  withdrawn: { bg: "#f5f5f4", fg: "#57534e" },
-};
-
-const fmtAUD = (v: number | null | undefined) =>
-  v == null
-    ? "—"
-    : new Intl.NumberFormat("en-AU", {
-        style: "currency",
-        currency: "AUD",
-        maximumFractionDigits: 0,
-      }).format(v);
-
-// --- Item Edit Sheet ---
-interface EditSheetProps {
-  item: InventoryItem;
-  eventId: string;
-  bundleId: string;
-  onClose: () => void;
-  onUpdated: () => void;
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-function ItemEditSheet({ item, eventId, bundleId, onClose, onUpdated }: EditSheetProps) {
-  const queryClient = useQueryClient();
-  const [name, setName] = useState(item.name);
-  const [price, setPrice] = useState(String(item.actual_listing_price ?? item.predicted_listing_price ?? ""));
-  const [soldPrice, setSoldPrice] = useState(String(item.actual_listing_price ?? ""));
-  const [payMethod, setPayMethod] = useState("Cash");
-  const [mode, setMode] = useState<"edit" | "sold">("edit");
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+const ITEM_STATUS_CHIP: Record<string, { label: string; status: StatusVariant }> = {
+  available: { label: "Available", status: "live" },
+  reserved: { label: "Reserved", status: "reserved" },
+  sold: { label: "Sold", status: "sold" },
+  withdrawn: { label: "Withdrawn", status: "neutral" },
+};
 
-  const patchMut = useMutation({
-    mutationFn: () =>
-      patchItem(eventId, bundleId, item.id, {
-        name,
-        actual_listing_price: price ? Number(price) : undefined,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      onUpdated();
-      onClose();
-    },
-  });
+function coverUri(item: InventoryItem): string | null {
+  const images = item.images ?? [];
+  const cover = images.find((i) => i.is_cover) ?? images[0];
+  return cover?.thumb_url ?? cover?.url ?? null;
+}
 
-  const repriceMut = useMutation({
-    mutationFn: () => repriceItem(eventId, bundleId, item.id),
-    onSuccess: (res) => {
-      setPrice(String(res.actual_listing_price));
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-    },
-  });
-
-  const soldMut = useMutation({
-    mutationFn: () =>
-      markItemSold(eventId, bundleId, item.id, {
-        final_price: soldPrice ? Number(soldPrice) : null,
-        payment_method: payMethod || null,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      onUpdated();
-      onClose();
-    },
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: () => deleteItem(eventId, bundleId, item.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      onUpdated();
-      onClose();
-    },
-  });
-
-  const pickAndUploadPhoto = useCallback(async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert("Permission needed", "Allow photo library access to upload photos.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.85,
-      allowsMultipleSelection: false,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
-    setUploadingPhoto(true);
-    try {
-      const filename = asset.fileName ?? `photo_${Date.now()}.jpg`;
-      const contentType = asset.mimeType ?? "image/jpeg";
-      const { urls } = await getItemImageUploadUrls(eventId, bundleId, item.id, [
-        { filename, content_type: contentType },
-      ]);
-      const { upload_url, image_id, gcs_path } = urls[0];
-      // Read file as blob then PUT to signed URL (RN fetch doesn't support file URIs as body directly)
-      const localBlob: Blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => resolve(xhr.response as Blob);
-        xhr.onerror = reject;
-        xhr.responseType = "blob";
-        xhr.open("GET", asset.uri);
-        xhr.send();
-      });
-      await fetch(upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: localBlob,
-      });
-      await confirmItemImages(eventId, bundleId, item.id, [{ image_id, gcs_path }]);
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      Alert.alert("Photo added", "Image uploaded successfully.");
-    } catch (err) {
-      Alert.alert("Upload failed", (err as Error).message);
-    } finally {
-      setUploadingPhoto(false);
-    }
-  }, [eventId, bundleId, item.id, queryClient]);
+function ItemRow({ item, onPress }: { item: InventoryItem; onPress: () => void }) {
+  const chip = ITEM_STATUS_CHIP[item.sale_status ?? "available"] ?? ITEM_STATUS_CHIP.available;
+  const price = item.actual_listing_price ?? item.predicted_listing_price;
+  const dimmed = item.sale_status === "sold" || item.sale_status === "withdrawn";
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, justifyContent: "flex-end" }}
+    <ScalePressable
+      onPress={onPress}
+      haptic="selection"
+      pressScale={0.99}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}, ${chip.label}${price != null ? `, ${formatAUD(price)}` : ""}`}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: colors.surface,
+      }}
     >
-      <View
-        style={{
-          backgroundColor: "#FAFAF7",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 20,
-          gap: 12,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1c1917", flex: 1 }} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={22} color="#A09683" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Mode toggle */}
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
-            onPress={() => setMode("edit")}
-            style={{
-              flex: 1,
-              paddingVertical: 8,
-              borderRadius: 10,
-              backgroundColor: mode === "edit" ? "#B5604A" : "#EDE8DC",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontWeight: "600", fontSize: 13, color: mode === "edit" ? "#fff" : "#57534e" }}>
-              Edit
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setMode("sold")}
-            style={{
-              flex: 1,
-              paddingVertical: 8,
-              borderRadius: 10,
-              backgroundColor: mode === "sold" ? "#6b21a8" : "#EDE8DC",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontWeight: "600", fontSize: 13, color: mode === "sold" ? "#fff" : "#57534e" }}>
-              Mark Sold
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {mode === "edit" && (
-          <>
-            <View>
-              <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>Name</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#D6C9B0",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: "#1c1917",
-                  backgroundColor: "#fff",
-                }}
-              />
-            </View>
-
-            <View>
-              <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>
-                Listing price (AUD)
-              </Text>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TextInput
-                  value={price}
-                  onChangeText={setPrice}
-                  keyboardType="numeric"
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: "#D6C9B0",
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    fontSize: 14,
-                    color: "#1c1917",
-                    backgroundColor: "#fff",
-                  }}
-                />
-                <TouchableOpacity
-                  onPress={() => repriceMut.mutate()}
-                  disabled={repriceMut.isPending}
-                  style={{
-                    paddingHorizontal: 14,
-                    justifyContent: "center",
-                    backgroundColor: "#EDE8DC",
-                    borderRadius: 10,
-                  }}
-                >
-                  {repriceMut.isPending ? (
-                    <ActivityIndicator size="small" color="#B5604A" />
-                  ) : (
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: "#B5604A" }}>
-                      AI Reprice
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={pickAndUploadPhoto}
-              disabled={uploadingPhoto}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                borderWidth: 1,
-                borderColor: "#D6C9B0",
-                borderRadius: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                backgroundColor: "#fff",
-              }}
-            >
-              {uploadingPhoto ? (
-                <ActivityIndicator size="small" color="#B5604A" />
-              ) : (
-                <Ionicons name="image-outline" size={18} color="#B5604A" />
-              )}
-              <Text style={{ fontSize: 13, fontWeight: "600", color: "#B5604A" }}>
-                {uploadingPhoto ? "Uploading…" : "Add photo from library"}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
-              <TouchableOpacity
-                onPress={() => patchMut.mutate()}
-                disabled={patchMut.isPending}
-                style={{
-                  flex: 1,
-                  backgroundColor: "#B5604A",
-                  borderRadius: 12,
-                  paddingVertical: 13,
-                  alignItems: "center",
-                }}
-              >
-                {patchMut.isPending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Save</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  Alert.alert("Delete item?", item.name, [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Delete", style: "destructive", onPress: () => deleteMut.mutate() },
-                  ])
-                }
-                style={{
-                  paddingHorizontal: 16,
-                  backgroundColor: "#fee2e2",
-                  borderRadius: 12,
-                  paddingVertical: 13,
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons name="trash-outline" size={18} color="#991b1b" />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {mode === "sold" && (
-          <>
-            <View>
-              <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>
-                Final price (AUD)
-              </Text>
-              <TextInput
-                value={soldPrice}
-                onChangeText={setSoldPrice}
-                keyboardType="numeric"
-                placeholder="e.g. 45"
-                placeholderTextColor="#A09683"
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#D6C9B0",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: "#1c1917",
-                  backgroundColor: "#fff",
-                }}
-              />
-            </View>
-            <View>
-              <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>
-                Payment method
-              </Text>
-              <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                {["Cash", "Bank transfer", "PayID", "Other"].map((m) => (
-                  <TouchableOpacity
-                    key={m}
-                    onPress={() => setPayMethod(m)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 99,
-                      backgroundColor: payMethod === m ? "#B5604A" : "#EDE8DC",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "600",
-                        color: payMethod === m ? "#fff" : "#57534e",
-                      }}
-                    >
-                      {m}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => soldMut.mutate()}
-              disabled={soldMut.isPending}
-              style={{
-                backgroundColor: "#6b21a8",
-                borderRadius: 12,
-                paddingVertical: 13,
-                alignItems: "center",
-                marginTop: 4,
-              }}
-            >
-              {soldMut.isPending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
-                  Confirm Sold
-                </Text>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
+      <ItemImage
+        uri={coverUri(item)}
+        width={56}
+        height={56}
+        borderRadius={radius.md}
+        recyclingKey={item.id}
+        style={dimmed ? { opacity: 0.45 } : undefined}
+      />
+      <View style={{ flex: 1 }}>
+        <AppText
+          weight="semibold"
+          numberOfLines={1}
+          style={{ fontSize: 14.5, color: dimmed ? colors.ink300 : colors.onSurface }}
+        >
+          {item.name}
+        </AppText>
+        {item.brand || item.condition ? (
+          <AppText variant="caption" tone="faint" numberOfLines={1} style={{ marginTop: 1 }}>
+            {[item.brand, item.condition].filter(Boolean).join(" · ")}
+          </AppText>
+        ) : null}
       </View>
-    </KeyboardAvoidingView>
-  );
-}
-
-// --- Bundle Sold Sheet ---
-interface BundleSoldSheetProps {
-  bundle: RoomBundle;
-  eventId: string;
-  onClose: () => void;
-}
-
-function BundleSoldSheet({ bundle, eventId, onClose }: BundleSoldSheetProps) {
-  const queryClient = useQueryClient();
-  const [soldPrice, setSoldPrice] = useState("");
-  const [payMethod, setPayMethod] = useState("Cash");
-  const [scope, setScope] = useState<"bundle_as_unit" | "all_items">("all_items");
-
-  const soldMut = useMutation({
-    mutationFn: () =>
-      markBundleSold(eventId, bundle.id, {
-        scope,
-        final_price: soldPrice ? Number(soldPrice) : null,
-        payment_method: payMethod || null,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      onClose();
-    },
-    onError: (e: Error) => Alert.alert("Failed", e.message),
-  });
-
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, justifyContent: "flex-end" }}
-    >
-      <View
-        style={{
-          backgroundColor: "#FAFAF7",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 20,
-          gap: 12,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1c1917", flex: 1 }} numberOfLines={1}>
-            Mark bundle sold — {bundle.name}
-          </Text>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={22} color="#A09683" />
-          </TouchableOpacity>
-        </View>
-
-        <View>
-          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 6 }}>Scope</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {(["all_items", "bundle_as_unit"] as const).map((s) => (
-              <TouchableOpacity
-                key={s}
-                onPress={() => setScope(s)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  borderRadius: 10,
-                  backgroundColor: scope === s ? "#6b21a8" : "#EDE8DC",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: "600", color: scope === s ? "#fff" : "#57534e" }}>
-                  {s === "all_items" ? "All items" : "Bundle as unit"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View>
-          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>
-            {scope === "all_items" ? "Total price (AUD)" : "Bundle price (AUD)"}
-          </Text>
-          <TextInput
-            value={soldPrice}
-            onChangeText={setSoldPrice}
-            keyboardType="numeric"
-            placeholder="e.g. 200"
-            placeholderTextColor="#A09683"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D6C9B0",
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              fontSize: 14,
-              color: "#1c1917",
-              backgroundColor: "#fff",
-            }}
-          />
-        </View>
-
-        <View>
-          <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>Payment method</Text>
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            {["Cash", "Bank transfer", "PayID", "Other"].map((m) => (
-              <TouchableOpacity
-                key={m}
-                onPress={() => setPayMethod(m)}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 99,
-                  backgroundColor: payMethod === m ? "#B5604A" : "#EDE8DC",
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: "600", color: payMethod === m ? "#fff" : "#57534e" }}>
-                  {m}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => soldMut.mutate()}
-          disabled={soldMut.isPending}
+      <View style={{ alignItems: "flex-end", gap: 4 }}>
+        <AppText
+          weight="bold"
           style={{
-            backgroundColor: "#6b21a8",
-            borderRadius: 12,
-            paddingVertical: 13,
-            alignItems: "center",
-            marginTop: 4,
+            fontSize: 14.5,
+            color: dimmed ? colors.ink300 : colors.clay600,
+            fontVariant: ["tabular-nums"],
           }}
         >
-          {soldMut.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Confirm Bundle Sold</Text>
-          )}
-        </TouchableOpacity>
+          {price != null ? formatAUD(price) : "—"}
+        </AppText>
+        {item.sale_status && item.sale_status !== "available" ? (
+          <Chip label={chip.label} status={chip.status} size="sm" />
+        ) : null}
       </View>
-    </KeyboardAvoidingView>
+      <Ionicons name="chevron-forward" size={15} color={colors.ink300} />
+    </ScalePressable>
   );
 }
 
-// --- Publish Modal ---
-function PublishModal({
-  eventId,
-  onClose,
-  onPublished,
-}: {
-  eventId: string;
-  onClose: () => void;
-  onPublished: () => void;
-}) {
-  const queryClient = useQueryClient();
-  const [moveOutDate, setMoveOutDate] = useState("");
-  const [streetAddress, setStreetAddress] = useState("");
-  const [suburb, setSuburb] = useState("");
-  const [pincode, setPincode] = useState("");
-
-  const publishMut = useMutation({
-    mutationFn: () =>
-      publishSale(eventId, {
-        move_out_date: moveOutDate,
-        street_address: streetAddress,
-        suburb,
-        pincode,
-        state: "NSW",
-      } as PublishPayload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["sales"] });
-      onPublished();
-      onClose();
-    },
-    onError: (e: Error) => Alert.alert("Publish failed", e.message),
-  });
-
-  const field = (label: string, value: string, onChange: (v: string) => void, opts?: object) => (
-    <View>
-      <Text style={{ fontSize: 12, color: "#78716c", marginBottom: 4 }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        style={{
-          borderWidth: 1,
-          borderColor: "#D6C9B0",
-          borderRadius: 10,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          fontSize: 14,
-          color: "#1c1917",
-          backgroundColor: "#fff",
-        }}
-        {...opts}
-      />
+function InventorySkeleton() {
+  return (
+    <View style={{ padding: 16, gap: 12 }}>
+      <Skeleton width="100%" height={120} borderRadius={16} />
+      <Skeleton width="100%" height={48} borderRadius={12} />
+      {[0, 1, 2, 3].map((i) => (
+        <Skeleton key={i} width="100%" height={72} borderRadius={12} />
+      ))}
     </View>
   );
-
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, justifyContent: "flex-end" }}
-    >
-      <ScrollView
-        style={{ backgroundColor: "#FAFAF7", borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-        contentContainerStyle={{ padding: 20, gap: 14 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1c1917", flex: 1 }}>
-            Publish sale
-          </Text>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={22} color="#A09683" />
-          </TouchableOpacity>
-        </View>
-
-        {field("Move-out date (YYYY-MM-DD)", moveOutDate, setMoveOutDate, {
-          placeholder: "2026-07-15",
-          placeholderTextColor: "#A09683",
-        })}
-        {field("Street address", streetAddress, setStreetAddress, {
-          placeholder: "12 Example St",
-          placeholderTextColor: "#A09683",
-        })}
-        {field("Suburb", suburb, setSuburb, {
-          placeholder: "Surry Hills",
-          placeholderTextColor: "#A09683",
-        })}
-        {field("Postcode", pincode, setPincode, {
-          placeholder: "2010",
-          placeholderTextColor: "#A09683",
-          keyboardType: "numeric",
-        })}
-
-        <TouchableOpacity
-          onPress={() => publishMut.mutate()}
-          disabled={publishMut.isPending || !moveOutDate || !suburb || !pincode}
-          style={{
-            backgroundColor:
-              publishMut.isPending || !moveOutDate || !suburb || !pincode ? "#D6C9B0" : "#B5604A",
-            borderRadius: 12,
-            paddingVertical: 14,
-            alignItems: "center",
-            marginTop: 4,
-            marginBottom: 20,
-          }}
-        >
-          {publishMut.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
-              Publish to marketplace
-            </Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
 }
 
-// --- Main screen ---
 export default function InventoryScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [selectedItem, setSelectedItem] = useState<{
-    item: InventoryItem;
-    bundleId: string;
-  } | null>(null);
-  const [selectedBundle, setSelectedBundle] = useState<RoomBundle | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ item: InventoryItem; bundleId: string } | null>(null);
+  const [soldBundle, setSoldBundle] = useState<RoomBundle | null>(null);
+  const [renamingBundle, setRenamingBundle] = useState<RoomBundle | null>(null);
   const [showPublish, setShowPublish] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [reestimating, setReestimating] = useState(false);
 
   const {
     data: summary,
@@ -744,6 +162,7 @@ export default function InventoryScreen() {
       queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
     },
+    onError: (e: Error) => Alert.alert("Unpublish failed", e.message),
   });
 
   const archiveMut = useMutation({
@@ -753,306 +172,238 @@ export default function InventoryScreen() {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       router.back();
     },
+    onError: (e: Error) => Alert.alert("Archive failed", e.message),
   });
+
+  // No bulk endpoint exists — reprice sequentially so backend rate limits hold.
+  async function reestimateAll() {
+    if (!summary || reestimating) return;
+    const targets = summary.bundles.flatMap((b) =>
+      b.items
+        .filter((i) => !i.sale_status || i.sale_status === "available")
+        .map((i) => ({ bundleId: b.id, itemId: i.id }))
+    );
+    if (targets.length === 0) return;
+    setReestimating(true);
+    let failed = 0;
+    for (const t of targets) {
+      try {
+        await repriceItem(eventId!, t.bundleId, t.itemId);
+      } catch {
+        failed += 1;
+      }
+    }
+    setReestimating(false);
+    triggerHaptic(failed === targets.length ? "error" : "success");
+    queryClient.invalidateQueries({ queryKey: ["summary", eventId] });
+    if (failed > 0) {
+      Alert.alert("Re-estimate finished", `${targets.length - failed} repriced, ${failed} failed.`);
+    }
+  }
+
+  function toggleCollapse(bundleId: string) {
+    triggerHaptic("selection");
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(bundleId)) next.delete(bundleId);
+      else next.add(bundleId);
+      return next;
+    });
+  }
+
+  const status = summary?.status;
+  const isLive = status === "live" || status === "partially_sold";
+  const isTerminal = status === "sold" || status === "archived" || status === "expired";
 
   const sections =
     summary?.bundles?.map((b: RoomBundle) => ({
       key: b.id,
       bundle: b,
-      data: b.items,
+      data: collapsed.has(b.id) ? [] : b.items,
     })) ?? [];
 
+  const allItems = summary?.bundles?.flatMap((b) => b.items) ?? [];
+  const totalValue = allItems.reduce(
+    (sum, i) => sum + (i.actual_listing_price ?? i.predicted_listing_price ?? 0),
+    0
+  );
+
   const title =
-    summary?.title ??
-    (summary?.suburb ? `${summary.suburb} Sale` : "Untitled Sale");
-
-  const status = summary?.status;
-  const statusBg = status ? STATUS_BG[status] ?? "#f5f5f4" : "#f5f5f4";
-  const statusFg = status ? STATUS_FG[status] ?? "#57534e" : "#57534e";
-  const statusText = status ? STATUS_LABEL[status] ?? status : "";
-
-  const canPublish = status === "ready_for_review";
-  const isLive = status === "live" || status === "partially_sold";
-  const isProcessing = status === "processing" || status === "pricing_in_progress";
-  const isTerminal = status === "sold" || status === "archived" || status === "expired";
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-surface items-center justify-center" style={{ paddingTop: insets.top }}>
-        <ActivityIndicator size="large" color="#B5604A" />
-      </View>
-    );
-  }
+    summary?.title ?? (summary?.suburb ? `${summary.suburb} Sale` : "Untitled Sale");
 
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="px-4 pt-3 pb-3 border-b border-outline-variant bg-surface flex-row items-center gap-3">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1c1917" />
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-on-surface flex-1" numberOfLines={1}>
-          {title}
-        </Text>
-        <View style={{ backgroundColor: statusBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99 }}>
-          <Text style={{ color: statusFg, fontSize: 12, fontWeight: "600" }}>{statusText}</Text>
-        </View>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <StackHeader title={title} />
 
-      {/* Status action banner */}
-      {(canPublish || isLive || isProcessing) && (
-        <View
-          style={{
-            backgroundColor: isProcessing ? "#fef3c7" : isLive ? "#dcfce7" : "#fff7ed",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          {isProcessing && (
-            <>
-              <ActivityIndicator size="small" color="#92400e" />
-              <Text style={{ color: "#92400e", fontSize: 13, flex: 1 }}>
-                AI is analysing and pricing your items…
-              </Text>
-            </>
-          )}
-          {canPublish && (
-            <>
-              <Ionicons name="checkmark-circle" size={20} color="#b45309" />
-              <Text style={{ color: "#b45309", fontSize: 13, flex: 1 }}>
-                Ready to go live on the marketplace
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowPublish(true)}
-                style={{
-                  backgroundColor: "#B5604A",
-                  paddingHorizontal: 14,
-                  paddingVertical: 7,
-                  borderRadius: 99,
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>Publish</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          {isLive && (
-            <>
-              <Ionicons name="globe-outline" size={20} color="#166534" />
-              <Text style={{ color: "#166534", fontSize: 13, flex: 1 }}>
-                Live on the marketplace
-              </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  Alert.alert("Unpublish sale?", "It will be removed from the marketplace.", [
+      {isLoading || !summary ? (
+        <InventorySkeleton />
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item: InventoryItem) => item.id}
+          stickySectionHeadersEnabled={false}
+          ListHeaderComponent={
+            <StatusHero
+              status={summary.status}
+              itemCount={allItems.length}
+              totalValue={totalValue}
+              onPublish={() => setShowPublish(true)}
+              onUnpublish={() =>
+                Alert.alert("Unpublish sale?", "It will be removed from the marketplace.", [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Unpublish", onPress: () => unpublishMut.mutate() },
+                ])
+              }
+              onReestimate={() =>
+                Alert.alert(
+                  "Re-estimate all prices?",
+                  "AI will reprice every available item. Manual prices will be overwritten.",
+                  [
                     { text: "Cancel", style: "cancel" },
-                    { text: "Unpublish", onPress: () => unpublishMut.mutate() },
-                  ])
-                }
+                    { text: "Re-estimate", onPress: () => reestimateAll() },
+                  ]
+                )
+              }
+              reestimating={reestimating}
+              unpublishing={unpublishMut.isPending}
+            />
+          }
+          renderSectionHeader={({ section }) => {
+            const b = section.bundle as RoomBundle;
+            const available = b.items.filter(
+              (i) => !i.sale_status || i.sale_status === "available"
+            ).length;
+            const allSold = b.items.length > 0 && available === 0;
+            const isCollapsed = collapsed.has(b.id);
+            return (
+              <View
                 style={{
-                  backgroundColor: "#fff",
-                  borderWidth: 1,
-                  borderColor: "#D6C9B0",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 99,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  paddingHorizontal: 16,
+                  paddingTop: 18,
+                  paddingBottom: 8,
+                  backgroundColor: colors.surface,
                 }}
               >
-                <Text style={{ color: "#57534e", fontWeight: "600", fontSize: 13 }}>Unpublish</Text>
-              </TouchableOpacity>
-            </>
+                <ScalePressable
+                  onPress={() => toggleCollapse(b.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: !isCollapsed }}
+                  accessibilityLabel={`${b.name} bundle, ${b.items.length} items`}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}
+                >
+                  <Ionicons
+                    name={isCollapsed ? "chevron-forward" : "chevron-down"}
+                    size={15}
+                    color={colors.ink400}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="heading" numberOfLines={1} style={{ fontSize: 15.5 }}>
+                      {b.name}
+                    </AppText>
+                    <AppText variant="caption" tone="faint">
+                      {b.items.length} item{b.items.length !== 1 ? "s" : ""} · {available} available
+                    </AppText>
+                  </View>
+                </ScalePressable>
+                <ScalePressable
+                  onPress={() => setRenamingBundle(b)}
+                  haptic="selection"
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rename ${b.name}`}
+                  style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Ionicons name="pencil-outline" size={16} color={colors.ink400} />
+                </ScalePressable>
+                {!allSold && isLive ? (
+                  <Button label="Mark sold" size="sm" variant="secondary" onPress={() => setSoldBundle(b)} />
+                ) : null}
+              </View>
+            );
+          }}
+          renderItem={({ item, section }) => (
+            <ItemRow
+              item={item}
+              onPress={() => setSelectedItem({ item, bundleId: (section.bundle as RoomBundle).id })}
+            />
           )}
-        </View>
+          ItemSeparatorComponent={() => (
+            <View style={{ height: 1, backgroundColor: colors.surfaceContainer, marginLeft: 84 }} />
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon="cube-outline"
+              title="No items yet"
+              body="Items appear here once processing finishes."
+              compact
+            />
+          }
+          ListFooterComponent={
+            <View style={{ padding: 16, paddingBottom: 40, gap: 10 }}>
+              {!isTerminal ? (
+                <Button
+                  label="Archive sale"
+                  variant="ghost"
+                  block
+                  loading={archiveMut.isPending}
+                  onPress={() =>
+                    Alert.alert(
+                      "Archive sale?",
+                      "This sale will be archived and removed from the marketplace.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Archive", style: "destructive", onPress: () => archiveMut.mutate() },
+                      ]
+                    )
+                  }
+                />
+              ) : null}
+            </View>
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.clay600}
+              colors={[colors.clay600]}
+            />
+          }
+        />
       )}
 
-      {/* Bundle + Item list */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item: InventoryItem) => item.id}
-        renderSectionHeader={({ section }) => {
-          const b = section.bundle as RoomBundle;
-          const available = b.items.filter((i) => i.sale_status === "available").length;
-          const allSold = b.items.length > 0 && available === 0;
-          return (
-            <View
-              style={{
-                backgroundColor: "#F5EFE4",
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: "#E0D5C0",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: "700", fontSize: 14, color: "#1c1917" }}>
-                  {b.name}
-                </Text>
-                <Text style={{ fontSize: 12, color: "#78716c", marginTop: 2 }}>
-                  {b.items.length} item{b.items.length !== 1 ? "s" : ""} · {available} available
-                </Text>
-              </View>
-              {!allSold && isLive && (
-                <TouchableOpacity
-                  onPress={() => setSelectedBundle(b)}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    backgroundColor: "#f3e8ff",
-                    borderRadius: 99,
-                  }}
-                >
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: "#6b21a8" }}>
-                    Mark sold
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        }}
-        renderItem={({ item, section }: { item: InventoryItem; section: { bundle: RoomBundle } }) => {
-          const { bg, fg } = ITEM_STATUS_STYLE[item.sale_status ?? "available"] ?? ITEM_STATUS_STYLE.available;
-          const price = item.actual_listing_price ?? item.predicted_listing_price;
-          return (
-            <TouchableOpacity
-              onPress={() =>
-                setSelectedItem({ item, bundleId: section.bundle.id })
-              }
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: "#F0E9DA",
-                backgroundColor: "#FAFAF7",
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#1c1917" }} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={{ fontSize: 12, color: "#78716c", marginTop: 1 }}>
-                  {[item.brand, item.condition].filter(Boolean).join(" · ")}
-                </Text>
-              </View>
-              <View style={{ alignItems: "flex-end", gap: 4 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#1c1917" }}>
-                  {fmtAUD(price)}
-                </Text>
-                <View style={{ backgroundColor: bg, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 99 }}>
-                  <Text style={{ color: fg, fontSize: 10, fontWeight: "600" }}>
-                    {(item.sale_status ?? "available").toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#A09683" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={{ padding: 32, alignItems: "center" }}>
-            <Text style={{ color: "#A09683", fontSize: 14 }}>No items found</Text>
-          </View>
-        }
-        ListFooterComponent={
-          !isTerminal ? (
-            <View style={{ padding: 16, paddingBottom: 32 }}>
-              <TouchableOpacity
-                onPress={() =>
-                  Alert.alert("Archive sale?", "This sale will be archived and removed from the marketplace.", [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Archive", style: "destructive", onPress: () => archiveMut.mutate() },
-                  ])
-                }
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#D6C9B0",
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#78716c", fontWeight: "600", fontSize: 14 }}>
-                  Archive sale
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={{ height: 32 }} />
-          )
-        }
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#B5604A" />
-        }
-      />
-
-      {/* Item edit modal */}
-      <Modal
-        visible={!!selectedItem}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSelectedItem(null)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-          activeOpacity={1}
-          onPress={() => setSelectedItem(null)}
-        />
-        {selectedItem && (
-          <ItemEditSheet
-            item={selectedItem.item}
-            eventId={eventId!}
-            bundleId={selectedItem.bundleId}
-            onClose={() => setSelectedItem(null)}
-            onUpdated={() => {}}
-          />
-        )}
-      </Modal>
-
-      {/* Publish modal */}
-      <Modal
-        visible={showPublish}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPublish(false)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-          activeOpacity={1}
-          onPress={() => setShowPublish(false)}
-        />
-        <PublishModal
+      {selectedItem ? (
+        <ItemEditSheet
+          // Remount per item so field state resets.
+          key={selectedItem.item.id}
+          item={selectedItem.item}
           eventId={eventId!}
-          onClose={() => setShowPublish(false)}
-          onPublished={() => {}}
+          bundleId={selectedItem.bundleId}
+          onClose={() => setSelectedItem(null)}
         />
-      </Modal>
+      ) : null}
 
-      {/* Bundle sold modal */}
-      <Modal
-        visible={!!selectedBundle}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSelectedBundle(null)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-          activeOpacity={1}
-          onPress={() => setSelectedBundle(null)}
+      {soldBundle ? (
+        <BundleSoldSheet bundle={soldBundle} eventId={eventId!} onClose={() => setSoldBundle(null)} />
+      ) : null}
+
+      {renamingBundle ? (
+        <RenameBundleSheet
+          key={renamingBundle.id}
+          bundle={renamingBundle}
+          eventId={eventId!}
+          onClose={() => setRenamingBundle(null)}
         />
-        {selectedBundle && (
-          <BundleSoldSheet
-            bundle={selectedBundle}
-            eventId={eventId!}
-            onClose={() => setSelectedBundle(null)}
-          />
-        )}
-      </Modal>
+      ) : null}
+
+      <PublishSheet
+        visible={showPublish}
+        eventId={eventId!}
+        saleTitle={title}
+        onClose={() => setShowPublish(false)}
+      />
     </View>
   );
 }

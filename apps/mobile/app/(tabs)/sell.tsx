@@ -1,105 +1,151 @@
-﻿import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { listSales } from "@myrio/api";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatAUD } from "@myrio/core";
 import { useAuth } from "@/contexts/auth-context";
 import type { SaleListing, SaleStatus } from "@myrio/types";
 import { Ionicons } from "@expo/vector-icons";
+import { colors, radius } from "@/lib/theme";
+import {
+  AppText,
+  Button,
+  Chip,
+  EmptyState,
+  ItemImage,
+  ScalePressable,
+  Skeleton,
+  TabHeader,
+  type StatusVariant,
+} from "@/components/ui";
 
-const STATUS_LABEL: Record<SaleStatus, string> = {
-  pending_upload: "Pending",
-  processing: "Processing…",
-  ready_for_review: "Review needed",
-  pricing_in_progress: "Pricing…",
-  live: "Live",
-  partially_sold: "Part. sold",
-  sold: "Sold",
-  failed: "Failed",
-  archived: "Archived",
-  expired: "Expired",
+const STATUS_CHIP: Record<SaleStatus, { label: string; status: StatusVariant }> = {
+  pending_upload: { label: "Pending", status: "neutral" },
+  processing: { label: "Processing…", status: "processing" },
+  ready_for_review: { label: "Review needed", status: "review" },
+  pricing_in_progress: { label: "Pricing…", status: "processing" },
+  live: { label: "Live", status: "live" },
+  partially_sold: { label: "Part. sold", status: "deal" },
+  sold: { label: "Sold", status: "sold" },
+  failed: { label: "Failed", status: "failed" },
+  archived: { label: "Archived", status: "neutral" },
+  expired: { label: "Expired", status: "neutral" },
 };
 
-const STATUS_STYLE: Record<SaleStatus, { bg: string; fg: string }> = {
-  pending_upload:      { bg: "#f5f5f4", fg: "#57534e" },
-  processing:          { bg: "#fef3c7", fg: "#92400e" },
-  ready_for_review:    { bg: "#fef3c7", fg: "#b45309" },
-  pricing_in_progress: { bg: "#fef3c7", fg: "#92400e" },
-  live:                { bg: "#dcfce7", fg: "#166534" },
-  partially_sold:      { bg: "#dbeafe", fg: "#1e40af" },
-  sold:                { bg: "#f3e8ff", fg: "#6b21a8" },
-  failed:              { bg: "#fee2e2", fg: "#991b1b" },
-  archived:            { bg: "#f5f5f4", fg: "#57534e" },
-  expired:             { bg: "#f5f5f4", fg: "#57534e" },
-};
+const IN_FLIGHT: SaleStatus[] = ["processing", "pricing_in_progress"];
 
-const fmtAUD = (v: number) =>
-  new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    maximumFractionDigits: 0,
-  }).format(v);
+function relativeDate(iso: string): string {
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  return d.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+}
 
 function SaleCard({ sale, onPress }: { sale: SaleListing; onPress: () => void }) {
-  const { bg, fg } = STATUS_STYLE[sale.status] ?? STATUS_STYLE.archived;
+  const chip = STATUS_CHIP[sale.status] ?? STATUS_CHIP.archived;
+  const inFlight = IN_FLIGHT.includes(sale.status);
+  const coverUri =
+    sale.coverImage?.thumb_url ?? sale.coverImage?.url ?? sale.preview_images?.[0] ?? null;
+
   return (
-    <TouchableOpacity
-      className="bg-surface-container-low rounded-xl border border-outline-variant mx-4 mb-3 p-4"
+    <ScalePressable
       onPress={onPress}
-      activeOpacity={0.7}
+      haptic="selection"
+      accessibilityRole="button"
+      accessibilityLabel={`${sale.title ?? "Sale"}, ${chip.label}, ${sale.itemCount} items`}
+      style={{
+        marginHorizontal: 16,
+        marginBottom: 12,
+        backgroundColor: colors.surfaceLow,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.outlineVariant,
+        padding: 14,
+      }}
     >
-      <View className="flex-row items-start justify-between mb-1">
-        <Text
-          className="text-base font-semibold text-on-surface flex-1 mr-2"
-          numberOfLines={1}
-        >
-          {sale.title ?? (sale.suburb ? `${sale.suburb} Sale` : "Untitled Sale")}
-        </Text>
-        <View
-          style={{
-            backgroundColor: bg,
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 99,
-          }}
-        >
-          <Text style={{ color: fg, fontSize: 11, fontWeight: "600" }}>
-            {STATUS_LABEL[sale.status]}
-          </Text>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <ItemImage
+          uri={coverUri}
+          width={64}
+          height={64}
+          borderRadius={radius.md}
+          fallbackIcon="home-outline"
+          recyclingKey={sale.id}
+        />
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+            <AppText variant="heading" numberOfLines={1} style={{ flex: 1, fontSize: 16 }}>
+              {sale.title ?? (sale.suburb ? `${sale.suburb} Sale` : "Untitled Sale")}
+            </AppText>
+            <Chip label={chip.label} status={chip.status} size="sm" />
+          </View>
+
+          {sale.suburb ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+              <Ionicons name="location-outline" size={12} color={colors.ink300} />
+              <AppText variant="caption" tone="muted">
+                {sale.suburb}, {sale.state ?? "NSW"}
+              </AppText>
+            </View>
+          ) : null}
+
+          <View style={{ flexDirection: "row", gap: 18, marginTop: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons name="cube-outline" size={13} color={colors.ink400} />
+              <AppText variant="caption" tone="muted">
+                {sale.itemCount} item{sale.itemCount !== 1 ? "s" : ""}
+              </AppText>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons name="pricetag-outline" size={13} color={colors.ink400} />
+              <AppText variant="caption" weight="semibold" style={{ color: colors.clay600 }}>
+                {formatAUD(sale.totalValue)}
+              </AppText>
+            </View>
+            <AppText variant="caption" tone="faint" style={{ marginLeft: "auto" }}>
+              {relativeDate(sale.createdAt)}
+            </AppText>
+          </View>
         </View>
       </View>
 
-      {sale.suburb && (
-        <Text className="text-sm text-on-surface-variant mb-2">
-          {sale.suburb}, {sale.state ?? "NSW"}
-        </Text>
-      )}
+      {inFlight ? (
+        <View
+          style={{
+            marginTop: 12,
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: colors.surfaceHigh,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              width: "55%",
+              height: 3,
+              borderRadius: 2,
+              backgroundColor: colors.clay600,
+            }}
+          />
+        </View>
+      ) : null}
+    </ScalePressable>
+  );
+}
 
-      <View style={{ flexDirection: "row", gap: 16 }}>
-        <Text className="text-sm text-on-surface-variant">
-          {sale.itemCount} item{sale.itemCount !== 1 ? "s" : ""}
-        </Text>
-        <Text className="text-sm text-on-surface-variant">
-          {fmtAUD(sale.totalValue)} value
-        </Text>
-      </View>
-
-      <Text className="text-xs text-on-surface-variant mt-2">
-        Created {new Date(sale.createdAt).toLocaleDateString("en-AU")}
-      </Text>
-    </TouchableOpacity>
+function SalesSkeleton() {
+  return (
+    <View style={{ paddingTop: 16, gap: 12, paddingHorizontal: 16 }}>
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} width="100%" height={110} borderRadius={16} />
+      ))}
+    </View>
   );
 }
 
 export default function SellScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
 
@@ -116,81 +162,61 @@ export default function SellScreen() {
 
   if (!user) {
     return (
-      <View
-        className="flex-1 bg-surface items-center justify-center p-6"
-        style={{ paddingTop: insets.top }}
-      >
-        <Ionicons name="bag-outline" size={48} color="#A09683" />
-        <Text className="text-base font-semibold text-on-surface mt-4 mb-2">
-          Sell your stuff
-        </Text>
-        <Text className="text-sm text-on-surface-variant text-center mb-6">
-          Sign in to create and manage your sales
-        </Text>
-        <TouchableOpacity
-          className="bg-primary rounded-xl px-6 py-3"
-          onPress={() => router.push("/(auth)/login")}
-        >
-          <Text className="text-on-primary font-medium">Sign in</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        <TabHeader title="My Sales" eyebrow="Selling" />
+        <EmptyState
+          icon="bag-handle-outline"
+          title="Sell your stuff"
+          body="Sign in to create and manage your moving sales."
+          ctaLabel="Sign in"
+          onCtaPress={() => router.push("/(auth)/login")}
+        />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
-      <View className="px-4 pt-4 pb-3 border-b border-outline-variant bg-surface flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-on-surface">My Sales</Text>
-        <TouchableOpacity
-          className="bg-primary rounded-xl px-4 py-2.5 flex-row items-center"
-          onPress={() => router.push("/capture")}
-          style={{ gap: 6 }}
-        >
-          <Ionicons name="camera" size={16} color="#fff" />
-          <Text className="text-on-primary font-semibold text-sm">Capture</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <TabHeader
+        title="My Sales"
+        eyebrow="Selling"
+        right={
+          <Button
+            label="Capture"
+            icon="camera"
+            size="sm"
+            haptic="light"
+            onPress={() => router.push("/capture")}
+          />
+        }
+      />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#B5604A" />
-        </View>
+        <SalesSkeleton />
       ) : (
         <FlatList
           data={sales ?? []}
           keyExtractor={(s) => s.id}
           renderItem={({ item }) => (
-            <SaleCard
-              sale={item}
-              onPress={() => router.push(`/seller/inventory/${item.id}`)}
-            />
+            <SaleCard sale={item} onPress={() => router.push(`/seller/inventory/${item.id}`)} />
           )}
           ListHeaderComponent={<View style={{ height: 16 }} />}
-          ListFooterComponent={<View style={{ height: 40 }} />}
+          ListFooterComponent={<View style={{ height: 90 }} />}
           ListEmptyComponent={
-            <View className="items-center justify-center py-20 px-8">
-              <Ionicons name="bag-outline" size={52} color="#A09683" />
-              <Text className="text-lg font-semibold text-on-surface mt-4 mb-2">
-                No sales yet
-              </Text>
-              <Text className="text-sm text-on-surface-variant text-center mb-6">
-                Start capturing your items to create your first sale listing
-              </Text>
-              <TouchableOpacity
-                className="bg-primary rounded-xl px-6 py-3"
-                onPress={() => router.push("/capture")}
-              >
-                <Text className="text-on-primary font-semibold">
-                  Start capturing
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <EmptyState
+              icon="camera-outline"
+              title="No sales yet"
+              body="Point your camera at what you're selling — AI identifies, groups, and prices everything."
+              ctaLabel="Start capturing"
+              onCtaPress={() => router.push("/capture")}
+            />
           }
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor="#B5604A"
+              tintColor={colors.clay600}
+              colors={[colors.clay600]}
             />
           }
         />
