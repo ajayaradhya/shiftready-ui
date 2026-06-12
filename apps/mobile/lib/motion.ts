@@ -21,7 +21,7 @@ import {
   withSpring,
   withTiming,
   Easing,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import { triggerHaptic, type HapticKind } from "@/components/ui";
 
 // ─── Spring configs ───────────────────────────────────────────────────────────

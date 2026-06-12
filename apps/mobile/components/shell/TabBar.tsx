@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import { useEffect } from "react";
 import { colors } from "@/lib/theme";
 import { AppText } from "@/components/ui/AppText";

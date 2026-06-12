@@ -18,6 +18,7 @@ import {
   type User as FirebaseUser,
 } from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { _setIdToken, setTokenRefresher } from "@myrio/api";
@@ -130,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
       androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
       webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
     });
 
   useEffect(() => {

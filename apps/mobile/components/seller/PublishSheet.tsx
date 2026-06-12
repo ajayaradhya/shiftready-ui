@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Alert, Modal, Share, Platform } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn, ZoomIn } from "@/lib/reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { publishSale, type PublishPayload } from "@myrio/api";
 import { colors, radius } from "@/lib/theme";

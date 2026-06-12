@@ -15,7 +15,7 @@ import { formatAUD } from "@myrio/core";
 import { captureStore, type CapturedItem } from "@/lib/capture-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeOutDown } from "@/lib/reanimated";
 import { colors, fonts, radius } from "@/lib/theme";
 import {
   AppText,

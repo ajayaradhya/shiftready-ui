@@ -7,7 +7,7 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 **Myrio UI** — Turborepo monorepo containing the web app and native mobile app for the Myrio relocation platform.
 
 - **Web** (`apps/web/`): Next.js 16 / React 19 seller dashboard + buyer marketplace.
-- **Mobile** (`apps/mobile/`): Expo 53 / React Native 0.79.6 native app.
+- **Mobile** (`apps/mobile/`): Expo 54 / React Native 0.81.5 native app.
 - **Shared packages**: `@myrio/api` · `@myrio/core` · `@myrio/types`.
 - **Backend** (`../shiftready-backend/`): FastAPI on Cloud Run. Sibling directory.
 

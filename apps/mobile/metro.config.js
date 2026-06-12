@@ -2,13 +2,26 @@ const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 const path = require("path");
 
+const monorepoRoot = path.resolve(__dirname, "../..");
+
 const config = getDefaultConfig(__dirname);
 
-// Support workspace packages (pnpm monorepo)
+// pnpm monorepo: watch workspace packages + follow symlinks
+config.watchFolders = [monorepoRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, "node_modules"),
-  path.resolve(__dirname, "../../node_modules"),
+  path.resolve(monorepoRoot, "node_modules"),
 ];
+config.resolver.unstable_enableSymlinks = true;
+
+// Required for react-native-worklets (reanimated): Expo disables inlineRequires
+// by default which breaks the worklets initialization pipeline.
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: false,
+    inlineRequires: true,
+  },
+});
 
 const nwConfig = withNativeWind(config, {
   input: "./global.css",

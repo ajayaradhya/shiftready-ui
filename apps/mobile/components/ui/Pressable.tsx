@@ -4,7 +4,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import * as Haptics from "expo-haptics";
 
 const AnimatedPressable = Animated.createAnimatedComponent(RNPressable);

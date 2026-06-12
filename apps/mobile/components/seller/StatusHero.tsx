@@ -6,7 +6,7 @@ import Animated, {
   withRepeat,
   withTiming,
   Easing,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import { formatAUD } from "@myrio/core";
 import type { SaleStatus } from "@myrio/types";
 import { colors, radius } from "@/lib/theme";

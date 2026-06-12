@@ -6,7 +6,7 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import { colors, radius } from "@/lib/theme";
 
 export interface SkeletonProps {

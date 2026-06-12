@@ -25,7 +25,7 @@ import Animated, {
   withRepeat,
   withTiming,
   ZoomIn,
-} from "react-native-reanimated";
+} from "@/lib/reanimated";
 import { initCaptureSale, captureFrameNative } from "@myrio/api";
 import { formatAUD } from "@myrio/core";
 import { captureStore, type CapturedItem } from "@/lib/capture-store";
