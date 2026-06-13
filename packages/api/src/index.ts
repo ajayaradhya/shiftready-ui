@@ -444,6 +444,29 @@ export async function repriceItem(
   );
 }
 
+export interface BulkRepriceItemResult {
+  bundle_id: string;
+  item_id: string;
+  predicted_listing_price: number;
+  actual_listing_price: number;
+  pricing_reasoning: string;
+  success: boolean;
+  error?: string | null;
+}
+
+export interface BulkRepriceResult {
+  results: BulkRepriceItemResult[];
+  repriced: number;
+  failed: number;
+}
+
+export async function repriceBulk(eventId: string): Promise<BulkRepriceResult> {
+  return apiRequest<BulkRepriceResult>(
+    `${_apiBase}/sales/${eventId}/items/reprice-bulk`,
+    { method: "POST" }
+  );
+}
+
 // --- Seller Dashboard ---
 
 export async function listSales(): Promise<SaleListing[]> {
